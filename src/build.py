@@ -1,14 +1,15 @@
 import json, chess
-from data_common import COMMON
-from data_white_e4 import WHITE_E4
-from data_white_d4 import WHITE_D4
-from data_black_e4 import BLACK_E4
-from data_black_d4 import BLACK_D4
-from data_prog_white import PROG_WHITE
-from data_prog_black import PROG_BLACK
-from data_deep import DEEP
-from data_four_knights import FOUR_KNIGHTS, DEEP_FOUR_KNIGHTS, PROG_FOUR_KNIGHTS
-from move_intel import move_data
+from content.common import COMMON
+from content.data_white_e4 import WHITE_E4
+from content.data_white_d4 import WHITE_D4
+from content.data_black_e4 import BLACK_E4
+from content.data_black_d4 import BLACK_D4
+from content.data_prog_white import PROG_WHITE
+from content.data_prog_black import PROG_BLACK
+from content.data_deep import DEEP
+from content.data_four_knights import FOUR_KNIGHTS, DEEP_FOUR_KNIGHTS, PROG_FOUR_KNIGHTS
+from engine.board import board_array
+from engine.intel import move_data
 WHITE_E4 = WHITE_E4 + [FOUR_KNIGHTS]
 DEEP = {**DEEP, "fourknights": DEEP_FOUR_KNIGHTS}
 PROG = {**PROG_WHITE, **PROG_BLACK, "fourknights": PROG_FOUR_KNIGHTS}
@@ -43,17 +44,6 @@ EXTRA = {
  ("sicilian",2,9): "Development, guarding e4 and eyeing d5 — the square the whole Sveshnikov is about.",
  ("kid",0,23): "White gets on with it. The bishop clears the way for Rc1, b4 and c5. Nobody is defending: White has counted the tempi and believes the queenside break arrives first.",
 }
-
-START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-def board_array(board):
-    """Return 64-char string, rank8->rank1, uppercase=white, '.'=empty."""
-    out = []
-    for rank in range(7, -1, -1):
-        for f in range(8):
-            p = board.piece_at(chess.square(f, rank))
-            out.append(p.symbol() if p else ".")
-    return "".join(out)
 
 errors = []
 out = []
