@@ -1,0 +1,17 @@
+/* ---------- mobile ---------- */
+.mobnav{display:none}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;gap:20px}
+  .rail{display:none}
+  .mobnav{display:block;margin-bottom:20px}
+  .mobnav select{
+    width:100%;padding:11px 12px;background:var(--panel2);color:var(--text);
+    border:1px solid var(--line);border-radius:7px;font:inherit;font-size:14px;
+  }
+  .study{grid-template-columns:1fr;padding:14px;gap:18px}
+  .wrap{padding:0 14px 60px}
+  .pc{font-size:min(10.5vw,58px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}

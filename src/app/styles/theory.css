@@ -1,0 +1,27 @@
+/* ---------- theory ---------- */
+.theory{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+}
+.card.span{grid-column:1/-1}
+.cardhead{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--green);margin:0 0 10px;display:flex;align-items:center;gap:8px;
+}
+.card.warn .cardhead{color:var(--red)}
+.card p{margin:0;font-size:14.5px;color:var(--text)}
+.card ul{margin:0;padding-left:0;list-style:none}
+.card li{
+  position:relative;padding-left:20px;margin-bottom:9px;font-size:14.2px;color:var(--text);
+}
+.card li::before{
+  content:"";position:absolute;left:4px;top:9px;width:5px;height:5px;border-radius:1px;
+  background:var(--green-dk);
+}
+.card.warn li::before{background:var(--red)}
+.card li:last-child{margin-bottom:0}
+.who{
+  grid-column:1/-1;background:linear-gradient(90deg,rgba(143,191,82,.09),transparent 70%);
+  border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:15px 20px;
+}
+.who p{margin:0;font-size:14.5px;font-style:italic;color:var(--text)}

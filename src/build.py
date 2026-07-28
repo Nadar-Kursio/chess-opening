@@ -6,13 +6,23 @@ Every move in every line is replayed on a real board. An illegal move fails the
 build loudly, naming the opening, line and ply.
 """
 import json
+import os
 
 import chess
 
 from content.common import COMMON
 from content.openings import load
+from content.sections import SECTIONS
 from engine.board import board_array
 from engine.intel import move_data
+
+APP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
+
+# Concatenation order. CSS cascades and the scripts share a top-level scope, so
+# both are order-dependent: responsive.css must land last, boot.js must run last.
+STYLES = ["base", "layout", "study", "board", "arrows",
+          "theory", "primer", "path", "responsive"]
+SCRIPTS = ["state", "rail", "board", "arrows", "render", "primer", "boot"]
 
 OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
                 "is the whole reason opening theory exists.")
@@ -101,6 +111,38 @@ def build_openings():
     return out
 
 
+def read(*parts):
+    with open(os.path.join(APP, *parts), encoding="utf-8") as f:
+        return f.read()
+
+
+def assemble(data_str):
+    """Inline every asset into one self-contained page.
+
+    Plain concatenation, deliberately: the output has to keep working from a
+    file:// URL with no server, which rules out ES modules and any external
+    reference.
+    """
+    page = read("page.html")
+    parts = {
+        "__HEAD_SCRIPT__": read("scripts", "shim.js"),
+        "__STYLES__": "\n".join(read("styles", f"{n}.css") for n in STYLES),
+        "__PRIMER__": read("primer.html"),
+        "__SCRIPTS__": "\n".join(read("scripts", f"{n}.js") for n in SCRIPTS),
+    }
+    for placeholder, text in parts.items():
+        if placeholder not in page:
+            raise SystemExit(f"page.html is missing the {placeholder} placeholder")
+        page = page.replace(placeholder, text)
+
+    for placeholder, text in (("__SECTIONS__", json.dumps(SECTIONS)),
+                              ("__DATA__", data_str)):
+        if placeholder not in page:
+            raise SystemExit(f"assembled page is missing the {placeholder} placeholder")
+        page = page.replace(placeholder, text)
+    return page
+
+
 def main():
     data = build_openings()
     data_str = json.dumps(data, separators=(",", ":"))
@@ -108,14 +150,10 @@ def main():
         f.write(data_str)
     print("wrote openings.json", len(data_str) // 1024, "KB")
 
-    with open("shell.html") as f:
-        shell = f.read()
-    if "__DATA__" not in shell:
-        raise SystemExit("shell.html is missing the __DATA__ placeholder")
-    final = shell.replace("__DATA__", data_str)
-    with open("chess-opening-course.html", "w") as f:
-        f.write(final)
-    print("wrote chess-opening-course.html", len(final) // 1024, "KB")
+    page = assemble(data_str)
+    with open("chess-opening-course.html", "w", encoding="utf-8") as f:
+        f.write(page)
+    print("wrote chess-opening-course.html", len(page) // 1024, "KB")
 
 
 if __name__ == "__main__":
