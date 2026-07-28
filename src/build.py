@@ -7,6 +7,7 @@ build loudly, naming the opening, line and ply.
 """
 import json
 import os
+import sys
 
 import chess
 
@@ -155,7 +156,26 @@ def outputs():
     }
 
 
+def check():
+    """Fail if docs/ no longer matches the sources, without writing anything."""
+    stale = []
+    for name, text in outputs().items():
+        try:
+            with open(os.path.join(DOCS, name), encoding="utf-8") as f:
+                current = f.read()
+        except FileNotFoundError:
+            current = None
+        if current != text:
+            stale.append(name)
+    if stale:
+        raise SystemExit("docs/ is stale, run: python3 src/build.py\n  " + "\n  ".join(stale))
+    print("docs/ is up to date.")
+
+
 def main():
+    if "--check" in sys.argv:
+        check()
+        return
     os.makedirs(DOCS, exist_ok=True)
     for name, text in outputs().items():
         with open(os.path.join(DOCS, name), "w", encoding="utf-8") as f:
