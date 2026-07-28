@@ -155,7 +155,6 @@ def outputs():
     """
     data_str = json.dumps(build_openings(), separators=(",", ":"))
     return {
-        "openings.json": data_str,
         "chess-opening-course.html": assemble(data_str),
         "index.html": read("index.html"),
         ".nojekyll": "",

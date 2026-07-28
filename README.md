@@ -36,7 +36,6 @@ what GitHub Pages serves. Never edit `docs/` by hand — run the build.
 docs/                          <- generated; served by GitHub Pages
   chess-opening-course.html      the built, shippable app
   index.html                     redirect so / opens the course
-  openings.json                  the data, also inlined into the HTML
   .nojekyll                      switches off Pages' Jekyll pass
 
 src/
