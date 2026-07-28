@@ -12,9 +12,9 @@ Online: **https://nadar-kursio.github.io/chess-opening/**
 Or open the built file locally:
 
 ```
-open chess-opening-course.html          # macOS
-xdg-open chess-opening-course.html      # Linux
-start chess-opening-course.html         # Windows
+open docs/chess-opening-course.html          # macOS
+xdg-open docs/chess-opening-course.html      # Linux
+start docs/chess-opening-course.html         # Windows
 ```
 
 That file is fully self-contained (data + code inline). If you only ever keep one
@@ -22,48 +22,64 @@ thing, keep that.
 
 ## Project layout
 
-```
-chess-opening-course.html   <- the built, shippable app (generated)
-shell.html                  <- the HTML/CSS/JS template, with a __DATA__ placeholder
-openings.json               <- generated data (moves, notes, arrows, tactics)
-build_data.py               <- builds openings.json AND injects it into the HTML
-move_intel.py               <- engine logic: per-move arrows + "what it does" text
+Everything under `src/` is source; everything under `docs/` is generated and is
+what GitHub Pages serves. Never edit `docs/` by hand — run the build.
 
-data_common.py              <- shared move annotations (keyed by "ply:SAN")
-data_white_e4.py            <- White 1.e4 openings (Italian, Ruy Lopez, Scotch)
-data_white_d4.py            <- White 1.d4 openings (Queen's Gambit, London, Catalan)
-data_black_e4.py            <- Black vs 1.e4 (Sicilian, French, Caro-Kann)
-data_black_d4.py            <- Black vs 1.d4 (King's Indian, Nimzo-Indian, Slav)
-data_four_knights.py        <- Four Knights + all its variations (incl. Caro, Tarrasch)
-data_deep.py                <- "deep dive" middlegame continuations
-data_prog_white.py          <- learning-path progressions for White openings
-data_prog_black.py          <- learning-path progressions for Black openings
+```
+docs/                          <- generated; served by GitHub Pages
+  chess-opening-course.html      the built, shippable app
+  index.html                     redirect so / opens the course
+  openings.json                  the data, also inlined into the HTML
+
+src/
+  build.py                     <- validates, generates intel, assembles the page
+  engine/
+    board.py                     board -> 64-char position string
+    intel.py                     per-move arrows + "what it does" text
+  content/
+    common.py                    shared annotations, keyed by "ply:SAN"
+    sections.py                  the sidebar's sections and their order
+    openings/
+      __init__.py                ORDER: which openings exist, and in what order
+      italian.py, ruylopez.py…   one module per opening — 13 of them
+  app/
+    page.html                    document skeleton with the build's placeholders
+    primer.html                  the "how openings work" primer, as plain HTML
+    index.html                   the redirect stub copied to docs/
+    styles/                      9 stylesheets, concatenated in build.py's order
+    scripts/                     7 scripts, concatenated in build.py's order
+
+tests/test_content.py          <- shape checks over the opening catalogue
 ```
 
 ## Rebuilding after an edit
 
-Requires Python 3 and the `python-chess` package:
-
 ```
-pip install chess
-python3 build_data.py
+pip install -r requirements.txt
+python3 src/build.py
 ```
 
-`build_data.py` does three things:
+`src/build.py` does three things:
 1. Validates that **every move in every line is legal** (fails loudly if not).
-2. Generates arrows + a plain-language tactical summary for each move (`move_intel.py`).
-3. Writes `openings.json` and injects it into `shell.html` -> `chess-opening-course.html`.
+2. Generates arrows + a plain-language tactical summary for each move (`engine/intel.py`).
+3. Writes `docs/`, inlining the data, styles and scripts into one HTML file.
 
 If a move is illegal, the build prints exactly which line and ply, and stops.
+`python3 src/build.py --check` verifies `docs/` matches the sources without
+writing anything — use it to catch a data edit that was never rebuilt.
 
-## How to add a new opening or variation
+## How to add a new opening
 
-1. Open the relevant `data_*.py` file (e.g. `data_white_e4.py`).
-2. Add a new opening object, or add a line to an existing opening's `lines` list.
-   A line needs: `name`, `note`, `moves` (space-separated SAN), and `notes`
-   (a dict mapping ply-number -> explanation string).
-3. Run `python3 build_data.py`. It validates the moves and rebuilds the HTML.
-4. Open `chess-opening-course.html` to check it.
+1. Copy any module in `src/content/openings/` — `italian.py` is a good, plain
+   example — and edit it. One module holds everything about one opening: its
+   `lines`, its `deep` dive, and its `progression`.
+2. Add its name to `ORDER` in `src/content/openings/__init__.py`. That list is
+   the catalogue *and* the sidebar order; it is editorial, not alphabetical.
+3. Run `python3 src/build.py`.
+
+Nothing else needs to change — the build has no per-opening knowledge. To add a
+variation to an existing opening, add an entry to its `lines` list: `name`,
+`note`, `moves` (space-separated SAN) and `notes` (ply number -> explanation).
 
 Arrows and the "On the board" tactical line are generated automatically from the
 moves — you do not write those by hand.
@@ -78,6 +94,13 @@ moves — you do not write those by hand.
   so host wrappers that call e.g. `console.debug` can't crash the page.
 - **Move intel is engine-derived** (python-chess), so the arrows and tactical text
   are always accurate rather than hand-written guesses.
+- **The build concatenates rather than bundles.** No npm, no bundler, and no ES
+  modules — the output has to keep working from a `file://` URL with no server,
+  which ES modules would refuse to load.
+- **One module per opening.** Content used to be grouped by *kind* — all the deep
+  dives in one file, all the learning paths in another — which meant adding an
+  opening touched three files and, in the Four Knights' case, the build script
+  too. Grouping by opening instead makes the build's job uniform.
 
 ## License / use
 
