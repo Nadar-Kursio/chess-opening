@@ -16,7 +16,9 @@ from content.sections import SECTIONS
 from engine.board import board_array
 from engine.intel import move_data
 
-APP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
+SRC = os.path.dirname(os.path.abspath(__file__))
+APP = os.path.join(SRC, "app")
+DOCS = os.path.join(os.path.dirname(SRC), "docs")
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
 # both are order-dependent: responsive.css must land last, boot.js must run last.
@@ -143,17 +145,22 @@ def assemble(data_str):
     return page
 
 
-def main():
-    data = build_openings()
-    data_str = json.dumps(data, separators=(",", ":"))
-    with open("openings.json", "w") as f:
-        f.write(data_str)
-    print("wrote openings.json", len(data_str) // 1024, "KB")
+def outputs():
+    """Everything the build produces, as {filename: text}."""
+    data_str = json.dumps(build_openings(), separators=(",", ":"))
+    return {
+        "openings.json": data_str,
+        "chess-opening-course.html": assemble(data_str),
+        "index.html": read("index.html"),
+    }
 
-    page = assemble(data_str)
-    with open("chess-opening-course.html", "w", encoding="utf-8") as f:
-        f.write(page)
-    print("wrote chess-opening-course.html", len(page) // 1024, "KB")
+
+def main():
+    os.makedirs(DOCS, exist_ok=True)
+    for name, text in outputs().items():
+        with open(os.path.join(DOCS, name), "w", encoding="utf-8") as f:
+            f.write(text)
+        print(f"wrote docs/{name}", len(text) // 1024, "KB")
 
 
 if __name__ == "__main__":
