@@ -1,0 +1,24 @@
+/* ---------- primer page ---------- */
+.primer{max-width:74ch}
+.primer h3{
+  font-family:var(--serif);font-size:24px;font-weight:600;margin:34px 0 10px;letter-spacing:-.01em;
+}
+.primer h3:first-child{margin-top:0}
+.primer p{color:var(--text);margin:0 0 14px;font-size:15.2px}
+.primer .lead{font-size:17px;color:var(--muted)}
+.rules{counter-reset:r;list-style:none;padding:0;margin:0}
+.rules li{
+  counter-increment:r;position:relative;padding:14px 0 14px 54px;border-top:1px solid var(--line);
+}
+.rules li::before{
+  content:counter(r,decimal-leading-zero);position:absolute;left:0;top:15px;
+  font-family:var(--mono);font-size:12px;color:var(--green);letter-spacing:.05em;
+}
+.rules b{display:block;font-size:15.5px;margin-bottom:3px}
+.rules span{color:var(--muted);font-size:14.3px}
+.gloss{border-top:1px solid var(--line);margin-top:8px}
+.gloss dt{
+  font-family:var(--mono);font-size:12.5px;color:var(--green);padding-top:13px;
+}
+.gloss dd{margin:2px 0 13px;color:var(--muted);font-size:14.2px;border-bottom:1px solid var(--line);padding-bottom:13px}
+.gloss dd:last-child{border-bottom:none}

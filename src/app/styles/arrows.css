@@ -1,0 +1,20 @@
+/* ---------- arrows toggle, legend, tactics ---------- */
+
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.legend i{width:15px;height:0;border-top:3px solid;border-radius:2px;display:inline-block}
+.legend i.atk{border-color:#D24B3C}
+.legend i.def{border-color:#4E8AD6}
+.legend i.mv{border-color:#7CA35A}
+.legend i.chk{border-color:#EA3B33}
+.legend i.ctrl{width:11px;height:11px;border:2px solid #E0B44A;border-top:2px solid #E0B44A;border-radius:50%}
+.tactics{
+  margin-top:12px;padding:9px 12px;background:var(--panel3);border:1px solid var(--line);
+  border-radius:7px;font-size:13px;color:var(--text);display:flex;gap:9px;align-items:flex-start;
+}
+.tactics .lbl{
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--green);flex-shrink:0;padding-top:2px;
+}
+.tactics .body{color:var(--muted)}
+.tactics .body b{color:var(--text);font-weight:600}
