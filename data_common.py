@@ -1,0 +1,47 @@
+# Shared annotations keyed by "ply:SAN" so repeated opening moves are explained
+# consistently across every line without duplicating text.
+
+COMMON = {
+    "1:e4": "The king's pawn opens the game. It grabs two central squares (d5 and f5), and unlocks both the queen and the light-squared bishop in a single move. No other first move frees two pieces at once.",
+    "1:d4": "The queen's pawn. Unlike 1.e4 it is defended from the start by the queen, which is why 1.d4 openings tend to be slower, tougher and more strategic than tactical.",
+    "2:e5": "Black meets force with force and stakes an equal claim to the centre. This is the Open Game — the most classical, most principled reply there is.",
+    "2:c5": "The Sicilian. Black declines symmetry and instead trades a wing pawn for a centre pawn later on. Unbalanced from move one, which is exactly the point.",
+    "2:e6": "The French. Black prepares ...d5 with support, accepting that the c8-bishop will be temporarily locked in behind the pawn chain.",
+    "2:c6": "The Caro-Kann. Same idea as the French — prepare ...d5 — but with the c-pawn, so the light-squared bishop keeps its freedom.",
+    "2:d5": "Black mirrors in the centre. The Closed Games, where structure matters more than tempo.",
+    "2:Nf6": "The Indian move order. Black hits e4 before deciding on a pawn structure, keeping every option open.",
+    "3:Nf3": "Develops a piece, attacks e5, and heads for castling. Knights before bishops: the knight's best square is obvious this early, the bishop's is not.",
+    "3:c4": "The Queen's Gambit. Not a real gambit — after 2...dxc4 Black cannot hold the pawn. The point is to challenge d5 from the side and win the centre.",
+    "3:d4": "Immediately opening the centre while Black is a tempo behind in development.",
+    "4:Nc6": "The natural defender of e5 and a developing move toward the centre. Knights on the rim are dim; Nc6 is the opposite of that.",
+    "4:cxd4": "Black gives up the c-pawn for the d-pawn. This is the Sicilian bargain: Black gets a central pawn majority and a half-open c-file for the rook.",
+    "4:dxc4": "Accepting the gambit. Black does not intend to cling to the pawn — the point is to give up the centre now and hit back at it later with ...c5 or ...e5.",
+    "5:Bc4": "The Italian bishop, aimed straight at f7 — the only square in Black's camp defended by nothing but the king.",
+    "5:Bb5": "The Spanish bishop. It pins nothing yet but pressures the knight that defends e5. This tiny, indirect threat is the most enduring idea in all of chess opening theory.",
+    "5:Nxd4": "Recapturing with the knight, which lands on a strong central post but will be chased later. White has a lead in development and more space.",
+    "5:Nc3": "Natural development, adding a second attacker to d5 and e4.",
+    "6:Nf6": "Developing with a threat against e4. Every developing move that also does something else is worth two.",
+    "7:O-O": "Castling. Before move ten if possible — the king is not safe in the centre once files start opening.",
+    "8:O-O": "Castling. Before move ten if possible — the king is not safe in the centre once files start opening.",
+}
+
+COMMON.update({
+    "3:Nc3": "Development, and a second defender for the e4-pawn. In 1.e4 openings this knight also fights for the critical d5 square.",
+    "4:d5": "Black challenges the centre with full pawn support. This is the whole point of the first move — ...e6 or ...c6 was played precisely to make this possible.",
+    "4:e6": "Preparing ...d5 or ...Bb4 and keeping every option open. Black has not committed to a structure yet.",
+    "4:c6": "The Slav move order. Black supports d5 with the c-pawn so the c8-bishop keeps its freedom.",
+    "4:g6": "Black prepares the fianchetto instead of fighting for the centre with pawns — the Indian philosophy: control the centre from a distance.",
+    "5:d4": "White opens the centre while ahead in development. Almost every Open Sicilian and every Scotch begins here.",
+    "5:Nf3": "Development, avoiding an immediate commitment in the centre.",
+    "6:cxd4": "The Sicilian bargain: a wing pawn for a centre pawn, plus the half-open c-file that Black's rooks will use for the rest of the game.",
+    "6:exd4": "Accepting. Black wins the pawn back temporarily, but White regains it with a lead in development.",
+    "6:Bg7": "The King's Indian bishop takes the long diagonal, aiming at d4 and b2. It is the most important piece Black owns.",
+    "6:Bb4": "The Nimzo-Indian pin. Black attacks the knight that guards e4 — fighting for the centre with pieces instead of pawns.",
+    "6:Nf6": "Development with a threat against e4.",
+    "7:Nxd4": "Recapturing with the knight. It looks powerful in the centre, but it is also the piece Black will spend the game attacking.",
+    "7:e4": "White takes the full classical centre. Black has allowed this deliberately — those pawns are a target, not a triumph.",
+    "7:Nc3": "Development, adding a defender to e4 and d5.",
+    "8:Nf6": "Hitting e4 and forcing White to defend it.",
+    "8:d6": "Supporting the coming ...e5 break and opening the c8-bishop's diagonal.",
+    "3:Bf4": "The defining London move. The bishop gets outside the pawn chain before e3 locks it in — miss this and the whole system falls apart.",
+})
