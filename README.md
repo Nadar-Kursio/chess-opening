@@ -25,11 +25,19 @@ thing, keep that.
 Everything under `src/` is source; everything under `docs/` is generated and is
 what GitHub Pages serves. Never edit `docs/` by hand — run the build.
 
+> **Why `docs/` and not `build/`?** Not a choice. GitHub Pages' deploy-from-a-branch
+> mode accepts exactly two source folders — the repo root, or `/docs`. Since the
+> root is where the source lives, `/docs` is the only option left. Read it as
+> "the folder Pages serves", not as documentation. Using `build/` would mean
+> dropping branch deployment and publishing through a GitHub Actions workflow
+> instead.
+
 ```
 docs/                          <- generated; served by GitHub Pages
   chess-opening-course.html      the built, shippable app
   index.html                     redirect so / opens the course
   openings.json                  the data, also inlined into the HTML
+  .nojekyll                      switches off Pages' Jekyll pass
 
 src/
   build.py                     <- validates, generates intel, assembles the page
@@ -67,6 +75,22 @@ python3 src/build.py
 If a move is illegal, the build prints exactly which line and ply, and stops.
 `python3 src/build.py --check` verifies `docs/` matches the sources without
 writing anything — use it to catch a data edit that was never rebuilt.
+
+## Publishing
+
+There is no deploy step. Pages is configured to deploy from `main`, folder
+`/docs`, so **committing a rebuilt `docs/` is the deploy**:
+
+```
+python3 src/build.py
+git add -A && git commit -m "…" && git push
+```
+
+The site updates about a minute later at
+https://nadar-kursio.github.io/chess-opening/. Push without rebuilding and the
+site keeps serving the previous version — `--check` exists to catch exactly that.
+`gh api repos/Nadar-Kursio/chess-opening/pages/builds/latest` shows the last
+build's status if a change does not appear.
 
 ## How to add a new opening
 

@@ -147,12 +147,18 @@ def assemble(data_str):
 
 
 def outputs():
-    """Everything the build produces, as {filename: text}."""
+    """Everything the build produces, as {filename: text}.
+
+    .nojekyll turns off the Jekyll pass GitHub Pages runs by default. This page
+    is already built; letting Jekyll near it only risks it rewriting or dropping
+    files, and skipping it makes deploys faster.
+    """
     data_str = json.dumps(build_openings(), separators=(",", ":"))
     return {
         "openings.json": data_str,
         "chess-opening-course.html": assemble(data_str),
         "index.html": read("index.html"),
+        ".nojekyll": "",
     }
 
 
