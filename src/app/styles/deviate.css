@@ -7,7 +7,7 @@
   color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:5px 12px;transition:.13s;
 }
 .dxdev:hover:not(:disabled){color:var(--text);border-color:var(--line2);background:var(--panel)}
-.dxdev.on{color:var(--ink);background:var(--amber);border-color:var(--amber);font-weight:600}
+.dxdev.on{color:var(--on-accent);background:var(--amber);border-color:var(--amber);font-weight:600}
 .dxdev:disabled{opacity:.4;cursor:default}
 .dxdev kbd,.brchip kbd,.devcancel kbd{
   font-family:var(--mono);font-size:9px;border:1px solid currentColor;border-radius:3px;

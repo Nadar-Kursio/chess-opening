@@ -30,7 +30,7 @@ h2.opname{
 .ctl:hover:not(:disabled){background:var(--panel3);color:var(--text);border-color:var(--line2)}
 .ctl:disabled{opacity:.32;cursor:default}
 .ctl.wide{flex:1.5}
-.ctl.on{color:var(--ink);background:var(--green);border-color:var(--green)}
+.ctl.on{color:var(--on-accent);background:var(--green);border-color:var(--green)}
 .ctlbar2{display:flex;gap:6px;margin-top:6px}
 .counter{
   font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center;
@@ -46,7 +46,7 @@ h2.opname{
   font-size:12.5px;color:var(--muted);background:var(--panel2);transition:.13s;
 }
 .vartab:hover{color:var(--text);border-color:var(--line2)}
-.vartab.on{background:var(--green);border-color:var(--green);color:#1B1F14;font-weight:600}
+.vartab.on{background:var(--green);border-color:var(--green);color:var(--on-accent);font-weight:600}
 .varnote{
   font-size:13.5px;color:var(--muted);border-left:2px solid var(--line2);
   padding-left:12px;margin-bottom:14px;
@@ -68,7 +68,7 @@ h2.opname{
   color:var(--muted);transition:.1s;white-space:nowrap;
 }
 .mv:hover{background:var(--panel3);color:var(--text)}
-.mv.on{background:var(--green);color:#1B1F14;font-weight:700}
+.mv.on{background:var(--green);color:var(--on-accent);font-weight:700}
 .mv.seen{color:var(--text)}
 
 .commentary{

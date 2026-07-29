@@ -49,6 +49,9 @@ DOCS = os.path.join(os.path.dirname(SRC), "docs")
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
 # both are order-dependent: responsive.css must land last, boot.js must run last.
+# HEAD_SCRIPTS go in <head> ahead of the styles, which is the point of them:
+# theme.js has to set the theme before the first paint, not after it.
+HEAD_SCRIPTS = ["shim", "theme"]
 STYLES = ["base", "layout", "tiers", "study", "board", "arrows", "drill",
           "deviate", "theory", "primer", "path", "structures", "responsive"]
 SCRIPTS = ["state", "store", "chrome", "rail", "board", "arrows",
@@ -418,7 +421,7 @@ def assemble(data_str, structures_str, games_str):
     """
     page = read("page.html")
     parts = {
-        "__HEAD_SCRIPT__": read("scripts", "shim.js"),
+        "__HEAD_SCRIPTS__": "\n".join(read("scripts", f"{n}.js") for n in HEAD_SCRIPTS),
         "__STYLES__": "\n".join(read("styles", f"{n}.css") for n in STYLES),
         "__PRIMER__": read("primer.html"),
         "__SCRIPTS__": "\n".join(read("scripts", f"{n}.js") for n in SCRIPTS),

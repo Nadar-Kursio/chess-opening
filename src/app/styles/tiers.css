@@ -1,10 +1,18 @@
 /* ---------- chrome: tier selector + progress chip ---------- */
 /* New custom properties go in their own :root rather than editing base.css's,
-   so the palette this file adds cannot disturb the one already there. */
+   so the palette this file adds cannot disturb the one already there.
+
+   The severities are aliases, not copies. A custom property that names another
+   resolves where it is used, so --sev-blunder follows whatever --red is in the
+   theme that ends up applied, and a severity cannot be left behind when the
+   palette it borrows from is retuned. */
 :root{
-  --blue:#5B8FD0; --slate:#7E8794;
-  --sev-blunder:#CC6A62; --sev-inaccuracy:#DDA94A;
-  --sev-playable:#5B8FD0; --sev-offbook:#7E8794;
+  --blue:#6E9CD5; --slate:#929AA5;
+  --sev-blunder:var(--red); --sev-inaccuracy:var(--amber);
+  --sev-playable:var(--blue); --sev-offbook:var(--slate);
+}
+:root[data-theme="light"]{
+  --blue:#2D65AE; --slate:#5D6673;
 }
 
 /* Visually hidden but still announced. */
@@ -28,7 +36,7 @@
   transition:.13s;
 }
 .tierseg:hover{color:var(--text);border-color:var(--line2);background:var(--panel)}
-.tierseg.on{color:var(--ink);background:var(--green);border-color:var(--green);font-weight:600}
+.tierseg.on{color:var(--on-accent);background:var(--green);border-color:var(--green);font-weight:600}
 
 .chip{
   font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
@@ -37,6 +45,10 @@
 .chip:hover{color:var(--text);border-color:var(--line2);background:var(--panel)}
 .chip b{color:var(--green);font-weight:600}
 .chip .sep{opacity:.5;margin:0 2px}
+
+.chromeacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* The glyph is the only part of a chip that should not be tracked out. */
+.themetog .glyph{font-style:normal;letter-spacing:0;margin-right:5px}
 
 /* Depth-of-feedback badge. Lives here rather than in layout.css because it uses
    the palette this file adds; custom properties resolve at use time, so the

@@ -18,23 +18,101 @@
   }catch(e){/* never let the shim itself break the page */}
 })();
 
+/* ---------------- theme ---------------- */
+/* Runs in <head>, ahead of the stylesheet and of any markup, so the page is
+   painted in the chosen theme once instead of flashing the default and being
+   repainted. That is the whole reason this is not part of store.js, which does
+   not run until the bottom of the body.
+
+   Being that early is also why the storage key is declared here: store.js needs
+   the same key, and the scripts share one top-level scope, so a single
+   declaration is what stops the two from drifting onto different keys. */
+const DB_KEY = "chessopening";
+const THEMES = ["dark", "light"];
+
+function themeName(){
+  return document.documentElement.getAttribute("data-theme") || "dark";
+}
+
+function themeSet(name){
+  document.documentElement.setAttribute(
+    "data-theme", THEMES.indexOf(name) < 0 ? "dark" : name);
+}
+
+/* A stored choice wins; without one, follow the system. Anything unreadable --
+   matchMedia is missing in some embedded webviews -- means "dark".
+
+   Separate from the bootstrap below because the store can be replaced whole
+   after load, by an import or a reset, and those have to resolve the theme by
+   the same rule rather than leaving the page on the old one. */
+function themeResolve(stored){
+  if(THEMES.indexOf(stored) >= 0) return stored;
+  try{
+    if(window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+  }catch(e){}
+  return "dark";
+}
+
+/* Read raw rather than through the store, which has not loaded yet, and
+   defensively: localStorage can throw on the property alone from a file:// URL,
+   and the payload may be from a build that never wrote a theme. */
+themeSet(themeResolve((function(){
+  try{
+    const saved = JSON.parse(window.localStorage.getItem(DB_KEY) || "null");
+    return saved && saved.ui && saved.ui.theme;
+  }catch(e){ return null; }
+})()));
+
 </script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Opening Repertoire — an interactive course</title>
 <style>
+/* The palette is the whole of a theme: no rule anywhere names a colour, so
+   switching is one attribute on <html>, set by theme.js before first paint.
+
+   Every text token clears WCAG AA (4.5:1, and 7:1 for --text) against all four
+   surfaces, not just against --ink. The raised panels are the tight case -- a
+   label that reads fine on the page background is the one that goes muddy
+   inside a card -- so --panel3 is what these values were chosen against. */
 :root{
-  --ink:#191715; --panel:#232120; --panel2:#2b2927; --panel3:#343130;
-  --line:#3d3936; --line2:#4c4744;
-  --text:#EFEAE2; --muted:#A29A8F; --dim:#7C746A;
-  --green:#8FBF52; --green-dk:#5C8A31;
-  --amber:#DDA94A; --red:#CC6A62;
-  --sq-light:#EBECD0; --sq-dark:#739552;
-  --sq-hl:rgba(255,238,88,.58);
-  --shadow:0 1px 0 rgba(255,255,255,.04), 0 12px 34px -18px rgba(0,0,0,.8);
+  /* Theme-independent. The board is the same board either way, so every colour
+     painted on it stays fixed: recolouring it per theme would only make the
+     pieces and the arrows drawn over it wrong half the time. */
+  --sq-light:#EBECD0; --sq-dark:#739552; --sq-hl:#F5EC59;
+  --cue:#8FBF52;
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+/* Dark carries no attribute selector, so a page that never runs theme.js -- or
+   one served with the attribute stripped -- still renders the way it always did. */
+:root{
+  --ink:#191715; --panel:#232120; --panel2:#2b2927; --panel3:#343130;
+  --line:#413D39; --line2:#544E49;
+  --text:#F1ECE4; --muted:#AFA99F; --dim:#9F988F;
+  --green:#8FBF52; --green-dk:#7FAE45;
+  --amber:#DDA94A; --red:#D5837C;
+  /* Text on an accent fill. Distinct from --ink, which it happens to resemble
+     here: the two are opposites in light theme, where the page is pale but a
+     filled pill still needs light text. */
+  --on-accent:#1A1815;
+  --wash:rgba(143,191,82,.09);
+  --shadow:0 1px 0 rgba(255,255,255,.04), 0 12px 34px -18px rgba(0,0,0,.8);
+}
+
+:root[data-theme="light"]{
+  /* --panel is the lightest surface, not the darkest: cards lift off the page
+     here, and the nested surfaces below them recede by getting warmer instead. */
+  --ink:#F6F3ED; --panel:#FFFFFF; --panel2:#F1EDE5; --panel3:#E7E2D8;
+  --line:#DBD5C8; --line2:#C2BAA9;
+  --text:#221F1B; --muted:#5E564B; --dim:#6C6459;
+  --green:#476F27; --green-dk:#5C8A31;
+  --amber:#855E10; --red:#B23A31;
+  --on-accent:#FFFFFF;
+  --wash:rgba(71,111,39,.10);
+  --shadow:0 1px 0 rgba(255,255,255,.9), 0 12px 30px -20px rgba(58,48,33,.45);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -98,11 +176,19 @@ h1.title em{font-style:italic;color:var(--green)}
 
 /* ---------- chrome: tier selector + progress chip ---------- */
 /* New custom properties go in their own :root rather than editing base.css's,
-   so the palette this file adds cannot disturb the one already there. */
+   so the palette this file adds cannot disturb the one already there.
+
+   The severities are aliases, not copies. A custom property that names another
+   resolves where it is used, so --sev-blunder follows whatever --red is in the
+   theme that ends up applied, and a severity cannot be left behind when the
+   palette it borrows from is retuned. */
 :root{
-  --blue:#5B8FD0; --slate:#7E8794;
-  --sev-blunder:#CC6A62; --sev-inaccuracy:#DDA94A;
-  --sev-playable:#5B8FD0; --sev-offbook:#7E8794;
+  --blue:#6E9CD5; --slate:#929AA5;
+  --sev-blunder:var(--red); --sev-inaccuracy:var(--amber);
+  --sev-playable:var(--blue); --sev-offbook:var(--slate);
+}
+:root[data-theme="light"]{
+  --blue:#2D65AE; --slate:#5D6673;
 }
 
 /* Visually hidden but still announced. */
@@ -126,7 +212,7 @@ h1.title em{font-style:italic;color:var(--green)}
   transition:.13s;
 }
 .tierseg:hover{color:var(--text);border-color:var(--line2);background:var(--panel)}
-.tierseg.on{color:var(--ink);background:var(--green);border-color:var(--green);font-weight:600}
+.tierseg.on{color:var(--on-accent);background:var(--green);border-color:var(--green);font-weight:600}
 
 .chip{
   font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
@@ -135,6 +221,10 @@ h1.title em{font-style:italic;color:var(--green)}
 .chip:hover{color:var(--text);border-color:var(--line2);background:var(--panel)}
 .chip b{color:var(--green);font-weight:600}
 .chip .sep{opacity:.5;margin:0 2px}
+
+.chromeacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* The glyph is the only part of a chip that should not be tracked out. */
+.themetog .glyph{font-style:normal;letter-spacing:0;margin-right:5px}
 
 /* Depth-of-feedback badge. Lives here rather than in layout.css because it uses
    the palette this file adds; custom properties resolve at use time, so the
@@ -217,7 +307,7 @@ h2.opname{
 .ctl:hover:not(:disabled){background:var(--panel3);color:var(--text);border-color:var(--line2)}
 .ctl:disabled{opacity:.32;cursor:default}
 .ctl.wide{flex:1.5}
-.ctl.on{color:var(--ink);background:var(--green);border-color:var(--green)}
+.ctl.on{color:var(--on-accent);background:var(--green);border-color:var(--green)}
 .ctlbar2{display:flex;gap:6px;margin-top:6px}
 .counter{
   font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center;
@@ -233,7 +323,7 @@ h2.opname{
   font-size:12.5px;color:var(--muted);background:var(--panel2);transition:.13s;
 }
 .vartab:hover{color:var(--text);border-color:var(--line2)}
-.vartab.on{background:var(--green);border-color:var(--green);color:#1B1F14;font-weight:600}
+.vartab.on{background:var(--green);border-color:var(--green);color:var(--on-accent);font-weight:600}
 .varnote{
   font-size:13.5px;color:var(--muted);border-left:2px solid var(--line2);
   padding-left:12px;margin-bottom:14px;
@@ -255,7 +345,7 @@ h2.opname{
   color:var(--muted);transition:.1s;white-space:nowrap;
 }
 .mv:hover{background:var(--panel3);color:var(--text)}
-.mv.on{background:var(--green);color:#1B1F14;font-weight:700}
+.mv.on{background:var(--green);color:var(--on-accent);font-weight:700}
 .mv.seen{color:var(--text)}
 
 .commentary{
@@ -285,15 +375,15 @@ h2.opname{
   display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
 }
 .sq{position:relative;display:flex;align-items:center;justify-content:center;line-height:1}
-.sq.l{background:#EBECD0}
-.sq.d{background:#739552}
+.sq.l{background:var(--sq-light)}
+.sq.d{background:var(--sq-dark)}
 .sq .pc{
   position:relative;z-index:2;line-height:1;user-select:none;
   font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Noto Sans Symbols","DejaVu Sans","Arial Unicode MS",sans-serif;
 }
 .sq .pc.wp{color:#FFFFFF;text-shadow:0 0 1px #35322D,0 0 1px #35322D,0 1px 1px rgba(0,0,0,.35);-webkit-text-stroke:1px #35322D}
 .sq .pc.bp{color:#2B2825;text-shadow:0 0 1px #141109;-webkit-text-stroke:.6px #141109}
-.sq.hl::before{content:"";position:absolute;inset:0;background:#F5EC59;opacity:.55;z-index:1}
+.sq.hl::before{content:"";position:absolute;inset:0;background:var(--sq-hl);opacity:.55;z-index:1}
 .sq.chk::after{content:"";position:absolute;inset:0;z-index:1;
   background:radial-gradient(circle at 50% 50%,rgba(219,68,55,.92) 12%,rgba(219,68,55,.5) 45%,rgba(219,68,55,0) 72%)}
 .sq .pc.moved{animation:drop .19s ease-out}
@@ -301,11 +391,15 @@ h2.opname{
 .coord{position:absolute;font-family:var(--mono);font-size:9px;font-weight:700;z-index:3;opacity:.85}
 .coord.f{right:3px;bottom:1px}
 .coord.r{left:3px;top:1px}
-.sq.l .coord{color:#739552}
-.sq.d .coord{color:#EBECD0}
+.sq.l .coord{color:var(--sq-dark)}
+.sq.d .coord{color:var(--sq-light)}
 
 /* ---------- arrows toggle, legend, tactics ---------- */
 
+/* The legend swatches are the one place a literal colour is right: each has to
+   be the exact colour ARROW_COLORS draws on the board, and the board does not
+   change with the theme. Themed swatches would make the legend describe arrows
+   that are not the ones on screen. */
 .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .legend i{width:15px;height:0;border-top:3px solid;border-radius:2px;display:inline-block}
@@ -340,7 +434,7 @@ h2.opname{
   color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:5px 14px;transition:.13s;
 }
 .dxmode:hover{color:var(--text);border-color:var(--line2);background:var(--panel)}
-.dxmode.on{color:var(--ink);background:var(--green);border-color:var(--green);font-weight:600}
+.dxmode.on{color:var(--on-accent);background:var(--green);border-color:var(--green);font-weight:600}
 .dxlvl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 
 .drill{
@@ -391,7 +485,7 @@ h2.opname{
 
 .sq.dxsel::after{
   content:"";position:absolute;inset:0;z-index:1;
-  box-shadow:inset 0 0 0 3px var(--green);background:rgba(143,191,82,.28);
+  box-shadow:inset 0 0 0 3px var(--cue);background:rgba(143,191,82,.28);
 }
 .sq.dxcur::before{
   content:"";position:absolute;inset:0;z-index:1;box-shadow:inset 0 0 0 2px rgba(255,255,255,.75);
@@ -424,7 +518,7 @@ h2.opname{
   color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:5px 12px;transition:.13s;
 }
 .dxdev:hover:not(:disabled){color:var(--text);border-color:var(--line2);background:var(--panel)}
-.dxdev.on{color:var(--ink);background:var(--amber);border-color:var(--amber);font-weight:600}
+.dxdev.on{color:var(--on-accent);background:var(--amber);border-color:var(--amber);font-weight:600}
 .dxdev:disabled{opacity:.4;cursor:default}
 .dxdev kbd,.brchip kbd,.devcancel kbd{
   font-family:var(--mono);font-size:9px;border:1px solid currentColor;border-radius:3px;
@@ -511,7 +605,7 @@ h2.opname{
 .card.warn li::before{background:var(--red)}
 .card li:last-child{margin-bottom:0}
 .who{
-  grid-column:1/-1;background:linear-gradient(90deg,rgba(143,191,82,.09),transparent 70%);
+  grid-column:1/-1;background:linear-gradient(90deg,var(--wash),transparent 70%);
   border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:15px 20px;
 }
 .who p{margin:0;font-size:14.5px;font-style:italic;color:var(--text)}
@@ -789,14 +883,15 @@ function curIdx(){ return state.branch ? state.branch.at : state.ply; }
 function curPly(){ const seq = curSeq(); return seq[curIdx()] || seq[0]; }
 
 /* ---------------- persistence ---------------- */
-/* One key, with the version inside the payload rather than in the key name, so
-   a migration can read what the old build wrote instead of orphaning it.
+/* One key -- DB_KEY, declared by theme.js, which has to read this payload from
+   <head> long before this file runs -- with the version inside the payload
+   rather than in the key name, so a migration can read what the old build wrote
+   instead of orphaning it.
 
    Storage may simply not exist: opening the built file from a file:// URL throws
    in some browsers on the localStorage PROPERTY, not just on write, so the probe
    has to wrap the access itself. When it fails everything below still works --
    it just lives for the session, and the progress view says so. */
-const DB_KEY = "chessopening";
 const DB_VERSION = 1;
 
 let dbMem = null;      // session-lifetime fallback when storage is unavailable
@@ -865,6 +960,15 @@ function dbRemember(){
   dbSave();
 }
 
+/* Written only when the learner picks a theme, which is why dbDefaults() has no
+   theme in it. Absent means "follow the system", and a default written here
+   would quietly end that the first time anything else was saved. The live value
+   is the attribute on <html>, not a field here: theme.js already set it. */
+function dbTheme(name){
+  db.ui.theme = name;
+  dbSave();
+}
+
 /* Restoring is the one place a stored value reaches straight into an array
    index, so every field is clamped against the catalogue as it exists NOW --
    an opening that was removed, or a line that got shorter, must not throw. */
@@ -929,7 +1033,10 @@ function buildChrome(){
       ${TIERS.map((t,i)=>`<button class="tierseg" data-tier="${t}" role="radio"
         aria-checked="false">${i?"+ ":""}${t}</button>`).join("")}
     </div>
-    <button class="chip" id="progchip"></button>`;
+    <div class="chromeacts">
+      <button class="chip themetog" id="themetog"></button>
+      <button class="chip" id="progchip"></button>
+    </div>`;
 
   el.querySelectorAll("[data-tier]").forEach(b=>b.onclick=()=>{
     state.tier = b.dataset.tier;
@@ -939,6 +1046,16 @@ function buildChrome(){
     dxSay(`Showing content up to ${state.tier}.`);
   });
   document.getElementById("progchip").onclick = ()=>go("progress");
+
+  // Nothing to re-render: the themes differ only in the custom properties the
+  // stylesheet already reads, so setting the attribute repaints the whole page.
+  document.getElementById("themetog").onclick = ()=>{
+    const next = themeName() === "light" ? "dark" : "light";
+    themeSet(next);
+    dbTheme(next);
+    syncChrome();
+    dxSay(`${next === "light" ? "Light" : "Dark"} theme.`);
+  };
 
   // Left/right walk the group, the way a radio group is expected to behave.
   el.querySelector(".tierbar").addEventListener("keydown", e=>{
@@ -963,6 +1080,16 @@ function syncChrome(){
   });
   const chip = document.getElementById("progchip");
   if(chip) chip.innerHTML = progressChipHTML();
+
+  // The button names the theme it switches TO, so its label and its accessible
+  // name say the same thing and neither has to be read as a state.
+  const tog = document.getElementById("themetog");
+  if(tog){
+    const to = themeName() === "light" ? "dark" : "light";
+    tog.innerHTML = `<span class="glyph" aria-hidden="true">${to === "light" ? "☀" : "☾"}</span>${to}`;
+    tog.setAttribute("aria-label", `Switch to the ${to} theme`);
+    tog.title = `Switch to the ${to} theme`;
+  }
 }
 
 function drilledCount(){ return Object.keys(db.lines).length; }
@@ -1050,6 +1177,8 @@ ACTIONS.import = ()=>{
   const err = dbImport(document.getElementById("pgbox").value);
   const msg = document.getElementById("pgmsg");
   if(err){ msg.textContent = err; return; }
+  // The import replaced the whole store, theme included.
+  themeSet(themeResolve(db.ui.theme));
   syncChrome();
   msg.textContent = "Imported.";
   dxSay("Progress imported.");
@@ -1062,6 +1191,9 @@ ACTIONS.reset = (t)=>{
     return;
   }
   dbReset();
+  // A reset drops the stored choice, so the page goes back to following the
+  // system rather than sitting on a theme nothing records any more.
+  themeSet(themeResolve(db.ui.theme));
   syncChrome();
   render();
   dxSay("Progress reset.");

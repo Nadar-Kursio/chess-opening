@@ -19,7 +19,10 @@ function buildChrome(){
       ${TIERS.map((t,i)=>`<button class="tierseg" data-tier="${t}" role="radio"
         aria-checked="false">${i?"+ ":""}${t}</button>`).join("")}
     </div>
-    <button class="chip" id="progchip"></button>`;
+    <div class="chromeacts">
+      <button class="chip themetog" id="themetog"></button>
+      <button class="chip" id="progchip"></button>
+    </div>`;
 
   el.querySelectorAll("[data-tier]").forEach(b=>b.onclick=()=>{
     state.tier = b.dataset.tier;
@@ -29,6 +32,16 @@ function buildChrome(){
     dxSay(`Showing content up to ${state.tier}.`);
   });
   document.getElementById("progchip").onclick = ()=>go("progress");
+
+  // Nothing to re-render: the themes differ only in the custom properties the
+  // stylesheet already reads, so setting the attribute repaints the whole page.
+  document.getElementById("themetog").onclick = ()=>{
+    const next = themeName() === "light" ? "dark" : "light";
+    themeSet(next);
+    dbTheme(next);
+    syncChrome();
+    dxSay(`${next === "light" ? "Light" : "Dark"} theme.`);
+  };
 
   // Left/right walk the group, the way a radio group is expected to behave.
   el.querySelector(".tierbar").addEventListener("keydown", e=>{
@@ -53,6 +66,16 @@ function syncChrome(){
   });
   const chip = document.getElementById("progchip");
   if(chip) chip.innerHTML = progressChipHTML();
+
+  // The button names the theme it switches TO, so its label and its accessible
+  // name say the same thing and neither has to be read as a state.
+  const tog = document.getElementById("themetog");
+  if(tog){
+    const to = themeName() === "light" ? "dark" : "light";
+    tog.innerHTML = `<span class="glyph" aria-hidden="true">${to === "light" ? "☀" : "☾"}</span>${to}`;
+    tog.setAttribute("aria-label", `Switch to the ${to} theme`);
+    tog.title = `Switch to the ${to} theme`;
+  }
 }
 
 function drilledCount(){ return Object.keys(db.lines).length; }
@@ -140,6 +163,8 @@ ACTIONS.import = ()=>{
   const err = dbImport(document.getElementById("pgbox").value);
   const msg = document.getElementById("pgmsg");
   if(err){ msg.textContent = err; return; }
+  // The import replaced the whole store, theme included.
+  themeSet(themeResolve(db.ui.theme));
   syncChrome();
   msg.textContent = "Imported.";
   dxSay("Progress imported.");
@@ -152,6 +177,9 @@ ACTIONS.reset = (t)=>{
     return;
   }
   dbReset();
+  // A reset drops the stored choice, so the page goes back to following the
+  // system rather than sitting on a theme nothing records any more.
+  themeSet(themeResolve(db.ui.theme));
   syncChrome();
   render();
   dxSay("Progress reset.");

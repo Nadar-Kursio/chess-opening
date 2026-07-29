@@ -21,7 +21,7 @@
 .card.warn li::before{background:var(--red)}
 .card li:last-child{margin-bottom:0}
 .who{
-  grid-column:1/-1;background:linear-gradient(90deg,rgba(143,191,82,.09),transparent 70%);
+  grid-column:1/-1;background:linear-gradient(90deg,var(--wash),transparent 70%);
   border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:15px 20px;
 }
 .who p{margin:0;font-size:14.5px;font-style:italic;color:var(--text)}

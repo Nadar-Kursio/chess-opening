@@ -1,5 +1,9 @@
 /* ---------- arrows toggle, legend, tactics ---------- */
 
+/* The legend swatches are the one place a literal colour is right: each has to
+   be the exact colour ARROW_COLORS draws on the board, and the board does not
+   change with the theme. Themed swatches would make the legend describe arrows
+   that are not the ones on screen. */
 .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .legend i{width:15px;height:0;border-top:3px solid;border-radius:2px;display:inline-block}

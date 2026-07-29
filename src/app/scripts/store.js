@@ -1,12 +1,13 @@
 /* ---------------- persistence ---------------- */
-/* One key, with the version inside the payload rather than in the key name, so
-   a migration can read what the old build wrote instead of orphaning it.
+/* One key -- DB_KEY, declared by theme.js, which has to read this payload from
+   <head> long before this file runs -- with the version inside the payload
+   rather than in the key name, so a migration can read what the old build wrote
+   instead of orphaning it.
 
    Storage may simply not exist: opening the built file from a file:// URL throws
    in some browsers on the localStorage PROPERTY, not just on write, so the probe
    has to wrap the access itself. When it fails everything below still works --
    it just lives for the session, and the progress view says so. */
-const DB_KEY = "chessopening";
 const DB_VERSION = 1;
 
 let dbMem = null;      // session-lifetime fallback when storage is unavailable
@@ -72,6 +73,15 @@ function dbRemember(){
   db.last = {view:state.view, opId:state.opId, line:state.line, ply:state.ply};
   db.ui.tier = state.tier;
   db.ui.arrows = state.arrows;
+  dbSave();
+}
+
+/* Written only when the learner picks a theme, which is why dbDefaults() has no
+   theme in it. Absent means "follow the system", and a default written here
+   would quietly end that the first time anything else was saved. The live value
+   is the attribute on <html>, not a field here: theme.js already set it. */
+function dbTheme(name){
+  db.ui.theme = name;
   dbSave();
 }
 
