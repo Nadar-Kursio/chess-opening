@@ -162,7 +162,7 @@ STRUCTURES = [
             "Refuse to open the queenside. Black's extra pawn there is worth something only if lines open for the bishops.",
         ],
         "black_plans": [
-            "Keep the queens on and keep the rooks on. The two bishops need open lines and targets; a pawn ending gives them neither.",
+            "Keep pieces on. The two bishops need open lines and targets; a pawn ending gives them neither. In the Berlin the queens come off by force on move eight, so 'pieces' means the rooks and both bishops — that is the whole reason the Berlin holds and the Exchange grinds.",
             "...c5 and ...c4 to fix White's queenside and give the bishops a diagonal — the pawn count on that wing is real as long as pieces are still on the board.",
             "...f6 and ...Bd6 to hold e5, then trade the knights, not the bishops.",
             "Aim at f2 and the light squares. The compensation is dynamic and it expires; use it early.",

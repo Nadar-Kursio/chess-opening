@@ -23,7 +23,7 @@ OPENING = {
             "In the Metger, unpin with ...Bxc3, ...Qe7 and reroute the knight ...Nd8–e6 to kick the g5-bishop and support ...c5 or ...d5.",
         ],
         "traps": [
-            "The symmetry trap: 4.Bb5 Bb4 5.O-O O-O 6.d3 d6 7.Bg5 Bg4? 8.Nd5 Nd4 9.Nxb4 Nxb5 10.Nd5 Nd4 11.Qd2! and if Black copies once more with 11...Qd7?? it is mate in five — 12.Bxf6 Bxf3 13.Ne7+ Kh8 14.Bxg7+! Kxg7 15.Qg5+ Kh8 16.Qf6#. The plain 8.Bxf6! also just wins a piece.",
+            "The symmetry trap: 4.Bb5 Bb4 5.O-O O-O 6.d3 d6 7.Bg5 Bg4? 8.Nd5 Nd4 9.Nxb4 Nxb5 10.Nd5 Nd4 11.Qd2! and if Black copies once more with 11...Qd7?? it is mate in five — 12.Bxf6 Bxf3 13.Ne7+ Kh8 14.Bxg7+! Kxg7 15.Qg5+ Kh8 16.Qf6#. Simpler is 8.Bxf6!, when 8...Qxf6? 9.Nd5 costs a piece and 8...gxf6 costs the kingside.",
             "Halloween Gambit shock: 4.Nxe5!? Nxe5 5.d4 forking two knights — Black is objectively winning a piece but must defend precisely, and many club players collapse under the central pawn roller.",
             "Belgrade Gambit greed: 4.d4 exd4 5.Nd5 Nxe4?! enters forced, only-move complications where one slip loses on the spot; the calm 5...Nxd5 or 5...Be7 is far safer.",
             "Rubinstein point: 4.Bb5 Nd4 5.Nxe5? Qe7! and Black regains the piece with the bishop pair after 6.Nf3 Nxb5 7.Nxb5 Qxe4+ — White should not grab on e5.",
@@ -242,7 +242,7 @@ OPENING = {
                     'Na4–c5 or Ne2–f4, the two routes to the squares in front of the pawn. A knight on c5 or f4 is worth more than the bishop pair here.',
                     'Bxf6 at the right moment, when the recapture is forced with a pawn and the d5-pawn is left with no defenders that are not pinned.',
                 ],
-                "endgame": 'A good ending to reach: the isolated-ish d-pawn is a target in every simplified position, and your 4v3 kingside majority is real. Trade queens whenever it is free.',
+                "endgame": 'A good ending to reach: with the pawns level at six each, the d5-pawn is the only weakness on the board and your 3v2 queenside majority is the only majority. Trade queens whenever it is free, then push the a- and b-pawns.',
             },
             "notes": {
                 7: "The Scotch Four Knights. White strikes in the centre immediately rather than manoeuvring. Far less theory than the Spanish, and it fights for an advantage right away.",
@@ -581,9 +581,9 @@ OPENING = {
 
         # ── ply 16 · after 7.Bg5 — the moment copying stops being safe ──────────
         "e4 e5 Nf3 Nc6 Nc3 Nf6 Bb5 Bb4 O-O O-O d3 d6 Bg5": [
-            {"san": "Bg4", "severity": "blunder", "tier": "Foundation",
+            {"san": "Bg4", "severity": "inaccuracy", "tier": "Foundation",
              "name": "The symmetry trap",
-             "why": "One move too many. The simplest punishment is 8.Bxf6! Qxf6 9.Nd5 Qd8 10.Bxc6 bxc6 11.Nxb4 and White is a piece up. The tape here shows the famous version instead — Black keeps mirroring, and 11.Qd2! sets a trap that ends in mate on f6. Symmetry is a plan until someone makes a threat.",
+             "why": "One move too many, because your bishop on g5 is defended and Black's on b4 is not. 8.Bxf6! and the queen cannot take: 8...Qxf6 9.Nd5 Qd8 10.Bxc6 bxc6 11.Nxb4 wins a piece. So 8...gxf6 is forced and Black's kingside is wrecked on move eight. The tape shows the famous version instead — Black keeps mirroring, and 11.Qd2! sets a trap that ends in mate on f6. Symmetry is a plan until someone makes a threat.",
              "line": "Nd5 Nd4 Nxb4 Nxb5 Nd5 Nd4 Qd2 Qd7 Bxf6 Bxf3 Ne7+ Kh8 Bxg7+ Kxg7 Qg5+ Kh8 Qf6#"},
             {"san": "Ne7", "severity": "playable", "tier": "Plans",
              "name": "Pillsbury Variation",

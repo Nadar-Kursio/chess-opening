@@ -144,7 +144,7 @@ OPENING = {
         "plan": {
             "structure": 'broad-centre-open-c-file',
             "tier": 'Plans',
-            "point": "Thirty-five moves to reach the position the opening was designed for: a pawn duo on d4 and e4, the c-file yours, the light-squared bishop pointing at h7 and every piece on the square it wanted. Now — and only now — the attack starts.",
+            "point": "Thirty-five moves to reach the position the opening was designed for: a pawn duo on d4 and e4, the c-file yours, the light-squared bishop pointing at h7 and every piece on the square it wanted. Black's version of the structure still has the e5-pawn, so d4–d5 closes the centre here rather than winning space — the c-file and the battery are the assets. Now, and only now, the attack starts.",
             "next": [
                 '18...h6 19.Qd3 and the battery is loaded. The threat is not mate; the threat is that Black can never move the h- or g-pawn again.',
                 'Nf1–g3–f5 next. The knight is the third attacker, and three is the number an attack needs.',
