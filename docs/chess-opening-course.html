@@ -128,7 +128,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .wrap{max-width:1340px;margin:0 auto;padding:0 20px 90px}
 header.masthead{
   border-bottom:1px solid var(--line); padding:34px 0 26px; margin-bottom:26px;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
 }
+/* min-width:0 so the long standfirst can wrap instead of forcing the row wider
+   and pushing the controls off the top-right corner. */
+.mastcopy{min-width:0}
 .eyebrow{
   font-family:var(--mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
   color:var(--dim); margin:0 0 10px;
@@ -222,7 +226,8 @@ h1.title em{font-style:italic;color:var(--green)}
 .chip b{color:var(--green);font-weight:600}
 .chip .sep{opacity:.5;margin:0 2px}
 
-.chromeacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* Top-right of the masthead: the corner every site puts display settings in. */
+.mastacts{display:flex;align-items:center;gap:8px;flex:none}
 /* The glyph is the only part of a chip that should not be tracked out. */
 .themetog .glyph{font-style:normal;letter-spacing:0;margin-right:5px}
 
@@ -747,9 +752,15 @@ ul.learn li::before{content:"";position:absolute;left:4px;top:9px;width:5px;heig
 <div class="wrap">
 
 <header class="masthead">
-  <p class="eyebrow" id="eyebrow"></p>
-  <h1 class="title">The opening, <em>explained move by move</em></h1>
-  <p class="standfirst">Every move on this page comes with a reason. Step through the board, read why the move was played, then read the strategy behind the whole system. Start with the primer if you want the rules that all of this is built on.</p>
+  <div class="mastcopy">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 class="title">The opening, <em>explained move by move</em></h1>
+    <p class="standfirst">Every move on this page comes with a reason. Step through the board, read why the move was played, then read the strategy behind the whole system. Start with the primer if you want the rules that all of this is built on.</p>
+  </div>
+  <!-- Top of the header, where a site's display settings live. Deliberately not
+       in the chrome bar below: that row changes what you are taught, and a theme
+       is not a thing you are taught. -->
+  <div class="mastacts" id="mastacts"></div>
 </header>
 
 <div class="chrome" id="chrome"></div>
@@ -1033,10 +1044,12 @@ function buildChrome(){
       ${TIERS.map((t,i)=>`<button class="tierseg" data-tier="${t}" role="radio"
         aria-checked="false">${i?"+ ":""}${t}</button>`).join("")}
     </div>
-    <div class="chromeacts">
-      <button class="chip themetog" id="themetog"></button>
-      <button class="chip" id="progchip"></button>
-    </div>`;
+    <button class="chip" id="progchip"></button>`;
+
+  // The theme toggle belongs to the page, not to the course, so it is built into
+  // the masthead rather than this row.
+  document.getElementById("mastacts").innerHTML =
+    `<button class="chip themetog" id="themetog"></button>`;
 
   el.querySelectorAll("[data-tier]").forEach(b=>b.onclick=()=>{
     state.tier = b.dataset.tier;
@@ -1086,9 +1099,12 @@ function syncChrome(){
   const tog = document.getElementById("themetog");
   if(tog){
     const to = themeName() === "light" ? "dark" : "light";
+    // Until a choice is stored the page is following the system, and only the
+    // tooltip can say so -- the label has to keep naming the destination.
+    const how = (db.ui || {}).theme ? "" : ", which is currently following your system";
     tog.innerHTML = `<span class="glyph" aria-hidden="true">${to === "light" ? "☀" : "☾"}</span>${to}`;
     tog.setAttribute("aria-label", `Switch to the ${to} theme`);
-    tog.title = `Switch to the ${to} theme`;
+    tog.title = `Switch to the ${to} theme${how}`;
   }
 }
 

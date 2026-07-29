@@ -19,10 +19,12 @@ function buildChrome(){
       ${TIERS.map((t,i)=>`<button class="tierseg" data-tier="${t}" role="radio"
         aria-checked="false">${i?"+ ":""}${t}</button>`).join("")}
     </div>
-    <div class="chromeacts">
-      <button class="chip themetog" id="themetog"></button>
-      <button class="chip" id="progchip"></button>
-    </div>`;
+    <button class="chip" id="progchip"></button>`;
+
+  // The theme toggle belongs to the page, not to the course, so it is built into
+  // the masthead rather than this row.
+  document.getElementById("mastacts").innerHTML =
+    `<button class="chip themetog" id="themetog"></button>`;
 
   el.querySelectorAll("[data-tier]").forEach(b=>b.onclick=()=>{
     state.tier = b.dataset.tier;
@@ -72,9 +74,12 @@ function syncChrome(){
   const tog = document.getElementById("themetog");
   if(tog){
     const to = themeName() === "light" ? "dark" : "light";
+    // Until a choice is stored the page is following the system, and only the
+    // tooltip can say so -- the label has to keep naming the destination.
+    const how = (db.ui || {}).theme ? "" : ", which is currently following your system";
     tog.innerHTML = `<span class="glyph" aria-hidden="true">${to === "light" ? "☀" : "☾"}</span>${to}`;
     tog.setAttribute("aria-label", `Switch to the ${to} theme`);
-    tog.title = `Switch to the ${to} theme`;
+    tog.title = `Switch to the ${to} theme${how}`;
   }
 }
 

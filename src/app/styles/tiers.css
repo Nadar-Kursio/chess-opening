@@ -46,7 +46,8 @@
 .chip b{color:var(--green);font-weight:600}
 .chip .sep{opacity:.5;margin:0 2px}
 
-.chromeacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* Top-right of the masthead: the corner every site puts display settings in. */
+.mastacts{display:flex;align-items:center;gap:8px;flex:none}
 /* The glyph is the only part of a chip that should not be tracked out. */
 .themetog .glyph{font-style:normal;letter-spacing:0;margin-right:5px}
 

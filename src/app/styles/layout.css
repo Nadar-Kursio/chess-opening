@@ -2,7 +2,11 @@
 .wrap{max-width:1340px;margin:0 auto;padding:0 20px 90px}
 header.masthead{
   border-bottom:1px solid var(--line); padding:34px 0 26px; margin-bottom:26px;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
 }
+/* min-width:0 so the long standfirst can wrap instead of forcing the row wider
+   and pushing the controls off the top-right corner. */
+.mastcopy{min-width:0}
 .eyebrow{
   font-family:var(--mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
   color:var(--dim); margin:0 0 10px;
