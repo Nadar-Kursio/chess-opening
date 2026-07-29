@@ -1,0 +1,8 @@
+{
+  // A linked worktree is a separate repository with its own HEAD and index, and
+  // VS Code does not descend into one nested inside the repo already open. Both
+  // entries are listed on purpose: the parent covers worktrees added later, the
+  // explicit path covers the case where only a repository root is accepted.
+  "git.autoRepositoryDetection": true,
+  "git.scanRepositories": [".worktrees", ".worktrees/theme-toggle"]
+}
