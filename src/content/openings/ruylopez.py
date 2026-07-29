@@ -7,7 +7,7 @@ OPENING = {
     "tagline": "The most respected opening in chess. Slow pressure that never goes away.",
     "level": "Intermediate → World Championship",
     "theory": {
-        "big_idea": "3.Bb5 attacks the knight that defends e5. The threat is not immediate — after 4.Bxc6 dxc6 5.Nxe5?? Qd4 wins the piece back — but it is a permanent nagging question. White's real plan is to build the centre with c3 and d4 while Black's pieces are tangled defending e5, then manoeuvre the knight to g3 and attack the kingside. It is the opening of long-term positional pressure.",
+        "big_idea": "3.Bb5 attacks the knight that defends e5. The threat is not immediate — after 4.Bxc6 dxc6 5.Nxe5?! Qd4 the pawn comes straight back — but it is a permanent nagging question. White's real plan is to build the centre with c3 and d4 while Black's pieces are tangled defending e5, then manoeuvre the knight to g3 and attack the kingside. It is the opening of long-term positional pressure.",
         "structure": "White gets a broad centre with pawns on d4 and e4 supported by c3. Black usually plays ...d6 and ...b5 and then either holds with ...c5 (the Chigorin) or breaks with ...d5 (the Marshall Attack, a whole-pawn gambit). The Exchange Variation produces a completely different structure: Black gets doubled c-pawns but the bishop pair.",
         "white_plans": [
             "The Spanish manoeuvre: Nb1–d2–f1–g3 (sometimes on to f5 or h5), the classic slow build-up toward a kingside attack.",
@@ -22,9 +22,10 @@ OPENING = {
             "Break with ...d5 or ...f5 once White's centre is committed.",
         ],
         "traps": [
-            "The Noah's Ark Trap: after an early ...b5 and ...c5, Black's queenside pawns can roll forward and physically trap White's bishop on b3 — ...c4 and ...b5–b4 nets a piece.",
-            "Do not play 4.Ba4 Nf6 5.O-O Nxe4 6.Re1?! d5 7.Nxe5 — this is the Riga/Open Spanish, sharp and double-edged, not a free piece.",
-            "Never grab with 4.Bxc6 dxc6 5.Nxe5?? — 5...Qd4! forks e5 and e4.",
+            "The Noah's Ark Trap: 3...a6 4.Ba4 d6 5.d4 b5 6.Bb3 Nxd4 7.Nxd4 exd4 8.Qxd4?? c5! 9.Qd5 Be6 10.Qc6+ Bd7 11.Qd5 c4 and the queenside pawns have built a box around the bishop. Play 8.Bd5! and there is no trap.",
+            "The Tarrasch Trap (Steinitz Defence): 3...d6 4.d4 Bd7 5.Nc3 Nf6 6.O-O Be7 7.Re1 O-O?? 8.Bxc6! Bxc6 9.dxe5 dxe5 10.Qxd8 Raxd8 11.Nxe5 and the pin on the e-file wins a pawn — the e5-knight cannot be taken.",
+            "The Mortimer Trap (Black's trap, Berlin): 3...Nf6 4.d3 Ne7!? 5.Nxe5?? c6! and the bishop is attacked while ...Qa5+ forks king and knight. The only move is 6.Nc4!, covering a5 — and then 6...cxb5?? is mate in one with 7.Nd6#.",
+            "Never grab with 4.Bxc6 dxc6 5.Nxe5?! — 5...Qd4! forks e5 and e4 and Black is the one playing for a win.",
         ],
         "who": "Play this if you are willing to invest in theory and you enjoy squeezing opponents slowly. It rewards patience and understanding, not memorised tricks.",
     },
@@ -33,6 +34,19 @@ OPENING = {
             "name": "Closed Ruy Lopez — Chigorin",
             "note": "The classical main line, played in thousands of grandmaster games. Both sides develop fully before the fight begins.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7",
+            "tier": "Foundation",
+            "drill": True,
+            "plan": {
+                "structure": 'italian-big-centre',
+                "tier": 'Structure',
+                "point": "Eleven quiet moves bought you a centre nobody can take away: d4 and e4 propped by c3, with h3 making sure ...Bg4 never undermines it. Now you choose what kind of game this is, and Black does not get a vote.",
+                "next": [
+                    '12.Nbd2 first — always. The knight is going d2–f1–g3 and it takes the longest road, so it leaves last and starts earliest.',
+                    'If Black holds the tension with 12...Nc6, close it: 13.d5! Nd8 14.a4 and the game is decided on the wings — this is the Karpov squeeze in the model game below.',
+                    'If Black releases with 12...cxd4 13.cxd4, take the duo and the open c-file. Rc1, Nf1, and the a5-knight has nowhere to go.',
+                ],
+                "endgame": 'Queens off, this is a good structure to own: the extra central pawn shelters your king on e3 and Black has to watch d6 forever. What you must not allow is a trade into a position where the b5–c5 pawns start rolling — that is Black winning, not simplifying.',
+            },
             "notes": {
                 5: "The Spanish bishop. It does not win the e5-pawn — but it asks a question Black has to answer for the next thirty moves.",
                 6: "The Morphy Defence. Black kicks the bishop first and asks it to make a decision. This gains the option of ...b5 later.",
@@ -58,6 +72,19 @@ OPENING = {
             "name": "Exchange Variation",
             "note": "White voluntarily gives up the bishop pair to ruin Black's structure. A pure, teachable endgame plan you can play at any level.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Bxc6 dxc6 O-O f6 d4 exd4 Nxd4 c5 Nb3 Qxd1 Rxd1 Bd6",
+            "tier": "Structure",
+            "drill": True,
+            "plan": {
+                "structure": 'crippled-majority',
+                "tier": 'Structure',
+                "point": "You have traded your best bishop for a structural fact that lasts until the last pawn: four healthy kingside pawns against three, and four queenside pawns against three that can never make a passer because two of them stand on the c-file.",
+                "next": [
+                    '10.Nc3 and 11.Be3, hitting c5 and daring Black to weaken more. Do not rush — the structure is not going anywhere.',
+                    'Trade rooks, not minor pieces. Every rook that comes off makes the kingside majority a step closer to a passed pawn; the bishop pair needs open lines and a rook to be worth anything.',
+                    'f4 and e5 at the right moment, when ...f6 has left dark holes and the bishops have nothing to aim at.',
+                ],
+                "endgame": 'This is the endgame — you played move four to reach it. Push the kingside majority to make a passer; Black pushes the queenside majority and gets nothing, because the doubled c-pawn is one pawn doing the work of two. If every piece comes off, the pure king and pawn ending is winning for White. Say that out loud before you trade the last rook.',
+            },
             "notes": {
                 7: "Straight to the point. White doubles Black's pawns on the c-file and creates a 4v3 healthy majority on the kingside.",
                 8: "Forced in practice — 4...bxc6 leaves Black with an even worse structure and no development.",
@@ -78,6 +105,19 @@ OPENING = {
             "name": "Berlin Defence — The Berlin Wall",
             "note": "The world-championship drawing weapon. Black gives up castling rights and the queens come off by move eight.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4 Nd6 Bxc6 dxc6 dxe5 Nf5 Qxd8+ Kxd8 Nc3 Ke8 h3 Be7",
+            "tier": "Plans",
+            "drill": True,
+            "plan": {
+                "structure": 'crippled-majority',
+                "tier": 'Plans',
+                "point": "The same structural bargain as the Exchange Variation, with two differences that decide everything: your pawn on e5 cramps Black, and Black owns the bishop pair in a position with no queens to harass. You are pressing, not attacking.",
+                "next": [
+                    '11.Bg5 or 11.Bf4, trading the dark-squared bishops. Black has two bishops; the fastest way to make them count for nothing is to take one off.',
+                    'Ne2–g3 or Ne4, heading for d6 and f5. A knight on a hole in front of doubled pawns is the piece this structure is built for.',
+                    'g4 and Rad1, then the king walks to e3. In a queenless middlegame the king is a piece — bring it out before the rooks come off, not after.',
+                ],
+                "endgame": 'Your kingside majority is real and Black\'s queenside majority is not, so pure pawn endings favour you. But Black\'s two bishops in an open position are worth about the same, which is why the Berlin holds. Press for forty moves, take the draw without complaint, and know that this is the position Kramnik used to take the title off Kasparov without losing a game.',
+            },
             "notes": {
                 6: "The Berlin. Instead of kicking the bishop, Black immediately counterattacks e4.",
                 7: "White ignores the threat, again. This is the whole flavour of the Ruy Lopez.",
@@ -101,6 +141,17 @@ OPENING = {
         "name": "Deep dive — the Chigorin middlegame",
         "note": "From the tabiya into the real fight: the centre resolves, the knight comes home, and both sides commit to a wing.",
         "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7 Nbd2 cxd4 cxd4 Nc6 Nb3 a5 Be3 a4 Nbd2 Bd7 Rc1 Qb7 Bb1",
+        "plan": {
+            "structure": 'broad-centre-open-c-file',
+            "tier": 'Plans',
+            "point": "Thirty-five moves to reach the position the opening was designed for: a pawn duo on d4 and e4, the c-file yours, the light-squared bishop pointing at h7 and every piece on the square it wanted. Now — and only now — the attack starts.",
+            "next": [
+                '18...h6 19.Qd3 and the battery is loaded. The threat is not mate; the threat is that Black can never move the h- or g-pawn again.',
+                'Nf1–g3–f5 next. The knight is the third attacker, and three is the number an attack needs.',
+                'Watch d4. Every attacking move you make on the kingside has to leave the centre standing, because ...exd4 followed by ...d5 undoes thirty-five moves of work.',
+            ],
+            "endgame": 'If the attack fizzles you still have the better endgame: the half-open c-file plus the duo means a healthy queenside majority against a black pawn mass that has already committed to a4 and b5. Trade into a rook ending, put the rook behind the passer and push.',
+        },
         "notes": {
             23: "The knight finally develops — to d2, of course, heading for f1 and g3. In the Ruy this knight is always the last piece out and often the most important.",
             24: "Black resolves the tension. It concedes the centre a little, but it opens the c-file and frees the c6 square for the offside knight.",
@@ -117,6 +168,487 @@ OPENING = {
             35: "The famous Spanish battery. Bb1 and Qd3 (or Qc2) aim at h7. This is the moment the Ruy stops being a positional opening and becomes a kingside attack — White has spent thirty-five moves earning the right to start it.",
         },
     },
+    # Deviations, keyed by the position they answer rather than by a ply number.
+    # The three Ruy lines split at move three and never meet again, so most sets
+    # fire in exactly one of them; the sets before the split fire in all three.
+    "branches": {
+
+        # ── ply 4 · your own third move: the three doors out of the Spanish ─────
+        "e4 e5 Nf3 Nc6": [
+            {"san": "Bc4", "severity": "playable", "tier": "Foundation",
+             "why": "The Italian. Same first two moves, a much smaller book, and an opening you can play well after a week rather than a year. The bishop attacks f7 directly instead of leaning on the knight that guards e5 — faster, louder, and easier for Black to meet correctly.",
+             "see": "italian"},
+            {"san": "d4", "severity": "playable", "tier": "Plans",
+             "why": "The Scotch. It resolves the centre on move three, which is the opposite of the Spanish idea: the Ruy keeps the tension precisely so that Black has to keep answering for e5. Sound, sharp, and about a tenth of the theory.",
+             "see": "scotch"},
+            {"san": "Nc3", "severity": "playable", "tier": "Plans",
+             "why": "The Four Knights. Note that you have not given up the Spanish at all — 4.Bb5 next move is a real line, and the Ruy's own Tarrasch Variation (3.Bb5 a6 4.Ba4 Nf6 5.Nc3) walks straight into the same structures.",
+             "see": "fourknights"},
+        ],
+
+        # ── ply 6 · after 3.Bb5 — everything Black is allowed to play ───────────
+        "e4 e5 Nf3 Nc6 Bb5": [
+            {"san": "a6", "severity": "playable", "tier": "Foundation",
+             "name": "Morphy Defence",
+             "why": "The main move by a distance: Black makes the bishop decide before doing anything else. Retreat with 4.Ba4 and you are in the Closed Ruy; take with 4.Bxc6 and you are in the Exchange. Both are full openings and you should own one of them.",
+             "line": "Ba4 Nf6 O-O Be7 Re1"},
+            {"san": "Nf6", "severity": "playable", "tier": "Structure",
+             "name": "Berlin Defence",
+             "why": "Black ignores the bishop and hits e4 instead. It is completely sound, it is what strong players actually meet you with, and it leads to the queenless endgame that made Kramnik world champion. Step through the Berlin line before you meet it.",
+             "line": "O-O Nxe4 d4 Nd6 Bxc6",
+             "see": "ruylopez#berlin"},
+            {"san": "d6", "severity": "inaccuracy", "tier": "Foundation",
+             "name": "Old Steinitz Defence",
+             "why": "Solid, passive, and it locks in the c8-bishop to hold a pawn that was never really attacked. Play 4.d4! at once. And know the punishment for Black's natural next move: after 4...Bd7 5.Nc3 Nf6 6.O-O Be7 7.Re1 O-O?? 8.Bxc6! Bxc6 9.dxe5 dxe5 10.Qxd8 Raxd8 11.Nxe5 the knight cannot be taken, because the e-file pin wins the piece back. That is the Tarrasch Trap, and Marco fell into it in 1892.",
+             "line": "d4 Bd7 Nc3 Nf6 O-O Be7 Re1"},
+            {"san": "Bc5", "severity": "playable", "tier": "Structure",
+             "name": "Classical (Cordel) Defence",
+             "why": "One of the oldest answers there is: Black ignores the threat that is not a threat and develops at f2 instead. Take the centre with 4.c3 and 5.d4 — you get exactly the big pawn duo the Ruy is trying to build, three moves earlier than usual.",
+             "line": "c3 Nf6 d4 exd4 e5 Ne4 O-O"},
+            {"san": "f5", "severity": "inaccuracy", "tier": "Mastery",
+             "name": "Schliemann (Jaenisch) Gambit",
+             "why": "A genuine gambit and genuinely dangerous if you improvise. Two answers: 4.Nc3! is the critical test, and 4.d3 is the practical one — decline, keep everything defended, and let the hole on e5 and the open a2–g8 diagonal do the arguing. Do not take twice on e5 and hope.",
+             "line": "Nc3 fxe4 Nxe4 d5 Nxe5 dxe4 Nxc6 Qg5 Qe2"},
+            {"san": "Nd4", "severity": "playable", "tier": "Structure",
+             "name": "Bird's Defence",
+             "why": "Black offers a trade on d4 to unbalance the pawns before you can build anything. Take: 4.Nxd4 exd4 5.O-O and the pawn on d4 is a long-term target on a file your rook already looks at. Black gets space, you get the better structure.",
+             "line": "Nxd4 exd4 O-O Bc5 d3"},
+            {"san": "Nge7", "severity": "playable", "tier": "Structure",
+             "name": "Cozio Defence",
+             "why": "Awkward-looking and perfectly sound: the second knight guards e5 so the first one never has to move. Black is heading for ...g6 and ...Bg7. Play 4.O-O and 5.c3, take the centre with d4 and remember that a knight on e7 is a knight not covering d5.",
+             "line": "O-O g6 c3 Bg7 d4"},
+            {"san": "g6", "severity": "playable", "tier": "Plans",
+             "name": "Fianchetto (Smyslov) Defence",
+             "why": "Black treats it like a Pirc: control the centre from the long diagonal instead of occupying it. Nothing to punish. Build the big centre with 4.c3 and d4 and note that ...Bg7 will be biting on your d4-pawn all game — keep it defended twice.",
+             "line": "c3 Bg7 O-O a6 Ba4 d6 d4"},
+            {"san": "Bd6", "severity": "inaccuracy", "tier": "Foundation",
+             "why": "It defends e5 and blocks the one pawn Black has to move to develop the queenside. 4.O-O and 5.d4 — you are not refuting anything, you are simply taking the centre while Black's pieces trip over each other.",
+             "line": "O-O Nf6 d4 exd4 Nxd4"},
+        ],
+
+        # ── ply 7 · after 3...a6 — the decision the whole opening turns on ──────
+        "e4 e5 Nf3 Nc6 Bb5 a6": [
+            {"san": "Ba4", "severity": "playable", "tier": "Foundation",
+             "why": "The main road. The bishop keeps the pressure and keeps the option of taking on c6 for a better moment — and it will spend the next twenty moves retreating from b5 to a4 to b3 to c2 to b1, which sounds absurd and is the whole plan.",
+             "line": "Nf6 O-O Be7 Re1 b5"},
+            {"san": "Bxc6", "severity": "playable", "tier": "Foundation",
+             "name": "Exchange Variation",
+             "why": "Give up the bishop pair to double Black's c-pawns for the rest of the game. It needs almost no theory, and the plan — trade everything, win the pawn endgame — is one you can explain in a sentence and win with for a decade.",
+             "line": "dxc6 O-O f6 d4",
+             "see": "ruylopez#exchange"},
+            {"san": "Bc4", "severity": "playable", "tier": "Structure",
+             "why": "Retreating to the Italian diagonal is playable and slightly toothless: Black has ...b5 in hand with tempo, so the bishop has already been told where it is going. If you want the Italian, play it on move three.",
+             "line": "Nf6 d3 Bc5 O-O d6"},
+            {"san": "Bd3", "severity": "inaccuracy", "tier": "Foundation",
+             "why": "The one retreat that has to be wrong: it blocks the d-pawn, so the c3-and-d4 plan that justifies the whole opening no longer exists. Nothing is hanging — you have just spent three moves to reach a worse version of move one.",
+             "line": "Nf6 O-O d5"},
+        ],
+
+        # ══ EXCHANGE VARIATION ══════════════════════════════════════════════════
+
+        # ── ply 8 · which pawn takes back ───────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Bxc6": [
+            {"san": "bxc6", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The wrong recapture: it keeps the pawn count tidy and leaves Black with no way to develop the c8-bishop and a backward pawn on an open file. 5.d4! immediately, and the difference between this and 4...dxc6 is the difference between a defensible endgame and a lost one.",
+             "line": "d4 exd4 Qxd4 Qf6 e5"},
+        ],
+
+        # ── ply 9 · your own fifth move in the Exchange ─────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Bxc6 dxc6": [
+            {"san": "d4", "severity": "playable", "tier": "Plans",
+             "name": "Lasker's move order",
+             "why": "Straight into the endgame: 5.d4 exd4 6.Qxd4 Qxd4 7.Nxd4 and the queens are off on move seven with the structure already decided. This is how Lasker beat Capablanca in 1914 — step through that game, it is the clearest lesson in this whole opening.",
+             "line": "exd4 Qxd4 Qxd4 Nxd4 Bd6 Nc3",
+             "see": "ruylopez#lasker-capablanca"},
+            {"san": "Nc3", "severity": "playable", "tier": "Foundation",
+             "why": "Fine, and slightly slow. Black gets ...Bg4 in and the pressure on f3 is annoying — 5.O-O first is the move order that stops it, because then h3 comes with a tempo you did not have to spend.",
+             "line": "Bg4 h3 Bh5 d3 Qf6"},
+            {"san": "Nxe5", "severity": "inaccuracy", "tier": "Foundation",
+             "why": "The most common Ruy Lopez mistake there is. 5...Qd4! hits the knight and e4 at once: 6.Nf3 Qxe4+ 7.Qe2 Qxe2+ 8.Kxe2 and the pawn is back, the queens are off, and Black has the two bishops in the endgame you wanted for yourself. You did not lose a piece — you lost the entire point of the variation.",
+             "line": "Qd4 Nf3 Qxe4+ Qe2 Qxe2+ Kxe2"},
+        ],
+
+        # ── ply 10 · after 5.O-O ────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Bxc6 dxc6 O-O": [
+            {"san": "Bg4", "severity": "playable", "tier": "Structure",
+             "why": "The most testing move: Black pins the knight before you play d4, so that the d4-pawn will be hanging when you do. 6.h3 Bh5 7.d3! — a small, patient move. Play d4 only when the pin is gone or the bishop can be won.",
+             "line": "h3 Bh5 d3 Qf6 Nbd2"},
+            {"san": "Qd6", "severity": "playable", "tier": "Structure",
+             "why": "Modern and respectable — the queen guards e5 from a square where nothing hits her, and Black keeps ...f6 in reserve. 6.Na3! heading for c4 is the point: the knight goes where the queen cannot follow it.",
+             "line": "Na3 Be6 Qe2 c5 Nc4"},
+            {"san": "Bd6", "severity": "playable", "tier": "Foundation",
+             "why": "Natural, and it walks into the break: 6.d4 exd4 7.Qxd4 and every trade brings the pawn endgame you are playing for closer. Black should be defending the majority, not developing into an open centre.",
+             "line": "d4 exd4 Qxd4 f6 Be3"},
+            {"san": "Ne7", "severity": "playable", "tier": "Foundation",
+             "why": "The knight heads for g6, and it does leave e5 loose for exactly one move: 6.Nxe5 Qd4 7.Qh5! g6 8.Nf3 Qxe4 and the pawn comes back — but the queen has been chased three times and there is a hole on f6 to work with. Take it if you want that game; 6.d4 is the quiet route to the same small edge.",
+             "line": "Nxe5 Qd4 Qh5 g6 Nf3 Qxe4 Nc3"},
+        ],
+
+        # ══ CLOSED RUY LOPEZ ════════════════════════════════════════════════════
+
+        # ── ply 8 · after 4.Ba4 ─────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4": [
+            {"san": "d6", "severity": "playable", "tier": "Structure",
+             "name": "Modern Steinitz Defence",
+             "why": "Black props up e5 with the pawn and keeps ...b5 in hand. Sound, and it is where the Noah's Ark Trap lives: 5.d4 b5 6.Bb3 Nxd4 7.Nxd4 exd4 8.Qxd4?? c5! 9.Qd5 Be6 10.Qc6+ Bd7 11.Qd5 c4 and the pawns have built a box around your bishop. Play 8.Bd5 instead — or avoid the whole thing with 5.O-O and 6.c3.",
+             "line": "O-O Nf6 Re1 Be7 c3 O-O h3"},
+            {"san": "b5", "severity": "playable", "tier": "Foundation",
+             "name": "Caro Variation",
+             "why": "The second kick, played immediately. The bishop is not trapped and never was: 5.Bb3 and it stands on its best diagonal, one move sooner than in the main line. What Black has really done is commit the queenside before knowing what you are doing with the centre.",
+             "line": "Bb3 Nf6 O-O Bc5 c3"},
+            {"san": "Bc5", "severity": "playable", "tier": "Structure",
+             "why": "The Classical Defence, one move late. Perfectly good. 5.c3 and 6.d4 hit the bishop while you build, so you gain the tempo back and end up with the centre you wanted anyway.",
+             "line": "c3 Nf6 d4 Ba7 O-O"},
+            {"san": "f5", "severity": "inaccuracy", "tier": "Mastery",
+             "name": "Deferred Schliemann",
+             "why": "The gambit with ...a6 thrown in, and the extra move helps you more than it helps Black. 5.d4! and the centre opens while the black king is still standing on the f-file it just unlocked.",
+             "line": "d4 exd4 e5 Bc5 O-O"},
+            {"san": "Nd4", "severity": "inaccuracy", "tier": "Structure",
+             "name": "Deferred Bird",
+             "why": "Now the trade favours you: 5.Nxd4 exd4 6.d3 and Black's pawn on d4 is a permanent weakness, not a space-gainer, because ...a6 has already been spent on a move that no longer does anything.",
+             "line": "Nxd4 exd4 d3 c6 O-O"},
+        ],
+
+        # ── ply 9 · your own fifth move ─────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6": [
+            {"san": "d3", "severity": "playable", "tier": "Plans",
+             "why": "The modern main line at the very top — Carlsen's version. You give up the big centre for a completely safe one and dodge the Marshall Attack, the Open Spanish and about two hundred pages of theory. The knight tour and the h3 move transfer over untouched.",
+             "line": "Bc5 c3 b5 Bb3 d6 O-O"},
+            {"san": "Nc3", "severity": "playable", "tier": "Structure",
+             "name": "Tarrasch Variation",
+             "why": "The knight comes out and the c-pawn loses c3 forever — no c3–d4 centre, but the Nd5 jump instead. You have just transposed into a Four Knights with an extra pair of tempi, which is a real opening and not a concession.",
+             "line": "b5 Bb3 Be7 O-O d6 Nd5",
+             "see": "fourknights"},
+            {"san": "Qe2", "severity": "playable", "tier": "Mastery",
+             "name": "Worrall Attack",
+             "why": "The queen takes the rook's job of defending e4, so the rook can go to d1 and support d4 instead. Sound, rare, and a good practical weapon precisely because Black's preparation assumes Re1.",
+             "line": "b5 Bb3 Be7 c3 O-O"},
+            {"san": "Bxc6", "severity": "playable", "tier": "Structure",
+             "name": "Delayed Exchange",
+             "why": "The Exchange structure with ...Nf6 and Ba4 thrown in — and that trade helps Black, because the knight on f6 is a better piece than the bishop on a4 was. Playable, but the pure Exchange on move four is the better version of the same idea.",
+             "line": "dxc6 Nc3 Bd6 d3 Nd7"},
+        ],
+
+        # ── ply 10 · after 5.O-O — Black's big fork in the road ─────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O": [
+            {"san": "Nxe4", "severity": "playable", "tier": "Mastery",
+             "name": "Open Defence",
+             "why": "Black takes the pawn and gives back the quiet life. 6.d4 b5 7.Bb3 d5 8.dxe5 Be6 and the knight on e4 is either a monster or a target for the next twenty moves. Sharp, sound, and a completely different opening from the Closed Ruy — do not walk into it unprepared.",
+             "line": "d4 b5 Bb3 d5 dxe5 Be6 c3"},
+            {"san": "b5", "severity": "playable", "tier": "Plans",
+             "name": "Arkhangelsk Defence",
+             "why": "Black skips ...Be7 and heads for ...Bb7 and ...Bc5, pointing both bishops at your king instead of tucking one behind the pawns. 6.Bb3 and now c3 and d4 come with the extra job of watching the long diagonal.",
+             "line": "Bb3 Bc5 a4 Bb7 c3 d6"},
+            {"san": "Bc5", "severity": "playable", "tier": "Plans",
+             "name": "Møller Defence",
+             "why": "The active bishop, aimed at f2, and a genuinely awkward move to meet. 6.c3 is right and 6.Nxe5?? is not: 6...Nxe5 7.d4 hits both, but 7...b5! 8.Bb3 Bxd4 and Black comes out on top. Take the centre, not the pawn.",
+             "line": "c3 b5 Bb3 d6 d4 Bb6"},
+            {"san": "d6", "severity": "playable", "tier": "Foundation",
+             "why": "The deferred Steinitz. Solid and a shade slow — the c8-bishop is behind its pawn again. 6.Re1 and 7.c3 and you have the standard set-up while Black still has a piece to untangle.",
+             "line": "Re1 b5 Bb3 Be7 c3 O-O"},
+            {"san": "Nd4", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The knight leaves e5 hanging to hit f3 and b5 at once, and it does not work here: 6.Nxe5! b5 7.c3 Ne6 8.Bb3 and White is a clean pawn up with the better structure. Count what the knight on c6 was doing before you move it.",
+             "line": "Nxe5 b5 c3 Ne6 Bb3"},
+        ],
+
+        # ── ply 11 · your own sixth move ────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7": [
+            {"san": "d3", "severity": "playable", "tier": "Plans",
+             "why": "The quiet Anti-Marshall. You keep every Spanish idea, lose the big centre, and Black's whole Marshall preparation is now worth nothing. At club level this is often the highest-value move in the entire opening.",
+             "line": "b5 Bb3 d6 a4 Bd7 c3"},
+            {"san": "Bxc6", "severity": "playable", "tier": "Structure",
+             "why": "The Exchange with both sides developed. Better for Black than the move-four version — the knight on f6 and the bishop on e7 are exactly the pieces that make the doubled pawns manageable — but the endgame plan is unchanged and still perfectly playable.",
+             "line": "dxc6 d3 Nd7 Be3 O-O"},
+            {"san": "d4", "severity": "playable", "tier": "Mastery",
+             "why": "Opening the centre a move before the rook reaches e1. It is sound and it is a different game: 6...exd4 7.e5 Ne4 8.Nxd4 O-O 9.Nf5 and the pieces do the fighting instead of the pawns.",
+             "line": "exd4 e5 Ne4 Nxd4 O-O Nf5"},
+        ],
+
+        # ── ply 12 · after 6.Re1 — the moment that punishes autopilot ───────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1": [
+            {"san": "d6", "severity": "playable", "tier": "Foundation",
+             "why": "Solid and a move order you should know: with ...b5 not yet played, 7.Bxc6+ bxc6 8.d4 is a real option for you, because now Black's structure is wrecked without the bishop having to spend a move on a4 first.",
+             "line": "c3 O-O h3 b5 Bb3"},
+            {"san": "O-O", "severity": "inaccuracy", "tier": "Foundation",
+             "why": "The natural move that drops a pawn, because ...b5 was not a luxury — it was the move keeping the bishop off c6. 7.Bxc6! dxc6 8.Nxe5 and the ...Qd4 trick does not work here: the rook on e1 already guards e4, so 8...Qd4 9.Nf3 Qxe4?? 10.Rxe4 simply loses the queen.",
+             "line": "Bxc6 dxc6 Nxe5 Nd7 Nf3"},
+            {"san": "Nxe4", "severity": "blunder", "tier": "Foundation",
+             "why": "Grabbing the pawn one move too late. 7.Rxe4! and the rook is not really hanging: 7...d5 8.Bxc6+! bxc6 9.Rxe5 and White is a piece up, because the in-between check removes the defender before the rook moves. The same capture was fine on move five only because the rook was still on f1.",
+             "line": "Rxe4 d5 Bxc6+ bxc6 Rxe5"},
+        ],
+
+        # ── ply 14 · after 7.Bb3 — including the Marshall ───────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3": [
+            {"san": "O-O", "severity": "playable", "tier": "Mastery",
+             "name": "Marshall Attack",
+             "why": "The most famous pawn sacrifice in opening theory: 8.c3 d5! 9.exd5 Nxd5 10.Nxe5 Nxe5 11.Rxe5 c6 and Black has given a clean pawn for an attack that has held up for a hundred years. Either learn the defence properly or duck it with 8.a4 or 8.h3 — but decide before the game, not at the board.",
+             "line": "c3 d5 exd5 Nxd5 Nxe5 Nxe5 Rxe5 c6"},
+            {"san": "Bb7", "severity": "playable", "tier": "Plans",
+             "why": "The Arkhangelsk set-up by transposition. The bishop eyes e4 down the long diagonal, so your standard c3–d4 has to be timed around the pressure it creates. Perfectly healthy for both sides.",
+             "line": "c3 d5 exd5 Nxd5 Nxe5 Nxe5 Rxe5"},
+            {"san": "Na5", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The Chigorin knight, four moves too early. 8.d4! and Black has no ...c5 yet to hold the centre, so the knight on a5 is simply a piece standing on the rim while you take the whole board.",
+             "line": "d4 Nxb3 axb3 d6 Nc3"},
+            {"san": "d5", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The Marshall break without castling first, which is the one detail that makes the Marshall work. 8.exd5 Nxd5 9.Nxe5 Nxe5 10.Rxe5 and with the king still on e8 the attack Black is paying for does not exist.",
+             "line": "exd5 Nxd5 Nxe5 Nxe5 Rxe5 c6 Re1"},
+        ],
+
+        # ── ply 16 · after 8.c3 ─────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3": [
+            {"san": "Na5", "severity": "playable", "tier": "Structure",
+             "why": "The Chigorin one move early, before h3. Play 9.Bc2 and then d4 — you have transposed, and the tempo you would have spent on h3 is now available for something else. Nothing is lost; note only that ...Bg4 is briefly a real option for Black.",
+             "line": "Bc2 c5 d4 Qc7 h3"},
+            {"san": "Bg4", "severity": "inaccuracy", "tier": "Structure",
+             "why": "This is precisely what h3 exists to prevent, and here it is legal — so answer it: 9.h3 Bh5 10.d3 and the bishop on h5 is a target for g2–g4 the moment your king is safe. Black has traded a good piece's future for one tempo of annoyance.",
+             "line": "h3 Bh5 d3 O-O Nbd2"},
+            {"san": "Bd7", "severity": "playable", "tier": "Plans",
+             "why": "Modest, flexible and slightly passive — the bishop covers b5 and keeps ...Na5 in reserve. Take the centre at once with 9.d4 while Black's most useful piece is standing on the square it least wants.",
+             "line": "d4 O-O Nbd2 a5 h3"},
+        ],
+
+        # ── ply 18 · after 9.h3 — the whole family of Closed defences ───────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3": [
+            {"san": "Nb8", "severity": "playable", "tier": "Plans",
+             "name": "Breyer Variation",
+             "why": "The knight goes all the way home so it can come out again to d7, where it defends e5 and supports ...c5 without being hit by anything. It looks like a joke and it is one of the soundest defences in chess. Answer 10.d4 and get on with your own plan.",
+             "line": "d4 Nbd7 Bc2 Re8 Nbd2"},
+            {"san": "Bb7", "severity": "playable", "tier": "Plans",
+             "name": "Zaitsev Variation",
+             "why": "Karpov's weapon: the bishop hits e4 immediately and Black keeps the knight flexible. It is the sharpest of the Closed defences and the one where a move-order slip costs you the game — 10.d4 Re8 11.Nbd2 and know what you are doing before you allow ...exd4.",
+             "line": "d4 Re8 Nbd2 Bf8 a4"},
+            {"san": "Nd7", "severity": "playable", "tier": "Mastery",
+             "name": "Karpov Variation",
+             "why": "The knight re-routes to b6 and the f-pawn is freed for ...f5 later. Slower than the Breyer and a little more committal — 10.d4 Nb6 11.Nbd2 and your extra space is the whole difference.",
+             "line": "d4 Nb6 Nbd2 a5 Nf1"},
+            {"san": "h6", "severity": "playable", "tier": "Structure",
+             "name": "Smyslov Variation",
+             "why": "A useful waiting move: it takes g5 from your pieces and prepares ...Re8 and ...Bf8 without committing the knight. Take the centre with 10.d4 and remember that ...h6 gives your future kingside attack the hook it needs.",
+             "line": "d4 Re8 Nbd2 Bf8 Nf1"},
+            {"san": "Be6", "severity": "playable", "tier": "Structure",
+             "name": "Kholmov Variation",
+             "why": "Black offers the trade of your best piece. Take it or don't — 10.d4 Bxb3 11.axb3 leaves you with a broad centre, a half-open a-file and a pawn on b3 that guards c4 and d5 forever. That is a fair price for the bishop.",
+             "line": "d4 Bxb3 axb3 exd4 cxd4"},
+            {"san": "Nxe4", "severity": "blunder", "tier": "Foundation",
+             "why": "Free pawn, wrong move. 10.Rxe4! and there is nothing behind it: the rook simply steps away next move a whole piece up. The e-pawn was defended by the rook the entire time — this is the tenth move, not the fifth.",
+             "line": "Rxe4 Na5 Bc2 Bb7 Re1"},
+        ],
+
+        # ── ply 20 · after 10.Bc2 ───────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2": [
+            {"san": "c6", "severity": "playable", "tier": "Structure",
+             "why": "Solid, slow, and it takes d5 and b5 away from your pieces — but it leaves the a5-knight with no future at all. 11.d4 and then Nbd2–f1–g3 while Black's knight looks for a job.",
+             "line": "d4 Qc7 Nbd2 Re8 b3"},
+            {"san": "d5", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The freeing break played before the pieces are ready for it. 11.d4! and the centre opens with your rook already on e1 and Black's knight still on a5. Timing is the whole difference between ...d5 as a resource and ...d5 as a concession.",
+             "line": "d4 dxe4 Nxe5 c5 Be3"},
+        ],
+
+        # ── ply 22 · after 11.d4 ────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4": [
+            {"san": "cxd4", "severity": "playable", "tier": "Plans",
+             "why": "Black resolves at once. 12.cxd4 and you have the duo plus the c-file — the structure from the deep dive, three moves early and with Black's knight still offside on a5.",
+             "line": "cxd4 exd4 Nxd4 Bd7 Nc3"},
+            {"san": "Nd7", "severity": "playable", "tier": "Structure",
+             "why": "The knight heads for b6 and c4 rather than sitting on a5. Close the centre with 12.d5 and the game moves to the wings: your pawns point at the kingside, so that is where you play.",
+             "line": "d5 Nb6 Nbd2 Nb7 b3"},
+            {"san": "Nc6", "severity": "inaccuracy", "tier": "Plans",
+             "why": "The knight comes back before the queen has taken c7, which hands you the strongest version of the bind: 12.d5! Na5 13.b3 and Black's pieces have nowhere to go while you take the whole queenside. This is the Karpov treatment — see the model game.",
+             "line": "d5 Na5 b3 g6 Nbd2",
+             "see": "ruylopez#karpov-unzicker"},
+        ],
+
+        # ── ply 24 · after 12.Nbd2 — the deep dive's crossroads ─────────────────
+        "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7 Nbd2": [
+            {"san": "Nc6", "severity": "inaccuracy", "tier": "Plans",
+             "why": "Unzicker's move against Karpov, and the reason that game is famous. 13.d5! shuts the centre with the black knight on the wrong square: it has to go to d8 and spends the rest of the game trying to get back. Fifty years later this is still the model of how to punish a knight with no squares.",
+             "line": "d5 Nd8 a4 Rb8 axb5 axb5 b4",
+             "see": "ruylopez#karpov-unzicker"},
+            {"san": "Bd7", "severity": "playable", "tier": "Structure",
+             "why": "Developing and keeping every option. 13.d5 closes the centre, 13.Nf1 keeps the tension — and with the bishop on d7 rather than the knight on c6, Black's queenside counterplay with ...c4 and ...Nb7–c5 actually works.",
+             "line": "d5 c4 Nb1 Nb7 b4"},
+            {"san": "Re8", "severity": "playable", "tier": "Foundation",
+             "why": "A useful move that changes nothing about your plan. 13.d5 or 13.Nf1 — the rook on e8 matters only in the lines where the centre opens, and you are the one who decides whether it does.",
+             "line": "d5 g6 b3 Bd7 Nf1"},
+        ],
+
+        # ══ BERLIN DEFENCE ══════════════════════════════════════════════════════
+
+        # ── ply 7 · your own fourth move against the Berlin ─────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6": [
+            {"san": "d3", "severity": "playable", "tier": "Foundation",
+             "name": "Anti-Berlin",
+             "why": "The practical answer and a very good one: keep the queens on, keep the tension, and refuse the endgame Black came for. You reach an Italian-flavoured position where the slow plans you already know all apply.",
+             "line": "Bc5 c3 O-O O-O d6 h3"},
+            {"san": "Nc3", "severity": "playable", "tier": "Structure",
+             "why": "The Four Knights. Symmetrical, sound and about a twentieth of the theory — and note that the Mortimer Trap (4.d3 Ne7!? 5.Nxe5?? c6!) does not exist here because the knight on c3 covers a5.",
+             "line": "Bb4 O-O O-O d3 d6",
+             "see": "fourknights"},
+            {"san": "Bxc6", "severity": "playable", "tier": "Structure",
+             "why": "The Exchange against the Berlin. It is a real line, and it hands Black the bishop pair one move earlier than the Berlin endgame would — the doubled pawns are the same, the queens stay on, and Black is comfortable.",
+             "line": "dxc6 Nc3 Be6 d3 Bc5"},
+            {"san": "d4", "severity": "playable", "tier": "Mastery",
+             "why": "Opening the centre at once. 4...exd4 5.O-O and you have a gambit-flavoured Scotch where the bishop on b5 is doing more work than it usually does in the Berlin. Sound, rare and genuinely awkward to face.",
+             "line": "exd4 O-O Be7 e5 Ne4"},
+        ],
+
+        # ── ply 8 · after 4.O-O ─────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O": [
+            {"san": "Bc5", "severity": "playable", "tier": "Structure",
+             "why": "Black declines the endgame and plays a normal game with the bishop pointing at f2. 5.Nxe5! is the critical try — 5...Nxe5 6.d4 forks, and after 6...c6 7.dxe5 Nxe4 8.Bd3 the pawn comes back with interest.",
+             "line": "Nxe5 Nxe5 d4 c6 dxe5 Nxe4 Bd3"},
+            {"san": "d6", "severity": "playable", "tier": "Foundation",
+             "name": "Improved Steinitz",
+             "why": "Solid and passive: e5 is defended by a pawn, so nothing is hanging. 5.Re1 and 6.c3 gives you a comfortable space edge and a plan you already know — d4 when everything supports it.",
+             "line": "Re1 Be7 c3 a6 Bxc6+ bxc6"},
+            {"san": "Ng4", "severity": "inaccuracy", "tier": "Mastery",
+             "name": "Fishing Pole",
+             "why": "A trap dressed as a move: Black wants 5.h3 h5!? 6.hxg4?? hxg4 and the rook on h8 mates down the open file. So do not take. 5.h3 Nf6 and Black has spent two moves to be a tempo worse — the pole only works if you bite.",
+             "line": "h3 Nf6 Bxc6 dxc6 Nxe5"},
+            {"san": "Nd4", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The Berlin version of Bird's Defence, and here the trade is good for you: 5.Nxd4 exd4 6.e5! and the knight on f6 has to move again while your pawn takes the centre. Black has traded a developed piece for a pawn on d4 that goes nowhere.",
+             "line": "Nxd4 exd4 e5 Nd5 c3"},
+        ],
+
+        # ── ply 10 · your own fifth move ────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4": [
+            {"san": "Re1", "severity": "playable", "tier": "Plans",
+             "why": "The other main move, and the one that keeps queens on: 5...Nd6 6.Nxe5 Be7 7.Bf1 and you regain the pawn with a small, permanent pull. If you like the Berlin structures but not the endgame, this is your line.",
+             "line": "Nd6 Nxe5 Be7 Bf1 Nxe5 Rxe5"},
+            {"san": "Qe2", "severity": "playable", "tier": "Mastery",
+             "why": "Sound and slightly awkward for both sides — the queen takes the rook's job so d4 can come next. 5...Ng5! is the reply that stops it being anything more than equal.",
+             "line": "Ng5 Nxg5 Qxg5 d4 Qe7"},
+        ],
+
+        # ── ply 12 · after 5.d4 ─────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4": [
+            {"san": "Be7", "severity": "playable", "tier": "Structure",
+             "why": "Black keeps the queens on and gives back the pawn. 6.Qe2 Nd6 7.Bxc6 bxc6 8.dxe5 Nb7 — a passive knight, doubled pawns and no bishop pair to show for them. This is a worse version of the Berlin endgame for Black.",
+             "line": "Qe2 Nd6 Bxc6 bxc6 dxe5 Nb7"},
+            {"san": "exd4", "severity": "inaccuracy", "tier": "Foundation",
+             "why": "Taking the wrong pawn. 6.Re1! pins the knight to the king and Black cannot hold on to it: 6...f5 7.Nxd4 and White is a piece for a pawn ahead in every line that follows.",
+             "line": "Re1 f5 Nxd4 Nxd4 Qxd4"},
+            {"san": "a6", "severity": "playable", "tier": "Structure",
+             "why": "Kicking the bishop first. 6.Bxc6 dxc6 7.Re1 and you reach the same doubled-pawn structure with the queens still on — a reasonable version for both sides, and one Black players choose when they want a game rather than a draw.",
+             "line": "Bxc6 dxc6 Re1 Nf6 Nbd2"},
+        ],
+
+        # ── ply 14 · after 7.dxe5 ───────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4 Nd6 Bxc6 dxc6 dxe5": [
+            {"san": "Ne4", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The knight jumps forward instead of to f5, and it has no support out there: 8.Qe2! Bf5 9.Rd1 and every white piece develops with a threat while the knight looks for a square. On f5 the knight had a job; on e4 it has an address.",
+             "line": "Qe2 Bf5 Rd1 Qe7 Bf4"},
+        ],
+
+        # ── ply 18 · after 9.Nc3 ────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4 Nd6 Bxc6 dxc6 dxe5 Nf5 Qxd8+ Kxd8 Nc3": [
+            {"san": "Bd7", "severity": "playable", "tier": "Plans",
+             "why": "Kramnik's own treatment, and the one he beat Kasparov's preparation with: the king walks to c8 behind the bishop instead of back to e8. Both plans are sound — this one keeps the h8-rook boxed in a little longer and the king a little safer.",
+             "line": "b3 h6 Bb2 Kc8 Rad1",
+             "see": "ruylopez#kasparov-kramnik"},
+            {"san": "h6", "severity": "playable", "tier": "Structure",
+             "why": "Prophylaxis first: it stops Bg5 and Ng5 for good before deciding where the king goes. 10.Rd1+ Ke8 11.h3 and you are in the main structure with an extra tempo's worth of information about Black's pawns.",
+             "line": "Rd1+ Ke8 h3 Ne7 Bf4"},
+            {"san": "Be7", "severity": "playable", "tier": "Foundation",
+             "why": "Development before king safety — which is legal here because there are no queens to punish it. 10.Rd1+ Ke8 11.g4!? is the aggressive try: the knight on f5 is the piece holding Black's kingside together.",
+             "line": "Rd1+ Ke8 g4 Nh4 Nxh4"},
+            {"san": "Ne7", "severity": "playable", "tier": "Structure",
+             "why": "The knight heads for g6 to hit e5 and cover f4 — a slower plan that keeps every pawn where it is. 10.h3 and 11.Be3, then Rad1 and the king walk. There is nothing to hunt here; you are playing for the ending.",
+             "line": "h3 Bd7 Be3 Ke8 Rad1"},
+        ],
+
+        # ── ply 20 · after 10.h3 ────────────────────────────────────────────────
+        "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4 Nd6 Bxc6 dxc6 dxe5 Nf5 Qxd8+ Kxd8 Nc3 Ke8 h3": [
+            {"san": "h5", "severity": "playable", "tier": "Plans",
+             "why": "Stopping g2–g4 before it happens, at the cost of a pawn that can never move again. Both sides are playing for tiny things now: 11.Ne2 and Ng3 to hit h5 and f5 at once.",
+             "line": "Ne2 c5 Rd1 Be7 Bg5"},
+            {"san": "a5", "severity": "playable", "tier": "Structure",
+             "why": "Space on the side where Black's extra pawn lives, and a square on a6 for the bishop. 11.Bf4 and Rad1 — your pieces are better, Black's structure is worse, and this is what a queenless Berlin looks like for forty more moves.",
+             "line": "Bf4 Bb4 Ne4 Be6 a3"},
+            {"san": "Ne7", "severity": "inaccuracy", "tier": "Structure",
+             "why": "The knight leaves f5 without being asked. 11.Ne4! and the outpost on d6 is suddenly available with no knight to challenge it — a queenless middlegame is exactly where one bad square decides the game.",
+             "line": "Ne4 Ng6 Re1 Bb4 c3"},
+        ],
+    },
+    "games": [
+        {
+            "id": 'karpov-unzicker-1974',
+            "name": "Karpov – Unzicker, Nice Olympiad 1974 — the squeeze",
+            "tier": 'Plans',
+            "note": "The model Closed Ruy Lopez, and it starts from the exact position you have just stepped through. Unzicker played 12...Nc6 instead of the deep dive's 12...cxd4, Karpov answered 13.d5! and Black's pieces never got another square. Forty-four moves, no tactics, no counterplay.",
+            "moves": (
+                'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 '
+                'd4 Qc7 Nbd2 Nc6 d5 Nd8 a4 Rb8 axb5 axb5 b4 Nb7 Nf1 Bd7 Be3 Ra8 Qd2 Rfc8 Bd3 g6 '
+                'Ng3 Bf8 Ra2 c4 Bb1 Qd8 Ba7 Ne8 Bc2 Nc7 Rea1 Qe7 Bb1 Be8 Ne2 Nd8 Nh2 Bg7 f4 f6 '
+                'f5 g5 Bc2 Bf7 Ng3 Nb7 Bd1 h6 Bh5 Qe8 Qd1 Nd8 Ra3 Kf8 R1a2 Kg8 Ng4 Kf8 Ne3 Kg8 '
+                'Bxf7+ Nxf7 Qh5 Nd8 Qg6 Kh8 Nh5'
+            ),
+            "notes": {
+                24: "Unzicker brings the knight back before the centre is settled — a normal-looking move, and the losing one. The deep dive's 12...cxd4 keeps the position fluid; this hands White the choice.",
+                25: "13.d5! The centre is closed and the game is decided: from here White plays on the queenside first and the kingside second, and Black's knight on d8 needs four moves to reach anywhere useful.",
+                27: "a4 — the pawns point at the queenside, so that is where the play is. Every single one of White's moves for the next fifteen is preparation.",
+                31: "b4 fixes the queenside for good. Black now has no pawn break at all: ...c4 gives up d4, ...f5 opens the file toward Black's own king.",
+                33: "The knight tour begins, the same Nf1–g3 as always. Karpov has a completely closed position and is still bringing pieces to their best squares.",
+                44: "Unzicker releases the tension himself. It frees d4 for White's pieces and, more importantly, it is the last time Black's queenside pawns move all game.",
+                47: "24.Ba7!! — the move the game is famous for. The bishop steps into a corner it can never be attacked in, and Black's rooks are shut out of the a-file forever. A piece that cannot be challenged is worth more than a piece that is active.",
+                51: "Both rooks double behind the bishop. White has four pieces on the queenside and Black cannot bring a single one to meet them.",
+                59: "Only now, on move thirty, does the kingside attack start. Black's pieces are all on the wrong side of the board and there is no route back.",
+                61: "f5 fixes the kingside too. Black is now in zugzwang-in-slow-motion: every piece has one square, and the king shuffles because there is nothing else to do.",
+                69: "The bishop takes the diagonal toward f7. Notice the pattern of the whole game: nothing is ever exchanged unless the trade improves White's worst piece.",
+                81: "The first capture since move fifteen, and it wins on the spot — f7 was the only square holding Black's position together.",
+                85: "43.Qg6 and Unzicker resigned after 44.Nh5. The queen cannot be taken — 44...Qxg6 45.fxg6 and the passed pawn on g6 decides it — and the knight lands on f6 next. Karpov sacrificed nothing all game and never gave Black a single move worth playing.",
+            },
+        },
+        {
+            "id": 'lasker-capablanca-1914',
+            "name": "Lasker – Capablanca, St Petersburg 1914 — the Exchange plan",
+            "tier": 'Structure',
+            "note": "The most famous Exchange Variation ever played. Lasker needed a win, chose the line everyone calls drawish, and beat the man who would not lose another game for ten years. Watch how 12.f5! decides a game where nothing is hanging.",
+            "moves": (
+                'e4 e5 Nf3 Nc6 Bb5 a6 Bxc6 dxc6 d4 exd4 Qxd4 Qxd4 Nxd4 Bd6 Nc3 Ne7 O-O O-O f4 Re8 '
+                'Nb3 f6 f5 b6 Bf4 Bb7 Bxd6 cxd6 Nd4 Rad8 Ne6 Rd7 Rad1 Nc8 Rf2 b5 Rfd2 Rde7 b4 Kf7 '
+                'a3 Ba8 Kf2 Ra7 g4 h6 Rd3 a5 h4 axb4 axb4 Rae7 Kf3 Rg8 Kf4 g6 Rg3 g5+ Kf3 Nb6 '
+                'hxg5 hxg5 Rh3 Rd7 Kg3 Ke8 Rdh1 Bb7 e5 dxe5 Ne4 Nd5 N6c5 Bc8 Nxd7 Bxd7 Rh7 Rf8 '
+                'Ra1 Kd8 Ra8+ Bc8 Nc5'
+            ),
+            "notes": {
+                9: "5.d4 — the queens come off on move six and the structure is already decided. This is the honest version of the Exchange: no attack, no tricks, just a better pawn structure for the next forty moves.",
+                19: "10.f4 starts the majority rolling. In this structure the kingside pawns are the plan, not a pawn storm — they advance to make a passed pawn thirty moves from now.",
+                23: "12.f5! The move the game is remembered for. It gives up d5 forever and takes e6 forever, and e6 is the square Black's pieces need. Lasker traded a square he could not use for one Capablanca could not live without.",
+                27: "Trading the dark-squared bishops: Black's pair was the only compensation for the doubled pawns, so one of them has to go.",
+                31: "The knight lands on e6 — the hole f5 created. From here it cannot be taken, cannot be driven away, and cuts Black's position in half.",
+                39: "b4 clamps the queenside. Black's four pawns there now cannot produce a passer, which is the entire point of the structure White chose on move four.",
+                43: "The king walks up the board. With no queens on, this is not risky — it is the strongest piece on the board joining the attack for free.",
+                55: "The king stands on f4 on move twenty-eight with all four rooks still on the board. That is not bravado: the majority is about to advance and the king is the piece that escorts it.",
+                69: "35.e5! The break, at the exact moment every piece supports it. Black's position falls apart in four moves.",
+                71: "Ne4 and Black cannot stop both knights arriving. The knight on c5 and the rook on h7 finish it.",
+                83: "42.Nc5 and Capablanca resigned. He would not lose another serious game until 1924 — this is the one that cost him the tournament.",
+            },
+        },
+        {
+            "id": 'kasparov-kramnik-2000',
+            "name": "Kasparov – Kramnik, London 2000 (game 1) — the Berlin Wall arrives",
+            "tier": 'Mastery',
+            "note": "The first game of the world championship match, and the moment the Berlin came back. Kasparov had prepared for everything except a defence that trades queens on move eight and asks him to prove something. He could not, and lost the title without winning a game.",
+            "moves": (
+                'e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4 Nd6 Bxc6 dxc6 dxe5 Nf5 Qxd8+ Kxd8 Nc3 Bd7 b3 h6 '
+                'Bb2 Kc8 h3 b6 Rad1 Ne7 Ne2 Ng6 Ne1 h5 Nd3 c5 c4 a5 a4 h4 Nc3 Be6 Nd5 Kb7 '
+                'Ne3 Rh5 Bc3 Re8 Rd2 Kc8 f4 Ne7 Nf2 Nf5'
+            ),
+            "notes": {
+                16: "Eight moves in and the queens are gone. Black cannot castle and does not care — there is nothing left to attack the king with.",
+                18: "Kramnik's move order: the bishop comes out first and the king will walk to c8, tucked behind it. The 9...Ke8 plan from the main line is equally good; this one keeps the king further from the open files.",
+                22: "The king reaches safety by hand. It took three moves and no piece was ever in danger, which is the Berlin's whole argument.",
+                26: "The knight sets off for g6, where it hits e5 and h4 and covers f4. Every black piece in this game has exactly one good square and finds it.",
+                29: "Kasparov re-routes too — Ne1–d3 to hold e5 and hit c5. Both sides are manoeuvring; neither has a single threat on the board.",
+                30: "...h5, and ...h4 next: space on the side where Black's pawns are healthy. Slow, permanent, and the kind of gain that decides queenless positions.",
+                35: "c4 and a4 stake out the queenside. White has more space and the better structure; Black has two bishops and no weaknesses. That is the whole match in one position.",
+                39: "The knight arrives on d5. It looks magnificent and does nothing — there is no attack behind it, and Black simply covers everything.",
+                42: "Kramnik puts the rook on h5, the file his own pawn opened. Every piece has come out through the eye of a needle.",
+                47: "24.f4 finally makes a pawn move on the kingside, and it changes nothing: 24...Ne7 covers d5 and f5 at once. Draw agreed after Black's twenty-fifth. Kasparov never solved this problem in the whole match.",
+            },
+        },
+    ],
     "progression": {
         "arc": "The Ruy is a five-year opening. You will keep finding new layers in it, which is exactly why every world champion has played it.",
         "stages": [
@@ -130,7 +662,7 @@ OPENING = {
                     "The Exchange Variation 4.Bxc6 as your safety net — it is fully playable and needs almost no theory.",
                 ],
                 "drill": "Play the Exchange Variation for a month. It teaches you the structure without the memorisation, and you will win endgames.",
-                "mistake": "Playing 5.Nxe5 after 4.Bxc6 dxc6. It loses a pawn to 5...Qd4 and it is the single most common Ruy Lopez blunder.",
+                "mistake": "Playing 5.Nxe5 after 4.Bxc6 dxc6. It loses the pawn straight back to 5...Qd4 and it is the single most common Ruy Lopez error.",
                 "ready": "You can reach move nine of the Closed Ruy from memory and you have won a game with the Exchange endgame plan.",
             },
             {

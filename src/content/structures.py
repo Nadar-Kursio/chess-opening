@@ -47,7 +47,6 @@ STRUCTURES = [
         ],
         "endgame_note": "Queenless, this structure favours whoever has the better minor piece, not whoever has more space. A knight on d5 or f5 outweighs a bishop staring at its own pawn chain.",
         "also_in": [
-            "fourknights — Morphy Defense, Tarrasch Variation reaches the identical d3+e4 vs d6+e5 skeleton.",
             "fourknights — Spanish Four Knights (Metger) is the same structure one move before White commits to d4.",
             "ruylopez — every Anti-Marshall and d3 Ruy arrives here; the Closed Ruy passes through it on the way to d4.",
         ],
@@ -81,9 +80,8 @@ STRUCTURES = [
         ],
         "endgame_note": "With queens off, the extra central pawn tells: White's d4+e4 gives an extra tempo in every pawn race and a shelter for the king on e3. Trade into it when Black's pieces are passive, avoid it when Black has the bishop pair.",
         "also_in": [
-            "ruylopez — Closed Ruy Lopez (Chigorin) reaches an identical White skeleton (a2,b2,c3,d4,e4,f2,g2,h3); Black differs only by ...b5 and ...c5.",
-            "fourknights — Caro Variation (Graz) reaches the identical White skeleton, move for move.",
             "fourknights — Spanish Four Knights (Metger) reaches it with doubled c-pawns after ...Bxc3 bxc3.",
+            "scotch — the Classical Variation reaches the same duo once White plays c3 and Black answers ...d6.",
         ],
     },
 
@@ -113,8 +111,8 @@ STRUCTURES = [
         ],
         "endgame_note": "The half-open c-file plus the duo usually means a healthy queenside majority. Simplify toward a rook endgame and push the majority; the extra central pawn covers the squares your king needs to march through.",
         "also_in": [
-            "ruylopez — the Chigorin deep dive reaches exactly this White skeleton (a2,b2,d4,e4,f2,g2,h3) after ...cxd4 cxd4; Black's half-open file is the c-file rather than the e-file.",
             "scotch — the Classical Variation arrives at a related version with e4 against ...d6 and no d-pawn.",
+            "italian — the Pianissimo reaches it whenever Black answers the delayed d4 with ...exd4 and White recaptures with the c-pawn.",
         ],
     },
 
@@ -148,6 +146,72 @@ STRUCTURES = [
             "carokann — the Panov-Botvinnik Attack ends on the identical White skeleton (a2,b2,d4,f2,g2,h2).",
             "queensgambit — the Queen's Gambit Accepted ends on the same skeleton with the a-pawn on a4.",
             "nimzo — the Rubinstein Variation (4.e3) ends on the identical White skeleton.",
+        ],
+    },
+
+    {
+        "id": "crippled-majority",
+        "name": "The crippled majority (4-against-3 healthy against 4-against-3 doubled)",
+        "tier": "Structure",
+        "taxonomy": "No chapter in Flores Rios or Soltis — both taxonomies are built around 1.d4 structures. The old name for it is the crippled queenside majority, and the Spanish Exchange is where it is easiest to learn: one side's four pawns can make a passer, the other side's four cannot.",
+        "fen": "r1b1k1nr/1pp3pp/p2b1p2/2p5/4P3/1N6/PPP2PPP/RNBR2K1 w kq - 1 10",
+        "white_plans": [
+            "Trade pieces, not pawns. Every trade takes you closer to the pure pawn ending, and the pure pawn ending is winning.",
+            "Roll the kingside majority — f4, g4, e5 — but only once the pieces cannot punish the holes it leaves.",
+            "Put a knight where a doubled pawn cannot chase it: c5, d5 and e6 are all squares Black's structure can no longer cover.",
+            "Refuse to open the queenside. Black's extra pawn there is worth something only if lines open for the bishops.",
+        ],
+        "black_plans": [
+            "Keep the queens on and keep the rooks on. The two bishops need open lines and targets; a pawn ending gives them neither.",
+            "...c5 and ...c4 to fix White's queenside and give the bishops a diagonal — the pawn count on that wing is real as long as pieces are still on the board.",
+            "...f6 and ...Bd6 to hold e5, then trade the knights, not the bishops.",
+            "Aim at f2 and the light squares. The compensation is dynamic and it expires; use it early.",
+        ],
+        "key_squares": ["c5", "d5", "e6", "f5", "the c-file"],
+        "pawn_breaks": ["White: f2–f4 and e4–e5, then g4–g5 to make the passer",
+                        "Black: ...c5–c4 and ...b5–b4, and ...f6–f5 to open lines for the bishops"],
+        "pitfalls": [
+            "Trading into the pawn ending as the side with the bishops. It is lost, and it usually looks equal one move earlier.",
+            "As White, pushing the majority before the pieces are placed. Pawns that advance without support become the targets.",
+            "Forgetting that the doubled pawn still defends squares. Two pawns on the c-file cover b5 and d5 twice over — the structure is crippled for making passers, not for holding ground.",
+        ],
+        "endgame_note": "This is the endgame the whole variation is played for. Four against three on the kingside produces a passed pawn by force; four against three on the queenside with two on the c-file produces nothing at all. If every piece comes off, White wins — so White should be counting trades and Black should be counting attackers.",
+        "also_in": [
+            "fourknights — the Scotch Four Knights hands the SAME doubled c-pawns to Black after 6.Nxc6 bxc6, and 7...d5 dissolves them. Comparing the two is the fastest way to understand this card: doubled pawns you can cure are a structure, doubled pawns you cannot are a verdict.",
+            "italian — Bxc6 in an Italian move order produces the identical trade, and the identical bargain.",
+        ],
+    },
+
+    {
+        "id": "doubled-c-pawns-open-b-file",
+        "name": "Doubled c-pawns with the b-file open (the Metger structure)",
+        "tier": "Structure",
+        "taxonomy": "Flores Rios covers the Nimzo-Indian version at length; the Four Knights version is the same pawns one rank lower and with the centre still on the board. Not a weakness and not a strength — a bargain, with clear terms on both sides.",
+        "fen": "r1b2rk1/pp2qppp/3pnn2/1Bp1p3/3PP3/2P2N2/P1P2PPP/R1BQR1K1 w - - 0 12",
+        "white_plans": [
+            "Play d4 and keep the two centre pawns abreast. The doubled c-pawn is what pays for the big centre — spend it.",
+            "Rb1 and pressure b7 down the file the doubled pawn opened. It is the one open line in the position.",
+            "d4–d5 to close the centre when Black's pieces are awkward, then Nh4–f5 or f2–f4 on the wing.",
+            "Trade the c-pawn off with c3–c4 and d4–d5 only if it comes with a target; otherwise it is a defender of d4 and b4 and should stay.",
+        ],
+        "black_plans": [
+            "...Nd8–e6, the Metger route: from e6 the knight hits d4 and c5 and kicks a bishop off g5 on the way.",
+            "...c5 to hit the base of the centre, and ...Qe7 and ...Rad8 behind it.",
+            "Trade the light-squared bishop and then aim at c3 and c2 with a rook. Doubled pawns on a half-open file are targets in an endgame even when they are useful in a middlegame.",
+            "Never allow d4–d5 for free: it gains space and unfreezes White's worst pawn at the same time.",
+        ],
+        "key_squares": ["d5", "b7", "c4", "e6", "f5"],
+        "pawn_breaks": ["White: d3–d4 and d4–d5, later f2–f4 and c3–c4",
+                        "Black: ...c7–c5 and ...d6–d5, ...f7–f5 once a knight reaches g6"],
+        "pitfalls": [
+            "Taking on c6 or c3 'to fix the structure' before you know which side the extra pawn helps. It usually helps whoever gets the open file.",
+            "Playing d4–d5 early. It stops being a pawn duo and starts being a locked centre where the bishop pair matters more than the file.",
+            "As Black, going after the c-pawns with pieces in the middlegame. They are defended, and hunting them costs the time you need for ...d5.",
+        ],
+        "endgame_note": "Queenless, the doubled pawns are simply a pawn worse: three pawns on the queenside doing the work of four. So the side with them wants pieces on and the centre alive, and the side against them wants trades. That is the same rule as the isolani card, and it is not a coincidence — every structural weakness gets worse as the pieces come off.",
+        "also_in": [
+            "nimzo — every ...Bxc3 bxc3 line reaches the identical pawns one rank higher; the Sämisch is the same bargain with the centre already committed.",
+            "italian — the Evans Gambit reaches a version of it after ...Bxb4 and c2–c3, except that there the pawns are a sacrifice rather than a structure.",
         ],
     },
 

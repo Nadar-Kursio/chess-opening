@@ -182,14 +182,15 @@ moves — you do not write those by hand.
 
 Every one of these can be left out, and an opening without them still builds and
 still works — the drill, the deviation panel and the plan card all degrade rather
-than disappear. Only the Italian carries the full set today.
+than disappear. The Italian, the Ruy Lopez and the Four Knights carry the full set
+today; the other ten openings carry none of it and still work.
 
 | Key | Where | What it does |
 | --- | --- | --- |
 | `tier` | line, branch, structure, game | Hides it below that setting in the **Show** bar. Absent = always visible. |
 | `drill` | line | Ships a legal-move list per position, so the drill can tell *illegal* from merely *not this line*. |
 | `plan` | line | The end-of-line card: `point`, optional `structure` id, `next`, `endgame`. |
-| `branches` | opening | Deviations, keyed by the **SAN prefix that reaches the position** — not by ply. A branch written once fires in every line and every opening that transposes into that position. |
+| `branches` | opening | Deviations, keyed by the **SAN prefix that reaches the position** — not by ply. A branch written once fires in every line of *that opening* which passes through the position; a second opening that transposes there writes its own, because the index is built per opening. |
 | `games` | opening | Annotated model games, replayed with the same board and tape. |
 
 A branch that happens to be the move some line plays is not an error: positions are
