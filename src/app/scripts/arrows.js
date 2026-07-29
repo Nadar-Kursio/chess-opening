@@ -38,7 +38,14 @@ function drawArrows(){
   const ctx = cv.getContext("2d");
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,size,size);
-  if(!state.arrows) return;
+
+  // Ahead of both gates below: a rejected attempt has to stay visible in the
+  // phase where the book arrows are suppressed, and whether the learner has the
+  // arrow overlay switched on is a separate question from whether they can see
+  // the move they just tried.
+  dxDrawBad(ctx, size/8);
+
+  if(!state.arrows || dxHideArrows()) return;
 
   const ply = curPly();
   const arrows = (ply && ply.arrows) || [];

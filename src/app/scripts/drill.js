@@ -55,7 +55,10 @@ function dxSide(){ const op = dxOp(); return op && op.orientation === "black" ? 
 /* The move the learner is being asked for: the one after the position on screen. */
 function dxAnswer(){ return curSeq()[state.ply + 1] || null; }
 
+/* Playing both sides means every move in the line is a question, so the score is
+   out of all of them rather than out of your own colour's. */
 function dxLearnerPlies(line){
+  if(state.drill.both) return line.plies.length - 1;
   const side = dxSide();
   return line.plies.filter((p,i)=>i>0 && p.turn===side).length;
 }
@@ -72,9 +75,9 @@ function dxSetMode(mode){
 
 function dxStart(){
   const d = state.drill;
-  d.phase = "ask"; d.hint = 0; d.tries = 0; d.seen = {};
+  d.phase = "ask"; d.hint = 0; d.tries = 0; d.seen = {}; d.bad = null;
   d.msg = ""; d.tone = ""; d.cursor = state.flip ? "e5" : "e4";
-  d.streak = db.streak.cur | 0;
+  d.streak = db.streak.cur | 0;   // `both` is a preference and deliberately survives
   state.ply = 0;
   state.sel = null;
   dxAdvanceToAsk();
@@ -84,11 +87,14 @@ function dxStart(){
 
 /* Play the opponent's moves for them until it is the learner's turn again.
    In an opening line that is exactly one move, but the loop is what makes the
-   function correct rather than the alternation happening to hold. */
+   function correct rather than the alternation happening to hold.
+
+   With `both` on nothing is played for you: every move is a question, which is
+   how you drill a line you have to know from both ends. */
 function dxAdvanceToAsk(){
   const side = dxSide();
   let next = dxAnswer();
-  while(next && next.turn !== side){
+  while(!state.drill.both && next && next.turn !== side){
     state.ply += 1;
     next = dxAnswer();
   }
@@ -117,6 +123,36 @@ function dxFinish(){
 
 /* ---- attempts ---- */
 
+/* Standing on an answered move, with the opponent's reply still to come. With
+   `both` on the reply is a real question instead, so this is false. */
+function dxReplying(){
+  const d = state.drill;
+  return !d.both && (d.phase === "right" || d.phase === "reveal") && !!dxAnswer();
+}
+
+function dxPlayReply(answer){
+  const d = state.drill;
+  state.ply += 1;
+  state.sel = null;
+  d.bad = null; d.msg = ""; d.tone = ""; d.hint = 0; d.tries = 0;
+  dxAdvanceToAsk();
+  render();
+  dxSay(answer.num + ". Your move.");
+}
+
+/* Naming the reply costs nothing: Continue was about to play it anyway, and
+   nothing here is being scored. */
+function dxWrongReply(here, from, to, answer){
+  const d = state.drill;
+  d.bad = {from, to, kind:"wrong"};
+  d.tone = "flat";
+  d.msg = `<b>${mvName(here.fen, from, to)}</b> isn't the reply this line plays &mdash; `
+        + `it goes <b>${answer.san}</b>.`;
+  state.sel = null;
+  render();
+  dxSay("Not the reply. The line plays " + answer.san + ".");
+}
+
 function dxTry(from, to){
   if(!dxOn() || state.drill.phase === "done") return;
   const here = curSeq()[state.ply];
@@ -125,6 +161,15 @@ function dxTry(from, to){
 
   const pair = mvNormalise(here.fen, from, to);
   from = pair[0]; to = pair[1];
+
+  // After your move is accepted, the reply is not a question -- you have already
+  // been marked. Playing it on the board is just a nicer way to press Continue,
+  // so it neither scores nor breaks a streak.
+  if(dxReplying()){
+    if(from === answer.from && to === answer.to){ dxPlayReply(answer); return; }
+    dxWrongReply(here, from, to, answer);
+    return;
+  }
 
   if(from === answer.from && to === answer.to){ dxRight(answer); return; }
 
@@ -156,7 +201,7 @@ function dxRight(answer){
   state.sel = null;
   state.ply += 1;
   d.phase = "right"; d.tries = 0; d.hint = 0;
-  d.msg = ""; d.tone = "ok";
+  d.msg = ""; d.tone = "ok"; d.bad = null;
   render();
   dxSay("Correct. " + answer.num + ".");
 }
@@ -177,6 +222,7 @@ function dxWrong(here, from, to){
   d.msg = level >= 1
     ? `<b>${name}</b> is legal — it just isn't the move this line teaches. ${dxPrinciple(here, from, to)}`
     : `<b>${name}</b> is not the move this line plays. Try another, or take a hint.`;
+  d.bad = {from, to, kind:"wrong"};
   state.sel = null;
   render();
   dxSay(name + ". Not this line's move.");
@@ -186,11 +232,10 @@ function dxNope(here, from, to){
   const d = state.drill;
   d.phase = "wrong";
   d.tone = "bad";
-  d.msg = `That isn't a legal move here.`;
+  d.msg = `<b>${mvName(here.fen, from, to)}</b> isn't a legal move here.`;
+  d.bad = {from, to, kind:"illegal"};
   state.sel = null;
   render();
-  const sq = document.querySelector(`[data-sq="${to}"]`);
-  if(sq){ sq.classList.add("dxnope"); setTimeout(()=>sq.classList.remove("dxnope"), 450); }
   dxSay("Not a legal move.");
 }
 
@@ -231,7 +276,7 @@ function dxShow(){
   state.sel = null;
   state.ply += 1;
   d.phase = "reveal"; d.hint = 0; d.tries = 0;
-  d.msg = ""; d.tone = "flat";
+  d.msg = ""; d.tone = "flat"; d.bad = null;
   render();
   dxSay("The move is " + answer.san + ".");
 }
@@ -239,7 +284,7 @@ function dxShow(){
 function dxContinue(){
   const d = state.drill;
   if(d.phase === "done") return;
-  d.msg = ""; d.tone = ""; d.hint = 0; d.tries = 0;
+  d.msg = ""; d.tone = ""; d.hint = 0; d.tries = 0; d.bad = null;
   state.sel = null;
   dxAdvanceToAsk();
   render();
@@ -274,6 +319,12 @@ function dxBarHTML(line){
             role="tab" aria-selected="${state.mode==="drill"}"
             title="Play each move before it is shown">Drill</button>
         </div>
+        ${state.mode==="drill"?`<button class="dxmode dxboth${state.drill.both?" on":""}"
+          data-act="both" aria-pressed="${state.drill.both}"
+          title="${state.drill.both
+            ? "Answering for both colours. Switch back to only your own."
+            : "Answer for both colours instead of having the replies played for you."}"
+          >⇄ Both sides</button>`:""}
         <div class="dxbarend">
           <span class="dxlvl lv${level}" title="How much this line can tell you about a wrong move">${DX_LEVELS[level].tag}<em> — ${DX_LEVELS[level].blurb}</em></span>
           <button class="dxdev${state.pick?" on":""}" data-act="deviate"
@@ -291,7 +342,7 @@ function dxScoreHTML(line){
   return `
         <div class="dxhead">
           <span class="dxturn">${d.phase==="done" ? "Line complete"
-            : `Your move &mdash; <b>${dxSide()==="w"?"White":"Black"}</b>`}</span>
+            : `Your move &mdash; <b>${dxMoverSide()==="w"?"White":"Black"}</b>`}</span>
           <span class="dxscore"><b>${right}</b> of <b>${asked}</b> first try
             <span class="sep">&middot;</span> streak <b>${d.streak}</b></span>
         </div>
@@ -306,7 +357,7 @@ function dxHintsHTML(){
   const rungs = [];
   if(d.hint >= 1){
     const here = curSeq()[state.ply];
-    rungs.push(`<li class="rung">Move your <b>${mvPieceName(mvPieceAt(here.fen, answer.from))}</b>.</li>`);
+    rungs.push(`<li class="rung">Move ${state.drill.both ? (answer.turn==="w"?"White&rsquo;s":"Black&rsquo;s") : "your"} <b>${mvPieceName(mvPieceAt(here.fen, answer.from))}</b>.</li>`);
   }
   if(d.hint >= 2){
     const why = dxRedact(answer.note, answer) || dxRedact(answer.tactics, answer);
@@ -334,6 +385,7 @@ function dxPanelHTML(line){
   }
 
   if(d.phase === "right" || d.phase === "reveal"){
+    const reply = dxReplying() ? dxAnswer() : null;
     return `
       <div class="drill" data-phase="${d.phase}" data-tone="${d.tone}">
         ${dxScoreHTML(line)}
@@ -343,6 +395,9 @@ function dxPanelHTML(line){
         </div>
         <p class="cmtext">${played.note}</p>
         ${played.tactics?`<div class="tactics"><span class="lbl">On the board</span><span class="body">${tacticsHTML(played.tactics)}.</span></div>`:""}
+        ${d.msg?`<p class="dxmsg">${d.msg}</p>`:""}
+        ${reply?`<p class="dxreply">Play <b>${reply.turn==="w"?"White":"Black"}</b>&rsquo;s
+          reply on the board, or press Continue to have it played.</p>`:""}
         <div class="dxacts">
           <button class="ctl wide" data-act="continue">Continue &#8594; <kbd>↵</kbd></button>
         </div>
@@ -354,7 +409,7 @@ function dxPanelHTML(line){
       <div class="drill" data-phase="${d.phase}" data-tone="${d.tone||"flat"}">
         ${dxScoreHTML(line)}
         ${d.msg?`<p class="dxmsg">${d.msg}</p>`:""}
-        <p class="dxprompt">Play ${dxSide()==="w"?"White":"Black"}&rsquo;s move on the board.</p>
+        <p class="dxprompt">Play ${dxMoverSide()==="w"?"White":"Black"}&rsquo;s move on the board.</p>
         ${played.note?`<p class="dxcontext">${dxRedact(played.note, dxAnswer())}</p>`:""}
         ${dxHintsHTML()}
         <div class="dxacts">
@@ -388,6 +443,10 @@ function dxPaint(){
   if(!board) return;
   const here = curSeq()[state.ply];
   const targets = state.sel ? mvTargets(here, state.sel) : [];
+  // The rejected move was never played, so the board shows no trace of it unless
+  // it is marked. Held until the next attempt rather than flashed -- you have to
+  // be able to look at what you did.
+  const bad = state.drill.bad;
   board.querySelectorAll("[data-sq]").forEach(sq=>{
     const name = sq.dataset.sq;
     sq.classList.toggle("dxsel", name === state.sel);
@@ -395,7 +454,43 @@ function dxPaint(){
     const isTarget = targets.indexOf(name) >= 0;
     sq.classList.toggle("dxhint", isTarget);
     sq.classList.toggle("dxcap", isTarget && mvPieceAt(here.fen, name) !== "");
+    const onBad = bad && (name === bad.from || name === bad.to);
+    sq.classList.toggle("dxbad", !!onBad && bad.kind === "wrong");
+    sq.classList.toggle("dxnope", !!onBad && bad.kind === "illegal");
+    sq.classList.toggle("dxbadto", !!onBad && name === bad.to);
   });
+}
+
+/* Drops the last attempt without a re-render. Called from pointerdown, where
+   replacing #content would delete the node the pointer is on and abandon a drag
+   before it starts -- so the message node is removed directly instead. */
+function dxClearMsg(){
+  const d = state.drill;
+  d.msg = ""; d.tone = "";
+  const msg = document.querySelector(".drill .dxmsg");
+  if(msg) msg.remove();
+  const panel = document.querySelector(".drill");
+  if(panel) panel.setAttribute("data-tone", "flat");
+  dxPaint();
+  drawArrows();
+}
+
+/* Drawn by arrows.js, which clears the canvas and then asks for this before it
+   decides whether the book arrows are allowed -- the attempt has to be visible
+   in exactly the phase where the book arrows are not. */
+function dxDrawBad(ctx, sq){
+  const bad = state.drill.bad;
+  if(!bad || !dxOn()) return;
+  const a = colrow(bad.from, state.flip), b = colrow(bad.to, state.flip);
+  const colour = bad.kind === "illegal"
+    ? "rgba(204,106,98,0.85)" : "rgba(221,169,74,0.85)";
+  const dcol = Math.abs(a.col-b.col), drow = Math.abs(a.row-b.row);
+  if((dcol===1 && drow===2) || (dcol===2 && drow===1)){
+    drawBentArrow(ctx, a, b, colour, sq*0.11, sq);
+  } else {
+    const p1 = center(a, sq), p2 = center(b, sq);
+    drawArrow(ctx, p1.x, p1.y, p2.x, p2.y, colour, sq*0.11, sq);
+  }
 }
 
 /* Whose move it is in the position on screen -- which in drill is always the
@@ -405,11 +500,16 @@ function dxMoverSide(){
   return next ? next.turn : (state.ply % 2 === 0 ? "w" : "b");
 }
 
-/* The board is live in two situations, and they want different answers. */
+/* The board is live in three situations, and they want different answers: being
+   asked, having just answered wrongly, and standing on an answered move with the
+   reply still to play. The last is why Continue is never the only way forward --
+   the board is the interface, a button is the fallback. */
 function dxArmed(){
   if(state.branch) return false;
   if(state.pick) return true;
-  return dxOn() && (state.drill.phase === "ask" || state.drill.phase === "wrong");
+  if(!dxOn()) return false;
+  const p = state.drill.phase;
+  return p === "ask" || p === "wrong" || p === "right" || p === "reveal";
 }
 
 function dxBoardMove(from, to){
@@ -444,6 +544,10 @@ function brTry(from, to){
 
 function dxPick(sq){
   const here = curSeq()[state.ply];
+  // Before every early return below, and here rather than in the pointer handler
+  // so the keyboard reaches it too: touching the board at all -- any square,
+  // pickable or not -- means you are done looking at the last attempt.
+  if(state.drill.bad){ state.drill.bad = null; dxClearMsg(); }
   if(state.sel === sq){ state.sel = null; dxPaint(); return; }
   if(state.sel){ const from = state.sel; state.sel = null; dxBoardMove(from, sq); return; }
   if(!mvIsOwn(here.fen, sq, dxMoverSide())) return;
@@ -536,6 +640,17 @@ function dxKey(e){
 }
 
 ACTIONS.mode     = t=>dxSetMode(t.dataset.v);
+ACTIONS.both     = ()=>{
+  // Restarts the line: the score is out of a different number of moves now, and
+  // half-answered progress against the old count would be meaningless.
+  state.drill.both = !state.drill.both;
+  db.ui.both = state.drill.both;
+  dbSave();
+  dxStart();
+  dxSay(state.drill.both
+    ? "Answering for both colours, from the start of the line."
+    : "Answering for your own colour only, from the start of the line.");
+};
 ACTIONS.hint     = ()=>dxHint();
 ACTIONS.show     = ()=>dxShow();
 ACTIONS.retry    = ()=>dxRetry();

@@ -92,6 +92,7 @@ function dbRestore(){
   const ui = db.ui || {};
   if(TIERS.indexOf(ui.tier) >= 0) state.tier = ui.tier;
   if(typeof ui.arrows === "boolean") state.arrows = ui.arrows;
+  if(typeof ui.both === "boolean") state.drill.both = ui.both;
 
   const last = db.last || {};
   const op = DATA.find(o=>o.id===last.opId);

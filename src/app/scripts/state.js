@@ -29,8 +29,11 @@ const state = {
   structId:null, // view === "structure"
   gameId:null,   // view === "game"; a game reuses state.ply, so the transport works unchanged
 
-  /* Session-only. Scores are mirrored into the store when a line finishes. */
-  drill:{phase:"ask", hint:0, tries:0, seen:{}, streak:0, cursor:"e4", msg:"", tone:""}
+  /* Session-only, except `both`, which is a preference and is restored from the
+     store. `bad` is the last rejected attempt, kept so the board can show you
+     what you just tried -- the move was never played, so nothing else records it. */
+  drill:{phase:"ask", hint:0, tries:0, seen:{}, streak:0, cursor:"e4", msg:"", tone:"",
+         both:false, bad:null}
 };
 
 /* Handlers for every control that declares data-act, dispatched by the one
