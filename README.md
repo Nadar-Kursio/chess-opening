@@ -66,6 +66,7 @@ src/
     styles/                      13 stylesheets, concatenated in build.py's order
     scripts/                     14 scripts, concatenated in build.py's order
 
+scripts/serve.sh               <- build and preview locally; sets up .venv if needed
 tests/test_content.py          <- shape checks over the opening catalogue
 ```
 
@@ -76,10 +77,19 @@ scope, so a `const` is only visible to files listed after it.
 
 ## Rebuilding after an edit
 
+The one dependency lives in a virtualenv, so use that interpreter rather than the
+system `python3` — every command below assumes it:
+
 ```
-pip install -r requirements.txt
-python3 src/build.py
+python3 -m venv .venv                        # first time only
+.venv/bin/pip install -r requirements.txt
+
+.venv/bin/python3 src/build.py
 ```
+
+Or `source .venv/bin/activate` once and plain `python3` works for the rest of the
+shell. Using the system `python3` by mistake fails with a message telling you
+this, rather than a bare `ModuleNotFoundError`.
 
 `src/build.py` does three things:
 1. Validates that **every move in every line is legal** (fails loudly if not).
@@ -97,9 +107,20 @@ writing anything — use it to catch a data edit that was never rebuilt.
 ## Previewing while you work
 
 ```
-python3 src/build.py --serve                  # http://127.0.0.1:8000/
-python3 src/build.py --serve --port 9000
-python3 src/build.py --serve --host 0.0.0.0   # reachable from other machines
+scripts/serve.sh                  # http://127.0.0.1:8000/
+scripts/serve.sh --port 9000
+scripts/serve.sh --host 0.0.0.0   # reachable from other machines
+```
+
+That is the whole setup step: the script creates `.venv` and installs the
+dependency if they are missing, then starts the server. It works from any
+directory and always serves the checkout it lives in — run the copy inside a
+worktree and you get that worktree, not `main`.
+
+It is a thin wrapper. The build owns the behaviour and can be driven directly:
+
+```
+.venv/bin/python3 src/build.py --serve --port 9000
 ```
 
 It rebuilds on every request — about 0.4s — and serves the result **from memory**.

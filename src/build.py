@@ -18,7 +18,23 @@ import sys
 import time
 from html import escape
 
-import chess
+try:
+    import chess
+except ModuleNotFoundError:
+    # The dependency lives in a virtualenv, so the system python3 will not find
+    # it. Saying so beats a traceback that only names the missing module.
+    raise SystemExit(
+        "python-chess is not installed for this interpreter.\n"
+        "\n"
+        "  Run the build with the project's virtualenv:\n"
+        "    .venv/bin/python3 src/build.py\n"
+        "\n"
+        "  or activate it once for this shell:\n"
+        "    source .venv/bin/activate\n"
+        "\n"
+        "  If .venv does not exist yet:\n"
+        "    python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+    )
 
 from content.common import COMMON
 from content.openings import load

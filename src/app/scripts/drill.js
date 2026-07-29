@@ -16,11 +16,31 @@ function dxLevel(line){
   for(let i=0;i<p.length;i++) if(p[i].legal) return 1;
   return 0;
 }
-const DX_LEVEL_LABEL = [
-  "Checks against this line",
-  "Checks legality + this line",
-  "Full feedback on your move",
+/* One vocabulary for the depth of feedback, used by the sidebar badge and the
+   study panel alike. Naming them for what they DO avoids calling the shallow
+   end unfinished: a Core line drills perfectly well, it just cannot tell an
+   illegal move from a merely off-book one, and it says so. */
+const DX_LEVELS = [
+  {tag:"Core",
+   blurb:"drills the line; cannot yet tell an illegal move from an off-book one"},
+  {tag:"Checked",
+   blurb:"knows every legal move, so it tells an illegal move from an off-book one"},
+  {tag:"Coached",
+   blurb:"answers the move you actually played"},
 ];
+
+/* An opening is only as good as its weakest line -- claiming Coached because
+   one line out of four is would be a promise the other three break. */
+function opLevel(op){
+  return op.lines.reduce((low, line)=>Math.min(low, dxLevel(line)), 2);
+}
+
+function opLevelTitle(op){
+  const lv = opLevel(op);
+  const devs = (op.branchsets || []).reduce((n,s)=>n+s.length, 0);
+  return `${DX_LEVELS[lv].tag} — ${DX_LEVELS[lv].blurb}`
+       + (devs ? `, with ${devs} deviations written` : "");
+}
 
 let dxTimer = null;
 
@@ -255,7 +275,7 @@ function dxBarHTML(line){
             title="Play each move before it is shown">Drill</button>
         </div>
         <div class="dxbarend">
-          <span class="dxlvl" title="How much this line can tell you about a wrong move">${DX_LEVEL_LABEL[level]}</span>
+          <span class="dxlvl lv${level}" title="How much this line can tell you about a wrong move">${DX_LEVELS[level].tag}<em> — ${DX_LEVELS[level].blurb}</em></span>
           <button class="dxdev${state.pick?" on":""}" data-act="deviate"
             ${state.branch?"disabled":""}>They deviated&hellip; <kbd>D</kbd></button>
         </div>

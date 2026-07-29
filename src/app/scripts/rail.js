@@ -25,8 +25,12 @@ function buildRail(){
     html += `<div class="railsub">${sec.label}</div>`;
     ops.forEach(o=>{
       const on = state.view==="op" && state.opId===o.id;
-      html += `<button class="railitem${on?" on":""}" data-go="${o.id}">${o.name}<span class="eco">${o.eco}</span></button>`;
-      opts += `<option value="${o.id}"${on?" selected":""}>${sec.label} — ${o.name}</option>`;
+      const lv = opLevel(o);
+      const tag = DX_LEVELS[lv].tag;
+      html += `<button class="railitem${on?" on":""}" data-go="${o.id}" title="${opLevelTitle(o)}">`
+            + `<span class="railtop">${o.name}<b class="lvtag lv${lv}">${tag}</b></span>`
+            + `<span class="eco">${o.eco}</span></button>`;
+      opts += `<option value="${o.id}"${on?" selected":""}>${sec.label} — ${o.name} · ${tag}</option>`;
     });
     const nextGroup = SECTIONS[SECTIONS.indexOf(sec)+1];
     if(!nextGroup || nextGroup.group!==sec.group){ html += `</div>`; opts += `</optgroup>`; }
