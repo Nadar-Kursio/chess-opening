@@ -20,6 +20,8 @@ __STYLES__
   <p class="standfirst">Every move on this page comes with a reason. Step through the board, read why the move was played, then read the strategy behind the whole system. Start with the primer if you want the rules that all of this is built on.</p>
 </header>
 
+<div class="chrome" id="chrome"></div>
+
 <div class="layout">
   <nav class="rail" id="rail"></nav>
   <main>
@@ -33,6 +35,10 @@ __STYLES__
 <template id="primer">
 __PRIMER__
 </template>
+
+<!-- Outside #content on purpose: a live region that render() destroys and
+     recreates does not reliably announce. -->
+<div class="sr" id="dxlive" role="status" aria-live="polite"></div>
 
 <script>
 __SCRIPTS__

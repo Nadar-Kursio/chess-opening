@@ -26,20 +26,22 @@ function boardCells(fen, from, to, checkSide, flip){
     let co = "";
     if(row===7) co += `<span class="coord f">${FILES[file]}</span>`;
     if(col===0) co += `<span class="coord r">${rank+1}</span>`;
-    out += `<div class="${cls.join(" ")}">${co}${extra}</div>`;
+    out += `<div class="${cls.join(" ")}" data-sq="${name}">${co}${extra}</div>`;
   });
   return `<div class="board" id="board">${out}</div>`;
 }
 
 /* Size the pieces to the actual rendered square, so they always fit at any board size.
-   Runs after every render and on window resize -- pure JS, works in every browser. */
+   Runs after every render and on window resize -- pure JS, works in every browser.
+   Every board on the page, not just the study board: a page may carry a second
+   diagram alongside it. */
 function sizeBoard(){
-  const b = document.getElementById("board");
-  if(!b) return;
-  const sq = b.clientWidth / 8;
-  if(sq > 0){
-    b.style.fontSize = (sq * 0.74) + "px";
-    b.querySelectorAll(".coord").forEach(c=>{ c.style.fontSize = Math.max(7, sq*0.16) + "px"; });
-  }
+  document.querySelectorAll(".board").forEach(b=>{
+    const sq = b.clientWidth / 8;
+    if(sq > 0){
+      b.style.fontSize = (sq * 0.74) + "px";
+      b.querySelectorAll(".coord").forEach(c=>{ c.style.fontSize = Math.max(7, sq*0.16) + "px"; });
+    }
+  });
 }
 window.addEventListener("resize", sizeBoard);

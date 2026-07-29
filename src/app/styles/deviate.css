@@ -1,0 +1,72 @@
+/* ---------- deviations ---------- */
+/* Severity is never carried by colour alone: every chip states its word, and
+   dxSay() puts the same word into the live region. */
+.dxbarend{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dxdev{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:5px 12px;transition:.13s;
+}
+.dxdev:hover:not(:disabled){color:var(--text);border-color:var(--line2);background:var(--panel)}
+.dxdev.on{color:var(--ink);background:var(--amber);border-color:var(--amber);font-weight:600}
+.dxdev:disabled{opacity:.4;cursor:default}
+.dxdev kbd,.brchip kbd,.devcancel kbd{
+  font-family:var(--mono);font-size:9px;border:1px solid currentColor;border-radius:3px;
+  padding:0 3px;margin-left:4px;opacity:.7;
+}
+
+.deviate{
+  background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--amber);
+  border-radius:7px;padding:13px 15px;margin-bottom:12px;
+}
+.devlead{margin:0 0 10px;font-size:14px}
+.devlead b{font-family:var(--mono);font-size:13px;color:var(--amber)}
+.devchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.brchip{
+  display:inline-flex;align-items:baseline;gap:7px;
+  border:1px solid var(--line2);border-radius:20px;padding:5px 13px;
+  font-family:var(--mono);font-size:12.5px;color:var(--text);transition:.13s;
+}
+.brchip em{font-style:normal;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.brchip:hover{background:var(--panel2)}
+.brchip.sev-blunder{border-color:var(--sev-blunder)}
+.brchip.sev-blunder em{color:var(--sev-blunder)}
+.brchip.sev-inaccuracy{border-color:var(--sev-inaccuracy)}
+.brchip.sev-inaccuracy em{color:var(--sev-inaccuracy)}
+.brchip.sev-playable{border-color:var(--sev-playable)}
+.brchip.sev-playable em{color:var(--sev-playable)}
+.develse{margin:0;font-size:13px;color:var(--dim)}
+.devcancel{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);margin-top:9px}
+.devcancel:hover{color:var(--text)}
+
+.branch{
+  background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--slate);
+  border-radius:7px;padding:14px 16px;
+}
+.branch.sev-blunder{border-left-color:var(--sev-blunder)}
+.branch.sev-inaccuracy{border-left-color:var(--sev-inaccuracy)}
+.branch.sev-playable{border-left-color:var(--sev-playable)}
+
+.brtop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.brsev{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid currentColor;border-radius:20px;padding:2px 9px;
+}
+.sev-blunder .brsev{color:var(--sev-blunder)}
+.sev-inaccuracy .brsev{color:var(--sev-inaccuracy)}
+.sev-playable .brsev{color:var(--sev-playable)}
+.brmove{font-family:var(--mono);font-size:14px;color:var(--text)}
+.brname{font-size:13px;color:var(--dim);font-style:italic}
+.brclose{margin-left:auto;color:var(--dim);font-size:14px;line-height:1}
+.brclose:hover{color:var(--text)}
+
+.brwhy{margin:0 0 12px;font-size:14.5px;line-height:1.62}
+.brtape{
+  display:flex;flex-wrap:wrap;gap:2px;align-items:center;
+  border-top:1px solid var(--line);padding-top:10px;margin-bottom:6px;
+}
+.brnav{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.brnav .brret{margin-left:auto}
+
+/* While a deviation is open the real line stays visible but stands down. */
+.tape.brmuted{opacity:.38}

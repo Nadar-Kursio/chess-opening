@@ -5,6 +5,15 @@ moves, chess.com-style arrows (including bent knight arrows), and an auto-genera
 "what this move does" line under every move. The whole app is a single HTML file
 with no external dependencies — open it in any browser.
 
+You can **read** a line, or **drill** it — the board asks for each move before it
+shows you, with a three-rung hint ladder and a score. When your opponent plays
+something else, the deviation panel answers *the move they actually played*, sorted
+into blunder / inaccuracy / playable — because most deviations are none of the first
+two, and a trainer that answers every one with a red cross teaches you to hunt for
+refutations that were never there. Every line ends with a plan card naming the pawn
+structure it reached, and structures are shared across openings, so learning the
+isolani once pays out in four of them.
+
 ## Quick start
 
 Online: **https://nadar-kursio.github.io/chess-opening/**
@@ -46,6 +55,7 @@ src/
   content/
     common.py                    shared annotations, keyed by "ply:SAN"
     sections.py                  the sidebar's sections and their order
+    structures.py                pawn structures, shared between openings
     openings/
       __init__.py                ORDER: which openings exist, and in what order
       italian.py, ruylopez.py…   one module per opening — 13 of them
@@ -53,11 +63,16 @@ src/
     page.html                    document skeleton with the build's placeholders
     primer.html                  the "how openings work" primer, as plain HTML
     index.html                   the redirect stub copied to docs/
-    styles/                      9 stylesheets, concatenated in build.py's order
-    scripts/                     7 scripts, concatenated in build.py's order
+    styles/                      13 stylesheets, concatenated in build.py's order
+    scripts/                     14 scripts, concatenated in build.py's order
 
 tests/test_content.py          <- shape checks over the opening catalogue
 ```
+
+`STYLES` and `SCRIPTS` in `build.py` are the real file lists; a file not named
+there is silently left out of the build. Both are order-dependent — `responsive.css`
+must cascade last, `boot.js` must run last, and the scripts share one top-level
+scope, so a `const` is only visible to files listed after it.
 
 ## Rebuilding after an edit
 
@@ -71,9 +86,44 @@ python3 src/build.py
 2. Generates arrows + a plain-language tactical summary for each move (`engine/intel.py`).
 3. Writes `docs/`, inlining the data, styles and scripts into one HTML file.
 
-If a move is illegal, the build prints exactly which line and ply, and stops.
+If a move is illegal, the build prints every problem it found — naming the opening,
+line, ply, and for a deviation the branch — and then stops without writing. That
+matters: `build_line` breaks out of a bad line, so carrying on would write a
+silently truncated line into `docs/` that `--check` would then call up to date.
+
 `python3 src/build.py --check` verifies `docs/` matches the sources without
 writing anything — use it to catch a data edit that was never rebuilt.
+
+## Previewing while you work
+
+```
+python3 src/build.py --serve                  # http://127.0.0.1:8000/
+python3 src/build.py --serve --port 9000
+python3 src/build.py --serve --host 0.0.0.0   # reachable from other machines
+```
+
+It rebuilds on every request — about 0.4s — and serves the result **from memory**.
+Nothing is written to `docs/`, so a preview never leaves the repo half-built or
+produces a diff you did not ask for, and there is no stale-page failure mode to
+remember: edit a module, refresh, see it. Responses carry `Cache-Control: no-store`,
+so an ordinary refresh is enough.
+
+If the build fails you get a 500 with the error — opening, line and ply — instead
+of the last page that happened to work.
+
+It binds loopback unless you pass `--host`, so exposing the port is something you
+type rather than something you get. There is no live reload and no file watching;
+this is a plain rebuild-per-request server, which is all a 0.4s build needs.
+
+Note that `--serve` drops the cached `content.*` modules before each build.
+Without that, `import_module` would hand back the first import forever and the
+server would serve your first build all afternoon — the styles and scripts are
+read from disk every time, so only content edits would silently fail to appear.
+
+**The build does not parse the JavaScript.** It concatenates it, so a syntax error
+in a script ships a dead page and the build still reports success. Nothing in the
+repo catches that; load `docs/chess-opening-course.html` in a browser after touching
+anything under `src/app/scripts/` and check the console.
 
 ## Publishing
 
@@ -106,6 +156,28 @@ variation to an existing opening, add an entry to its `lines` list: `name`,
 
 Arrows and the "On the board" tactical line are generated automatically from the
 moves — you do not write those by hand.
+
+### The optional keys
+
+Every one of these can be left out, and an opening without them still builds and
+still works — the drill, the deviation panel and the plan card all degrade rather
+than disappear. Only the Italian carries the full set today.
+
+| Key | Where | What it does |
+| --- | --- | --- |
+| `tier` | line, branch, structure, game | Hides it below that setting in the **Show** bar. Absent = always visible. |
+| `drill` | line | Ships a legal-move list per position, so the drill can tell *illegal* from merely *not this line*. |
+| `plan` | line | The end-of-line card: `point`, optional `structure` id, `next`, `endgame`. |
+| `branches` | opening | Deviations, keyed by the **SAN prefix that reaches the position** — not by ply. A branch written once fires in every line and every opening that transposes into that position. |
+| `games` | opening | Annotated model games, replayed with the same board and tape. |
+
+A branch that happens to be the move some line plays is not an error: positions are
+shared, so the same move can be a deviation from one line and the main move of
+another. The line being rendered drops it.
+
+Structures live in `src/content/structures.py` and belong to no single opening. A
+line points at one from its `plan`; the reverse list — which openings reach a
+structure — is derived by the build and must never be written by hand.
 
 ## Design notes (why things are the way they are)
 

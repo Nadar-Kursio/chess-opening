@@ -1,0 +1,89 @@
+/* ---------- drill ---------- */
+/* Loads after board.css so the interaction states layer above .sq.hl::before,
+   which already owns z-index 1. They sit below .pc (z-index 2) so a piece is
+   never obscured by the cue that points at it. */
+
+.dxbar{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:2px;
+}
+.dxmodes{display:flex;gap:4px}
+.dxmode{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:5px 14px;transition:.13s;
+}
+.dxmode:hover{color:var(--text);border-color:var(--line2);background:var(--panel)}
+.dxmode.on{color:var(--ink);background:var(--green);border-color:var(--green);font-weight:600}
+.dxlvl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+
+.drill{
+  background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--line2);
+  border-radius:7px;padding:14px 16px;
+}
+.drill[data-tone="ok"]{border-left-color:var(--green)}
+.drill[data-tone="warn"]{border-left-color:var(--amber)}
+.drill[data-tone="bad"]{border-left-color:var(--red)}
+.drill[data-tone="flat"]{border-left-color:var(--slate)}
+
+.dxhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dxturn{font-size:14.5px}
+.dxturn b{color:var(--green)}
+.dxscore{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.dxscore b{color:var(--muted)}
+.dxscore .sep{opacity:.5;margin:0 2px}
+
+.dxprogress{height:3px;background:var(--line);border-radius:2px;margin:10px 0 12px;overflow:hidden}
+.dxprogress i{display:block;height:100%;background:var(--green);transition:width .2s}
+
+.dxprompt{margin:0;font-size:14.5px;color:var(--text)}
+.dxcontext{margin:8px 0 0;font-size:13.5px;color:var(--muted)}
+.dxmsg{margin:0 0 8px;font-size:14px;color:var(--text)}
+.dxmsg b{color:var(--amber);font-family:var(--mono);font-size:13px}
+
+.dxhints{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.dxhints .rung{
+  font-size:13.5px;color:var(--muted);border-left:2px solid var(--line2);padding-left:12px;
+}
+.dxhints .rung b{color:var(--green)}
+
+.dxacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.dxacts kbd{
+  font-family:var(--mono);font-size:9.5px;border:1px solid var(--line2);border-radius:3px;
+  padding:0 4px;margin-left:5px;color:var(--dim);
+}
+
+/* The move list is the answer sheet, so the future is blanked but its shape kept. */
+.mv.mask{
+  display:inline-block;color:var(--dim);opacity:.4;letter-spacing:.1em;
+  padding:2px 6px;user-select:none;
+}
+
+/* ---------- board interaction ---------- */
+.board.dxlive{touch-action:none}
+.board.dxlive .sq{cursor:pointer}
+
+.sq.dxsel::after{
+  content:"";position:absolute;inset:0;z-index:1;
+  box-shadow:inset 0 0 0 3px var(--green);background:rgba(143,191,82,.28);
+}
+.sq.dxcur::before{
+  content:"";position:absolute;inset:0;z-index:1;box-shadow:inset 0 0 0 2px rgba(255,255,255,.75);
+}
+.sq.dxhint::after{
+  content:"";position:absolute;left:50%;top:50%;width:26%;height:26%;
+  transform:translate(-50%,-50%);border-radius:50%;background:rgba(35,33,32,.42);z-index:1;
+}
+.sq.dxhint.dxcap::after{
+  width:86%;height:86%;background:none;border-radius:50%;
+  box-shadow:inset 0 0 0 4px rgba(35,33,32,.42);
+}
+/* Feedback is carried by a colour class held by a JS timeout, not by the
+   animation: prefers-reduced-motion kills every animation on this page, and a
+   cue nobody can see is not a cue. */
+.sq.dxnope::after{
+  content:"";position:absolute;inset:0;z-index:1;background:rgba(204,106,98,.55);
+  animation:dxshake .22s ease-in-out 2;
+}
+@keyframes dxshake{
+  0%,100%{transform:translateX(0)} 25%{transform:translateX(-7%)} 75%{transform:translateX(7%)}
+}

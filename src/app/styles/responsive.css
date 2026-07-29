@@ -11,6 +11,9 @@
   .study{grid-template-columns:1fr;padding:14px;gap:18px}
   .wrap{padding:0 14px 60px}
   .pc{font-size:min(10.5vw,58px)}
+  .chrome{position:sticky;top:0;z-index:20;background:var(--ink);padding:8px 0;margin:-8px 0 16px}
+  .dxbar{flex-direction:column;align-items:stretch}
+  .dxacts .ctl{flex:1 1 auto}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}

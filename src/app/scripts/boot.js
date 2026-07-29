@@ -12,5 +12,7 @@ function mastheadText(){
 }
 
 document.getElementById("eyebrow").textContent = mastheadText();
+dbRestore();
+buildChrome();
 buildRail();
 render();

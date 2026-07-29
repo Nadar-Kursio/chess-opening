@@ -40,9 +40,7 @@ function drawArrows(){
   ctx.clearRect(0,0,size,size);
   if(!state.arrows) return;
 
-  const op = DATA.find(o=>o.id===state.opId);
-  if(!op) return;
-  const ply = op.lines[state.line].plies[state.ply];
+  const ply = curPly();
   const arrows = (ply && ply.arrows) || [];
   const sq = size/8;
 
