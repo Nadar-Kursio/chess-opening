@@ -751,10 +751,46 @@ ul.learn li::before{content:"";position:absolute;left:4px;top:9px;width:5px;heig
   }
   .study{grid-template-columns:1fr;padding:14px;gap:18px}
   .wrap{padding:0 14px 60px}
-  .pc{font-size:min(10.5vw,58px)}
-  .chrome{position:sticky;top:0;z-index:20;background:var(--ink);padding:8px 0;margin:-8px 0 16px}
+  /* No font-size for .pc here. sizeBoard() sets it on .board from the board's
+     own measured width and the pieces inherit it; a viewport-based size competes
+     with that and wins, so the glyphs stop matching the squares they sit in.
+     Overflow past the last rank is clipped by .boardwrap, which is why it showed
+     up as the bottom of the board being cut off. */
   .dxbar{flex-direction:column;align-items:stretch}
   .dxacts .ctl{flex:1 1 auto}
+
+  /* One column means the board is as wide as the screen, and padding-top:100%
+     makes it just as tall -- so on a phone it is taller than the space left
+     under the header and its own controls fall off the bottom. Cap it against
+     the viewport HEIGHT instead, and centre it once the cap bites.
+
+     svh, not vh: vh is the viewport with the browser's chrome hidden, so a vh
+     box is too tall the whole time that chrome is on screen. The vh line is the
+     fallback for engines that do not know svh. */
+  .boardframe{
+    max-width:min(100%,62vh);
+    max-width:min(100%,62svh);
+    margin-inline:auto;
+  }
+
+  /* Every row above the board is a row the board is pushed down by. The header
+     is the biggest of them and the least useful once you are studying. */
+  header.masthead{padding:20px 0 16px;margin-bottom:18px}
+  .standfirst{font-size:14px}
+  .ophead{margin-bottom:14px}
+  .jump{margin-bottom:14px}
+
+  /* Deliberately not sticky here. It is a settings row, not something you touch
+     mid-line, and pinning it costs ~40px of the height the board needs. */
+  .chrome{margin:-6px 0 14px}
+}
+
+/* Short and wide -- a phone on its side. Height is the scarce axis, so the board
+   gets a harder cap and the prose around it gets out of the way. */
+@media (max-width:900px) and (max-height:520px){
+  .boardframe{max-width:min(100%,86svh)}
+  .standfirst{display:none}
+  header.masthead{padding:14px 0 12px;margin-bottom:12px}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -2778,12 +2814,24 @@ function bindView(el){
   });
 }
 
+/* Keep the current move visible inside the move list, and nowhere else.
+   scrollIntoView cannot do this: it scrolls every scrollable ancestor up to and
+   including the document, which on the one-column mobile layout -- where the
+   list sits below the board -- drags the board off the screen on every move. */
+function scrollTapeToCurrent(){
+  const tape = document.getElementById("tape");
+  const on = tape && tape.querySelector(".mv.on");
+  if(!on) return;
+  const t = tape.getBoundingClientRect(), r = on.getBoundingClientRect();
+  if(r.top < t.top)         tape.scrollTop -= (t.top - r.top);
+  else if(r.bottom > t.bottom) tape.scrollTop += (r.bottom - t.bottom);
+}
+
 function afterRender(){
   sizeBoard();
   drawArrows();
   dxArm();
-  const on = document.querySelector(".mv.on");
-  if(on && on.scrollIntoView) on.scrollIntoView({block:"nearest"});
+  scrollTapeToCurrent();
   dbRemember();   // debounced, so stepping a line with the arrow keys costs one write
 }
 

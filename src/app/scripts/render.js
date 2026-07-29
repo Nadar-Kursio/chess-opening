@@ -209,12 +209,24 @@ function bindView(el){
   });
 }
 
+/* Keep the current move visible inside the move list, and nowhere else.
+   scrollIntoView cannot do this: it scrolls every scrollable ancestor up to and
+   including the document, which on the one-column mobile layout -- where the
+   list sits below the board -- drags the board off the screen on every move. */
+function scrollTapeToCurrent(){
+  const tape = document.getElementById("tape");
+  const on = tape && tape.querySelector(".mv.on");
+  if(!on) return;
+  const t = tape.getBoundingClientRect(), r = on.getBoundingClientRect();
+  if(r.top < t.top)         tape.scrollTop -= (t.top - r.top);
+  else if(r.bottom > t.bottom) tape.scrollTop += (r.bottom - t.bottom);
+}
+
 function afterRender(){
   sizeBoard();
   drawArrows();
   dxArm();
-  const on = document.querySelector(".mv.on");
-  if(on && on.scrollIntoView) on.scrollIntoView({block:"nearest"});
+  scrollTapeToCurrent();
   dbRemember();   // debounced, so stepping a line with the arrow keys costs one write
 }
 
