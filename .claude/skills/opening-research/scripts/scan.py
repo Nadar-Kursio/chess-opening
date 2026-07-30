@@ -41,7 +41,13 @@ def positions(argv):
 def main():
     with open_engine() as eng:
         for prefix, candidates in positions(sys.argv[1:]):
-            base = board_after(prefix)
+            # One unplayable prefix must not drop the rest of a --file batch. It
+            # has, twice, and each time it cost a re-run of everything after it.
+            try:
+                base = board_after(prefix)
+            except ValueError as e:
+                print(f"\n=== after {prefix}\n    SKIPPED — {e}", flush=True)
+                continue
             here, pv = score(eng, base)
             print(f"\n=== after {prefix}   [{here:+5d}, engine likes {pv}]", flush=True)
             for san in candidates:

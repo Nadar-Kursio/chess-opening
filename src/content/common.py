@@ -11,7 +11,7 @@ COMMON = {
     "2:d5": "Black mirrors in the centre. The Closed Games, where structure matters more than tempo.",
     "2:Nf6": "The Indian move order. Black hits e4 before deciding on a pawn structure, keeping every option open.",
     "3:Nf3": "Develops a piece, attacks e5, and heads for castling. Knights before bishops: the knight's best square is obvious this early, the bishop's is not.",
-    "3:c4": "The Queen's Gambit. Not a real gambit — after 2...dxc4 Black cannot hold the pawn. The point is to challenge d5 from the side and win the centre.",
+    "3:c4": "The second big pawn move, and what it means depends on what Black has already played. Against 1...d5 this is the Queen's Gambit — not a real gambit, because after 2...dxc4 Black cannot hold the pawn. Against 1...Nf6 there is nothing on d5 to take yet, and c4 simply claims the square before Black can occupy it. Either way the point is the same: challenge d5 from the side and take the centre.",
     "3:d4": "Immediately opening the centre while Black is a tempo behind in development.",
     "4:Nc6": "The natural defender of e5 and a developing move toward the centre. Knights on the rim are dim; Nc6 is the opposite of that.",
     "4:cxd4": "Black gives up the c-pawn for the d-pawn. This is the Sicilian bargain: Black gets a central pawn majority and a half-open c-file for the rook.",

@@ -111,6 +111,7 @@ class BranchIndex:
         self.sets = []          # what gets emitted
         self.authored = {}      # epd -> raw entries
         self.built = {}         # epd -> index into self.sets
+        self.played = {}        # epd -> the moves the lines themselves play there
         for prefix, entries in (op.get("branches") or {}).items():
             board = chess.Board()
             try:
@@ -125,8 +126,10 @@ class BranchIndex:
                 continue
             self.authored[board.epd()] = entries
 
-    def slot(self, board, where, ply):
+    def slot(self, board, where, ply, played=None):
         epd = board.epd()
+        if played is not None:
+            self.played.setdefault(epd, set()).add(played)
         if epd not in self.authored:
             return None
         if epd not in self.built:
@@ -138,6 +141,24 @@ class BranchIndex:
     def unused(self, op_id):
         return [f"{op_id}: branches authored for a position no line reaches"
                 for epd in self.authored if epd not in self.built]
+
+    def dead(self, op_id):
+        """Entries that can never render, because they are the move the line plays.
+
+        The renderer drops a deviation that matches the line's own next move --
+        rightly, since it is not a deviation from that line. When several lines
+        share a position that is harmless: the entry still shows for the others.
+        When only one line passes through, the entry is invisible, the build is
+        happy, and the author has no way to find out.
+        """
+        out = []
+        for epd, entries in self.authored.items():
+            plays = self.played.get(epd, set())
+            for br in entries:
+                if plays and plays == {br.get("san")}:
+                    out.append(f"{op_id}: deviation '{br.get('san')}' is the move every line "
+                               f"plays there, so it never renders")
+        return out
 
 
 def build_branches(where, board, entries, ply, errors):
@@ -276,7 +297,8 @@ def build_line(op_id, index, line, errors, side=None, branches=None):
             # Built once per position and referenced by index. Four Italian lines
             # share their opening moves, so emitting the set inline would ship
             # the same deviations three or four times over.
-            slot = branches.slot(board, f"{op_id} / line {index} '{line['name']}'", i + 1)
+            slot = branches.slot(board, f"{op_id} / line {index} '{line['name']}'", i + 1,
+                                 played=san)
             if slot is not None:
                 plies[i]["bx"] = slot
         try:
@@ -315,6 +337,7 @@ def build_line(op_id, index, line, errors, side=None, branches=None):
 
 def build_openings(games):
     errors = []
+    warnings = []
     out = []
     for op in load():
         side = chess.WHITE if op["orientation"] == "white" else chess.BLACK
@@ -326,6 +349,7 @@ def build_openings(games):
         if branches.sets:
             record["branchsets"] = branches.sets
         errors.extend(branches.unused(op["id"]))
+        warnings.extend(branches.dead(op["id"]))
         games.extend(build_game(op["id"], i, g, errors)
                      for i, g in enumerate(op.get("games") or []))
         out.append(record)
@@ -340,6 +364,8 @@ def build_openings(games):
             print(" ", e)
         raise SystemExit(f"{len(errors)} content error(s) — nothing written")
     print("All moves legal, and every capture, check and mate marker true.")
+    for w in warnings:
+        print("  warning:", w)
 
     total = missing = 0
     for op in out:

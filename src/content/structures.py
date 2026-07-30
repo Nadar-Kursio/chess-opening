@@ -116,6 +116,39 @@ STRUCTURES = [
     },
 
     {
+        "id": "carlsbad",
+        "name": "The Carlsbad — two queenside pawns against three",
+        "tier": "Structure",
+        "taxonomy": "A named chapter in Flores Rios (Chess Structures) and in Soltis, and one of the few structures in this course named after a tournament rather than a variation. The Exchange QGD is where it is easiest to learn; the Nimzo Rubinstein and the Semi-Slav exchange reach the identical pawns. The Exchange Slav looks like it belongs here and does not — there Black recaptures on d5 with the c-pawn and both sides keep two queenside pawns, which is a different game entirely.",
+        "fen": "r1bqrnk1/pp2bppp/2p2n2/3p2B1/3P4/2NBP3/PPQ1NPPP/1R3RK1 b - - 10 11",
+        "white_plans": [
+            "The minority attack: a4, b4, b5 and bxc6. Two pawns marching at three sounds wrong until you see what it leaves behind — a black pawn on c6 that no pawn can ever defend, on a file your rooks already own.",
+            "It is a two-for-two trade, not a way of winning a pawn. What you are buying is the target, so do not start it until Rb1, a4 and b4 are all ready and ...a5 has been dealt with.",
+            "The other plan is f3 and e3–e4, and it is why the knight goes to e2 rather than f3 — from e2 it supports the break instead of standing in front of it. Pick one plan; the two do not mix.",
+            "Once c6 is fixed, Na4–c5 and Rc1. A knight on c5 is worth more than the pawn on c6 you are attacking.",
+        ],
+        "black_plans": [
+            "Attack on the kingside, where your own pawns point: ...Ne4, ...Ng6, ...f5. You are faster than White because White's pawns are committed to the other wing.",
+            "...a5 stops b4 before it starts. One move, and White's whole queenside plan needs rebuilding.",
+            "...Ne4 and ...Nxc3 bxc3 is the cleanest antidote of all — White's b-pawn lands on c3, and a minority attack needs a b-pawn.",
+            "Do not take on c6 with a piece if the pawn can do it: which pawn recaptures decides whether you have a weakness or a wall.",
+        ],
+        "key_squares": ["c6", "c5", "e4", "e5", "the c-file"],
+        "pawn_breaks": ["White: b4–b5 (the minority attack), and e3–e4 after f3",
+                        "Black: ...c6–c5 to dissolve the target, ...f7–f5 and ...e6–e5 on the other wing"],
+        "pitfalls": [
+            "Starting b4–b5 with the rooks still at home. The pawns are not the attack; the file they open is.",
+            "As Black, meeting b5 with ...cxb5. That hands over the very structure you were defending and opens the c-file for free — the whole point of ...a5 is that you never face the question.",
+            "Treating a backward pawn as a won pawn. c6 is a target for the rest of the game, and targets are how you win a middlegame, not a way of being a pawn up.",
+        ],
+        "endgame_note": "The side that owns c6 owns the endgame — which cuts both ways: if Black gets ...c5 in under decent circumstances the structure is symmetrical again and the whole plan has bought nothing. So White should be counting the defenders of c6 and Black should be counting the moves to ...c5.",
+        "also_in": [
+            "carokann — the Exchange Caro-Kann is this card with the colours swapped: White keeps three queenside pawns and Black two, so it is Black who has the minority and Black who plays the attack. Every plan here works, with the sides exchanged.",
+            "nimzo — the Rubinstein with ...d5 and cxd5 exd5 lands here whenever White trades on d5 rather than pushing.",
+        ],
+    },
+
+    {
         "id": "isolani",
         "name": "The Isolani — White's isolated queen's pawn on d4",
         "tier": "Structure",
@@ -244,6 +277,103 @@ STRUCTURES = [
         "also_in": [
             "fourknights — the Scotch Four Knights hands Black the identical doubled c-pawns after 6.Nxc6 bxc6, with White's pawn still on e4 rather than wedged on e5. Same pawn count, none of the pressure — and ...d5 dissolves it, which is exactly what the Mieses does not allow.",
             "scotch — the Scotch Gambit reaches the same queenside after 8.Bxc6 bxc6, with pawns facing off on d5 and e5 instead of a wedge. Same target on c6, and the same warning about the endgame.",
+        ],
+    },
+
+    {
+        "id": "sicilian-small-centre",
+        "name": "The Sicilian small centre — e4 against d6+e5, with the c-file half-open",
+        "tier": "Structure",
+        "taxonomy": "Flores Rios gives the Najdorf/Scheveningen skeleton its own chapter and Soltis treats it as the Sicilian structure. Every Open Sicilian ends up here or in a close relative — the Dragon and the Scheveningen reach the identical pawns and differ only in where the pieces stand.",
+        "fen": "r2q1rk1/1p1nbppp/p2pbn2/4p3/4P1P1/1NN1BP2/PPPQ3P/2KR1B1R b - - 0 11",
+        "white_plans": [
+            "Storm with g4–g5 and h4–h5. The kings are on opposite wings, so this is a race and every defensive move you make is a move you lose it by.",
+            "d5 is the square the whole structure is about. Three things cover it — the knight on c3, the queen on d2 and the pawn on e4 — and a knight that lands there rather than merely watching it is usually worth a pawn or an exchange.",
+            "Bxb6 or Nd5 to strip the guards before the storm arrives, not after. Black defends d5 with the e6-bishop and the f6-knight; trade one and the other has a job it cannot do alone.",
+            "Count the queenside before you commit: three pawns against two is a genuine majority, and it is what you are left with if the attack does not land.",
+        ],
+        "black_plans": [
+            "...b5–b4 chases the knight on c3 — the piece that wants to *land* on d5, not just watch it. Winning that race is the difference between an attack and a bad position.",
+            "...Rc8 and, when it is right, ...Rxc3. If bxc3 has to recapture, White's king on c1 is sitting behind doubled c-pawns with the b-file open.",
+            "...Nb6–a4 and ...a5–a4–a3. Your pawns point at the king; use them the way White is using theirs.",
+            "When g5 comes, retreat the knight to e8 rather than d7 — d7 is occupied, and a knight on e8 holds d6 and comes back via c7.",
+        ],
+        "key_squares": ["d5", "b4", "c3", "f5", "the c-file"],
+        "pawn_breaks": ["White: g4–g5 and h4–h5, and f3–f4 once the pieces support it",
+                        "Black: ...b5–b4, ...a5–a4–a3, and ...d6–d5 the moment it is playable"],
+        "pitfalls": [
+            "Defending in a race. One tempo spent on a quiet defensive move is the whole margin — if you are not attacking, you are losing this structure.",
+            "Moving the only defender of d5 or f5. Both squares are one sacrifice away from deciding the game, and the sacrifice does not need to be sound to work over the board.",
+            "As White, assuming the queenside majority is a fallback plan. It is a real asset, but it needs an endgame, and this structure rarely reaches one with the kings where they are.",
+        ],
+        "endgame_note": "Pawn counts are level at seven each, and White's f- and g-pawns have already left home — so with the queens off, the side that has not weakened its king usually stands better, and that is Black. This is why White attacks and why a White player who trades queens has generally already lost the argument.",
+        "also_in": [
+            "sicilian — the Dragon and the Scheveningen reach the same skeleton; the Dragon puts the bishop on g7 and the Scheveningen leaves the pawn on e6, and every plan on this card survives both changes.",
+        ],
+    },
+
+    {
+        "id": "mar-del-plata-locked-chain",
+        "name": "The Mar del Plata locked chain (c4+d5+e4 against c7+d6+e5)",
+        "tier": "Structure",
+        "taxonomy": "Flores Rios gives it a chapter as the King's Indian chain; Soltis files it under the closed centre. The name is genuinely used in the literature and comes from Najdorf–Gligorić, Mar del Plata 1953.",
+        "fen": "r1bq1rk1/ppp1npbp/3p1np1/3Pp3/2P1P3/2N2N2/PP2BPPP/R1BQ1RK1 w - - 1 9",
+        "white_plans": [
+            "c4–c5 and cxd6, then Nb5 and Rc7. Black's d6-pawn has no pawn that can ever defend it and cannot advance, and c7 becomes a hole the moment the c-pawns come off.",
+            "Rc1 and b2–b4 first. The break is the plan; the rook behind it is what makes the break worth playing.",
+            "Do not play c5 while a black knight can reach it — ...Nxc5 is simply a pawn, and it is the one tactical accident in an otherwise strategic position.",
+            "Count moves, not merits. This is a race between two attacks on opposite wings, and the loser is whoever spends a move defending.",
+        ],
+        "black_plans": [
+            "...f5 is the whole opening. Play ...Ne7–g6 or ...Nf6–d7 first to unblock the pawn, then ...f4, ...g5, ...h5, ...g4.",
+            "Once the pawns are rolling, everything joins behind them: ...Rf7–g7, ...Bf8, ...Ng6–f8–h7. A piece landing on g3 or h3 is usually worth more than the piece it costs.",
+            "...Rf7 and ...Bf8 hold d6 without spending an attacker on it — the one piece of defence that is not a lost tempo.",
+            "Never spend a move stopping c5. You cannot stop it and you do not need to; you need to be faster.",
+        ],
+        "key_squares": ["c5, c7, b5 and d6 for White", "f4, g3, h3 and g4 for Black"],
+        "pawn_breaks": ["White: b2–b4 and c4–c5, and cxd6 to open the c-file",
+                        "Black: ...f7–f5 and ...f5–f4, then ...g5–g4 and ...g3"],
+        "pitfalls": [
+            "Defending. In a locked chain there is no such thing as a useful defensive move — both attacks arrive, and the only question is which arrives first.",
+            "As White, pushing c5 with a black knight a move from d7. It costs a pawn for nothing.",
+            "As Black, opening the position. Every trade and every open file helps the side whose attack is slower to arrive, and that is not you.",
+        ],
+        "endgame_note": "There is no good endgame here for Black, and that is not a flaw in the plan — it is the plan. The kingside attack is the compensation for a structure that is worse the moment queens come off, so a Black player who reaches an endgame has usually already lost the argument, and a White player who survives to one has usually already won it.",
+        "also_in": [
+            "kid — the Sämisch reaches the same pawns with White castled queenside, which changes who is attacking whom: the pawn storm becomes White's, and Black plays on the other wing instead.",
+        ],
+    },
+
+    {
+        "id": "french-chain",
+        "name": "The French chain (d4+e5 against d5+e6)",
+        "tier": "Foundation",
+        "taxonomy": "The literature names this structure after the opening rather than after the pawns, which is unusual and tells you how completely one variation owns it. A pawn chain is attacked at its base, and this is the chain every book uses to teach that rule.",
+        "fen": "r1b1kbnr/pp3ppp/1qn1p3/2ppP3/3P4/2P2N2/PP3PPP/RNBQKB1R w KQkq - 3 6",
+        "white_plans": [
+            "Hold d4 and keep adding to it — c3, Nf3, then Bb2 or Nb1–a3–c2 when c3 is taken. The whole opening is a counting exercise on one square, and the board above is the count: two attackers, three defenders.",
+            "Trade the knight that reaches f5. Bd3 and Bxf5 costs you a bishop for Black's best piece, and Black does not have a second one.",
+            "Kingside space with g4 and h4 — but only once d4 holds. Every pawn that leaves the kingside is a square your own king wanted.",
+            "dxc5 is almost always a concession: it hands back the centre and takes the last defender off e5.",
+        ],
+        "black_plans": [
+            "...c5, ...Nc6 and ...Qb6 — three attackers on the base, in that order, and the whole plan of the opening.",
+            "...Nh6–f5 is the fourth attacker and blocks nothing on the way. ...Nge7–f5 gets there too, but shuts the f8-bishop in while it waits.",
+            "...f6 second, never first, and only once the king has chosen a wing — the file it opens runs at whoever is standing on it.",
+            "Pick a route for the light-squared bishop by move ten: ...Bd7–b5, ...b6 and ...Ba6, or ...Bd7–e8–g6. It is the piece the whole structure imprisons, and it will not free itself.",
+        ],
+        "key_squares": ["d4 (the base)", "e5 (the head)", "f5", "b2", "the c-file"],
+        "pawn_breaks": ["White: f2–f4 to prop e5, g2–g4 and h2–h4 for space; dxc5 only as a concession",
+                        "Black: ...c7–c5 against d4 and ...f7–f6 against e5. There are no others, which is what makes them easy to prepare for and impossible to avoid"],
+        "pitfalls": [
+            "White defending d4 with the c1-bishop. Be3 and Bd2 both leave b2 with nothing on it, and Black's queen is already looking at it.",
+            "White playing Bd3 or Nd2 and counting it as a defender. Both block the queen's own defence of d4 down the d-file, so both turn three defenders into two.",
+            "Black releasing the tension on d4 without a reason. It costs almost nothing by the engine's count and it costs you every future choice.",
+            "Black playing ...f6 with the king still on e8.",
+        ],
+        "endgame_note": "Once both c-pawns die on d4 the count is two, two and three a side: no majority anywhere and no passer to make, so the ending turns entirely on the bishops. White's dark-squared bishop is walled in by White's own pawn on d4; Black's light-squared bishop has one diagonal shut by Black's own pawn on e6 and one wide open toward b5 and a4. Whoever solves their bad bishop first wins — which is what all four of those bishop routes are for.",
+        "also_in": [
+            "carokann — the Advance Caro-Kann reaches the identical chain with Black's pawn on c6 instead of e6. That one square is the whole difference between the two openings: the bishop comes out before the wall goes up, and the ...c5 break then costs a tempo.",
         ],
     },
 

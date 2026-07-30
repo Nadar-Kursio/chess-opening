@@ -190,8 +190,10 @@ moves — you do not write those by hand.
 
 Every one of these can be left out, and an opening without them still builds and
 still works — the drill, the deviation panel and the plan card all degrade rather
-than disappear. The Italian, the Ruy Lopez, the Four Knights and the Scotch carry
-the full set today; the other nine openings carry none of it and still work.
+than disappear. Ten of the thirteen openings carry the full set today — the
+Italian, Ruy Lopez, Four Knights, Scotch, Queen's Gambit, London, Sicilian,
+French, Slav and King's Indian; the Caro-Kann, Nimzo-Indian and Catalan carry
+none of it and still work.
 
 | Key | Where | What it does |
 | --- | --- | --- |

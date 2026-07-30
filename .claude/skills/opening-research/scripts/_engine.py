@@ -11,7 +11,10 @@ import chess
 import chess.engine
 
 DEPTH = int(os.environ.get("DEPTH", "20"))
-THREADS = int(os.environ.get("THREADS", str(max(1, (os.cpu_count() or 2) - 1))))
+# One thread by default. These scripts are usually run several at a time -- one
+# per opening being authored -- and an engine that grabs most of the box makes
+# every other run crawl. Raise it with THREADS= when you have the machine.
+THREADS = int(os.environ.get("THREADS", "1"))
 
 
 def repo_root():

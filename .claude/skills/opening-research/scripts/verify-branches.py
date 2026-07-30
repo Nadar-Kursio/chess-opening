@@ -29,6 +29,7 @@ at the end and says so if you edited it meanwhile -- otherwise a clean report fo
 text you have since replaced reads as a clean report for the text you now have.
 """
 import argparse
+import hashlib
 import os
 import sys
 
@@ -51,6 +52,22 @@ DECISIVE = 400
 # How much of what the deviation conceded a written line may hand back before the
 # line is the problem. Wide enough to absorb depth noise between two positions.
 GAVE_BACK = 75
+
+
+def fingerprint(name):
+    """A hash of what this script actually checks: moves and labels, not prose.
+
+    Re-imported from disk, so it reflects the file now rather than at start-up.
+    The point is to tell "you changed a line I already verified" from "you fixed a
+    typo in a `why`", because a bare mtime check calls both of them stale and a
+    40-minute run gets thrown away for a comma.
+    """
+    for mod in [m for m in sys.modules if m == "content" or m.startswith("content.")]:
+        del sys.modules[mod]
+    branches = (opening(name).get("branches") or {})
+    shape = [(prefix, [(b.get("san"), b.get("severity"), b.get("line")) for b in entries])
+             for prefix, entries in sorted(branches.items())]
+    return hashlib.sha256(repr(shape).encode()).hexdigest()
 
 
 def flag(severity, cost, punished, kept):
@@ -91,6 +108,7 @@ def main():
 
     src = source_of(args.opening)
     read_at = os.path.getmtime(src)
+    shape_at_start = fingerprint(args.opening)
     print(f"read {os.path.relpath(src, ROOT)} at mtime {read_at:.0f}", flush=True)
 
     flags = 0
@@ -138,9 +156,14 @@ def main():
           f"\n\n'best' is the engine's reply to the deviation — write your line from that."
           f"\n'then' is what follows the end of the line you wrote.")
     if os.path.getmtime(src) != read_at:
-        print(f"\n!! {os.path.relpath(src, ROOT)} changed while this ran. Every row above "
-              f"describes the version read at start-up, not the one on disk now — re-run "
-              f"the sets you edited.")
+        where = os.path.relpath(src, ROOT)
+        if fingerprint(args.opening) == shape_at_start:
+            print(f"\n-- {where} changed while this ran, but only its prose: every move, "
+                  f"severity and line above is still what the file says. Nothing to re-run.")
+        else:
+            print(f"\n!! {where} changed while this ran, and a move, severity or line "
+                  f"changed with it. The rows above describe the version read at start-up "
+                  f"— re-run the sets you edited.")
 
 
 if __name__ == "__main__":

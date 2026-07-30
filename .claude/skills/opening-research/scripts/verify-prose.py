@@ -48,7 +48,8 @@ BARE = re.compile(rf" ({SAN})([!?+#]*)")
 # that was blocked by White's own knight, and "cannot take" is not a cue at all:
 # it describes a bad move, not an impossible one, and that distinction is exactly
 # where a real error was hiding.
-DELIBERATE = ("legal", "impossible", "threat", "stop", "prevent")
+DELIBERATE = ("legal", "impossible", "threat", "stop", "prevent",
+              "does not exist", "unavailable", "no longer available")
 # A terminator only ends a sentence after a letter -- "19.Qd3" and "18...h6" are
 # full of dots that end nothing.
 SENTENCE = re.compile(r"(?<=[a-z)\]])[.!?;:]\s")
@@ -90,8 +91,15 @@ def sentence_at(text, pos):
     return text
 
 
-def cited_moves(text, moves):
+def cited_moves(text, moves, loose=False):
     """Yield (claim, problem, sentence) for every numbered move in `text` that is illegal.
+
+    `moves` may be one sequence or several. `theory` and `progression` belong to
+    the whole opening, so they get every line as a candidate and are checked
+    `loose`: a citation is reported only when it fails to continue a variation the
+    text has already established. A bare "the Traxler 4...Bc5" in a list of names
+    is not a claim about any position on the page, and treating it as one reported
+    fourteen sound sentences as errors.
 
     A move number names a position, but prose does not stay on one line: it says
     "the automatic 4.d4 exd4 5.Nxd4?? … if you play 4.d4 the follow-up is 5.O-O",
@@ -100,51 +108,62 @@ def cited_moves(text, moves):
     reports a citation only when it is illegal from all of them. Checking against
     the authored line alone called nine sound sentences wrong.
     """
+    sequences = [moves] if isinstance(moves, str) else list(moves)
     seen = {}               # ply -> boards the text has established there
-    chain = None            # (board, next_ply) for the variation being spelled out
+    chain = None            # ([boards], next_ply) for the variation being spelled out
     end = 0
 
-    def remember(board):
-        seen.setdefault(board.ply(), []).append(board.copy())
+    def remember(boards):
+        for board in boards:
+            seen.setdefault(board.ply(), []).append(board.copy())
+
+    def advance(boards, san):
+        """Every board that accepts `san`, plus the reason if none do.
+
+        All of them, deliberately. When several lines reach the same move number
+        the first one that happens to accept a move is not necessarily the one the
+        sentence is about -- "in the Sämisch, 9.g4" is legal in the Classical too,
+        and judging the follow-up from there reported a sound trap as broken.
+        """
+        out, problem = [], "illegal"
+        for board in boards:
+            work = board.copy()
+            try:
+                work.push_san(san)
+            except ValueError as e:
+                problem = str(e).split(" in ")[0]
+                continue
+            out.append(work)
+        return out[:8], problem
 
     for m in NUMBERED.finditer(text):
         num, dots, san, _ = m.groups()
         ply = 2 * (int(num) - 1) + (2 if dots else 1)
-        bases = []
-        if chain and chain[1] == ply and m.start() >= end:
-            bases.append(chain[0])
+        continues = bool(chain and chain[1] == ply and m.start() >= end)
+        bases = list(chain[0]) if continues else []
         bases += seen.get(ply - 1, [])
-        if (line := board_at(moves, ply - 1)) is not None:
-            bases.append(line)
-        played = None
-        for base in bases:
-            board = base.copy()
-            try:
-                board.push_san(san)
-            except ValueError as e:
-                problem = str(e).split(" in ")[0]
-                continue
-            played = board
-            break
+        for sequence in sequences:
+            if (line := board_at(sequence, ply - 1)) is not None:
+                bases.append(line)
         if not bases:
             chain = None
             continue            # nothing reaches that move number; nothing to say
-        if played is None:
-            yield f"{num}.{'..' if dots else ''}{san}", problem, sentence_at(text, m.start())
+        played, problem = advance(bases, san)
+        if not played:
+            if not loose or continues:
+                yield f"{num}.{'..' if dots else ''}{san}", problem, sentence_at(text, m.start())
             chain = None
             continue
         remember(played)
         chain, end = (played, ply + 1), m.end()
         # Follow the variation while the prose keeps handing over moves.
         while (nxt := BARE.match(text, end)):
-            board = played.copy()
-            try:
-                board.push_san(nxt.group(1))
-            except ValueError:
+            step, _ = advance(played, nxt.group(1))
+            if not step:
                 break           # ordinary prose that happens to look like a move
-            played = board
+            played = step
             remember(played)
-            chain, end = (played, played.ply() + 1), nxt.end()
+            chain, end = (played, played[0].ply() + 1), nxt.end()
 
 
 def balance(board):
@@ -196,7 +215,34 @@ def counts(board):
 
 
 def texts(op):
-    """Yield (where, moves, ply, text) for every piece of authored prose."""
+    """Yield (where, moves, ply, text) for every piece of authored prose.
+
+    `theory` and `progression` are checked against line 0's moves from the
+    starting position, because they belong to the opening rather than to a ply.
+    That is enough: a trap spells its own sequence out from move one, so the
+    first citation establishes the variation and the rest follow it. These two
+    were unchecked for a long time, and `theory.traps` is nothing *but* move
+    sequences -- two false refutations were found hiding there.
+    """
+    main = [l["moves"] for l in op["lines"]] + ([op["deep"]["moves"]] if op.get("deep") else [])
+    theory = op.get("theory") or {}
+    for key in ("big_idea", "structure", "who"):
+        if theory.get(key):
+            yield f"theory.{key}", main, 0, theory[key]
+    for key in ("white_plans", "black_plans", "traps"):
+        for n, item in enumerate(theory.get(key) or []):
+            yield f"theory.{key}[{n}]", main, 0, item
+    prog = op.get("progression") or {}
+    for key in ("arc", "study", "next"):
+        if isinstance(prog.get(key), str):
+            yield f"progression.{key}", main, 0, prog[key]
+    for n, stage in enumerate(prog.get("stages") or []):
+        for key in ("when", "goal", "drill", "mistake", "ready"):
+            if stage.get(key):
+                yield f"progression[{n}].{key}", main, 0, stage[key]
+        for m, item in enumerate(stage.get("learn") or []):
+            yield f"progression[{n}].learn[{m}]", main, 0, item
+
     for i, line in enumerate(op["lines"] + [op["deep"]]):
         label = f"line {i}" if i < len(op["lines"]) else "deep"
         plies = len(line["moves"].split())
@@ -232,7 +278,8 @@ def main():
     for where, moves, ply, text in texts(op):
         if not text:
             continue
-        for claim, why, sentence in cited_moves(text, moves):
+        loose = not isinstance(moves, str)
+        for claim, why, sentence in cited_moves(text, moves, loose=loose):
             if any(word in sentence.lower() for word in DELIBERATE):
                 stated += 1
                 print(f"-- {where}: cites {claim}, illegal, and the sentence says so.")

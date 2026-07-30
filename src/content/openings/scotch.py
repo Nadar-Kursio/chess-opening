@@ -293,10 +293,6 @@ OPENING = {
 
         # ── ply 9 · your own fifth move against 4...Nf6 ─────────────────────────
         "e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Nf6": [
-            {"san": "Nxc6", "severity": "playable", "tier": "Foundation",
-             "why": "The Mieses. Trade first, then push: the point of taking on c6 is not the trade, it is that Black's recapture is forced and 6.e5 arrives with a tempo. Doubled c-pawns for Black, a pawn on e5 for you, and a structure that lasts to the endgame.",
-             "line": "bxc6 e5 Qe7 Qe2 Nd5 c4",
-             "see": "scotch#mieses"},
             {"san": "Nc3", "severity": "playable", "tier": "Structure",
              "name": "Four Knights, Scotch Variation",
              "why": "A transposition, not a concession: this is the Four Knights Game, and after 5...Bb4 6.Nxc6 bxc6 7.Bd3 d5 8.exd5 cxd5 Black gets the doubled c-pawns cured and you get a comfortable, tiny edge. Worth knowing as your quiet option when you do not want the Mieses race.",
@@ -312,9 +308,6 @@ OPENING = {
 
         # ── ply 10 · which pawn takes back on c6 ────────────────────────────────
         "e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Nf6 Nxc6": [
-            {"san": "bxc6", "severity": "playable", "tier": "Foundation",
-             "why": "The right recapture, and effectively forced: it keeps a pawn on d7, and that pawn is the only thing stopping 6.Qxd8+. Black accepts doubled c-pawns because the alternative costs the right to castle.",
-             "line": "e5 Qe7 Qe2 Nd5 c4 Ba6"},
             {"san": "dxc6", "severity": "inaccuracy", "tier": "Foundation",
              "why": "The tidy-looking recapture that costs the right to castle: 6.Qxd8+! Kxd8 7.Nc3 and Black has an endgame a shade worse — king on d8, rooks unable to connect, no counterplay anywhere. Healthy pawns are the compensation, and half a pawn's worth of evaluation says it is not quite enough.",
              "line": "Qxd8+ Kxd8 Nc3 Be6 f3 Nd7"},

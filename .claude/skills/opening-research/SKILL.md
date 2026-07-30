@@ -54,6 +54,25 @@ Copy the shape of `src/content/openings/italian.py` — it carries the full set.
   fires in every line of that opening passing through it. Author at the positions
   where a real opponent actually deviates: move 3 and 4 alternatives, your own
   branch points, and any position where a natural move loses something.
+
+  **A set only attaches to a position one of your lines actually reaches** — the
+  build stops with `branches authored for a position no line reaches` otherwise.
+  That is a planning rule, not just an error: pick your lines partly for the
+  branch positions they make reachable. It is what decides how much of an opening
+  you can cover, and it is why the Sicilian here has seven lines rather than three.
+
+  And an entry whose `san` is the move the line itself plays never renders — the
+  panel drops it, correctly, because it is not a deviation from that line. Harmless
+  when several lines share the position; invisible dead weight when only one does.
+  The build now warns.
+
+- **A Black repertoire inverts the job.** `orientation: "black"` means the reader
+  answers White's choices, so the branch sets sit at the plies where *White* moves,
+  and `playable` will dominate — White picking a good system is not a mistake, and
+  most entries should explain what changes rather than hunt for a punishment.
+  Severity is always measured against whoever played the move, so `blunder` on a
+  White move means White lost something and the `line` must show Black taking it.
+  The scripts handle the sign already; the framing is yours.
 - **Severity is a promise to the learner.** `blunder` means there is a refutation
   and it is in the `line`. `inaccuracy` means it costs something specific. Most
   deviations are `playable` — say so, and explain what changes rather than
@@ -77,10 +96,18 @@ Copy the shape of `src/content/openings/italian.py` — it carries the full set.
 - **`games`** are annotated by hand — `build_game` deliberately skips engine
   intel, so a game with no `notes` ships with no commentary at all. Nothing
   validates note keys against a game's length beyond a range check, which is why
-  `verify-notes.py` exists.
-- **Shared text is free.** `content/common.py` explains repeated opening moves by
-  `"ply:SAN"`; a line that reaches move six by a normal move order needs no notes
-  for plies 1–6. `content/sections.py` must already contain the `section` id you
+  `verify-notes.py` exists. Prefer a score that ends on the winner's move, and
+  run the final position through the engine before writing the last note: "and
+  White resigned" is not in the PGN, and a note claiming the loser had no moves
+  left is the kind of thing that turns out to be four legal king moves.
+- **Shared text is free, and it is keyed by ply and SAN only.** `content/common.py`
+  explains repeated opening moves by `"ply:SAN"`, so a line that reaches move six
+  by a normal move order needs no notes for plies 1–6. But the key knows nothing
+  about *your* opening: most entries were written for 1.e4, and a 1.d4 line that
+  happens to play the same move at the same ply inherits text about a different
+  game. Read what your line actually renders and override locally when it is
+  wrong — nine lines were being told "after 2...dxc4 Black cannot hold the pawn"
+  in positions with no pawn on d5 at all. `content/sections.py` must already contain the `section` id you
   name, and every section needs at least one opening or the tests fail.
 - `tests/test_content.py` enforces the key sets exactly, so a typo'd key is a
   test failure rather than a shrug. Run the tests before the build.
@@ -124,10 +151,17 @@ describe the old text — re-run the sets you changed. Set `THREADS=2` when some
 else is on the box, and both scripts flush as they go, so silence means slow, not
 hung.
 
-To stop a background run, kill it **by pid**. `pkill -f "scan.py"` matches the
-shell that issued it — so it kills the command you are typing, and any other
-agent's engine running the same script. That has happened, and it cost a
-completed 30-minute run.
+To stop a background run, **capture the pid when you launch it and kill that**.
+Any `pkill -f` / `pgrep -f` against a repo script matches the shell that issued
+it, so it kills the command you are typing and any other agent's engine running
+the same script. Making the pattern more specific does not help — a port number
+or a `[b]racket` trick still appears in your own command line. This has cost
+several completed runs.
+
+**Namespace your scratch files by opening.** The scratchpad directory is shared,
+so `scan1.log` and `pos1.txt` collide when more than one opening is being written
+at once — output interleaves mid-line and a run comes back containing somebody
+else's analysis. Write to `<scratchpad>/<opening-id>/` and it cannot happen.
 
 A move that parses is not necessarily the move you typed. `scan.py` prints
 `Bxd4 -> Bd4` when the position writes it differently — python-chess accepts a
@@ -288,7 +322,9 @@ Then `git status` should show `docs/` rebuilt — committing that is the deploy.
 
 An opening at Italian depth is roughly: 20–30 branch positions, 70–90 deviations,
 a plan card per line, one or two model games, `drill: True` everywhere. Shipped:
-Ruy 24/86, Four Knights 30/88, Scotch 27/90, Italian 20/74.
+Italian 28/106, Ruy 24/86, Four Knights 30/88, Scotch 32/104, Queen's Gambit
+23/90, London 25/87, Sicilian 26/90, French 24/89, Slav 23/86, King's Indian
+28/90.
 
 Treat those as a **budget and count as you go**. It is not a floor to beat: past
 about 30 positions the page asks the reader to click through deviations nobody
