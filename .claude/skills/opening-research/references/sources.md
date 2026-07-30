@@ -28,6 +28,14 @@ Deep pages exist for the main lines (the 9.h3 crossroads of the Closed Ruy has
 its own page listing Chigorin / Breyer / Zaitsev / Karpov / Smyslov). Not every
 position has a page; a miss returns an empty-ish answer rather than a 404.
 
+**Coverage is deep for 1.e4 and thin for 1.d4 systems.** The Catalan has four
+pages under `3.g3`, every assessment a bare `=`, and the Open Catalan pages were
+never written; Wikipedia's article has one variation section. Check early how much
+is actually there, and when the answer is "not much", switch sources rather than
+grinding: ECO code lists give you the names, and the **PGN archives give you the
+theory** — replaying what Kramnik and Anand actually played in a variation tells
+you more than a page of `=` signs, and it is verifiable.
+
 **Take moves and names from these pages. Never take adjectives.** The move lists
 and the variation names are what the page is good at; the verdicts are old,
 unsourced and sometimes attached to the wrong position. Both of these came from

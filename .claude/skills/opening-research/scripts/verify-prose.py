@@ -173,16 +173,35 @@ def balance(board):
 
 
 def guards(board, text):
-    """Who attacks each square the text names, so 'X guards Y' can be checked."""
+    """For each square the text names: who attacks it, and what stands there sees.
+
+    Both directions are needed. Attackers answer "X guards Y"; `sees` answers "the
+    bishop on g2 fires down the long diagonal", which is the claim that goes wrong
+    most often and which attackers alone cannot check -- the piece doing the
+    blocking is usually White's own, and appears nowhere in the sentence, so no row
+    is printed for it. A bishop on g2 that `sees: f1,f3,h1,h3` settles it at once.
+    """
     out = []
     for name in dict.fromkeys(SQUARE.findall(text)):
         square = chess.parse_square(name)
         w = sorted(chess.square_name(s) for s in board.attackers(chess.WHITE, square))
         b = sorted(chess.square_name(s) for s in board.attackers(chess.BLACK, square))
         piece = board.piece_at(square)
-        out.append(f"{name}[{piece.symbol() if piece else '-'}] W:{','.join(w) or '-'} "
-                   f"B:{','.join(b) or '-'}")
+        row = (f"{name}[{piece.symbol() if piece else '-'}] W:{','.join(w) or '-'} "
+               f"B:{','.join(b) or '-'}")
+        if piece and piece.piece_type != chess.PAWN:
+            sees = sorted(chess.square_name(s) for s in board.attacks(square))
+            row += f"  sees:{','.join(sees)}"
+        out.append(row)
     return out
+
+
+def position_label(moves, ply):
+    """'12.Nbd2' for a text attached to a ply, 'start' otherwise."""
+    if not isinstance(moves, str):
+        return "opening-wide"
+    seq = moves.split()
+    return numbered(ply, seq[ply - 1]) if 0 < ply <= len(seq) else "start"
 
 
 def counts(board):
@@ -293,11 +312,14 @@ def main():
             geometry = [w for w in GEOMETRY_WORDS if w in low]
             if hits or geometry:
                 claims += 1
-                board = board_at(moves, ply)
-                seq = moves.split()
-                at = numbered(ply, seq[ply - 1]) if 0 < ply <= len(seq) else "start"
-                print(f"\n-- {where} @ {at}   [{', '.join(hits + geometry)}]")
-                if board is None:
+                print(f"\n-- {where} @ {position_label(moves, ply)}   "
+                      f"[{', '.join(hits + geometry)}]")
+                # `theory` and `progression` belong to every line at once, so there
+                # is no one board to count. Say so rather than picking a line's
+                # board and printing numbers that describe a different position.
+                if loose:
+                    print("   spans every line — no single position to count against")
+                elif (board := board_at(moves, ply)) is None:
                     print("   position not reachable")
                 else:
                     print(f"   {counts(board)}")

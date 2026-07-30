@@ -47,7 +47,9 @@ and wrong, and the build will accept it.
 
 ## 2. Author
 
-Copy the shape of `src/content/openings/italian.py` — it carries the full set.
+Copy the shape of `src/content/openings/italian.py` for a White repertoire and
+`src/content/openings/french.py` for a Black one — both carry the full set, and
+the second one shows what the inversion below actually looks like on the page.
 `README.md` ("The optional keys") is the reference for what each key does.
 
 - **`branches`** are keyed by the SAN prefix that reaches a position, so one set
@@ -201,6 +203,13 @@ Band edges are editorial, not arithmetic. A named theoretical defence that
 concedes 60cp is still `playable`; a 40cp move that drops a pawn by force is
 still a `blunder`. Write what is true, then make the label match the text.
 
+**The sentence that goes wrong most often is "the bishop on g2 fires down the long
+diagonal".** It is wrong because a piece is standing in the way, and the piece is
+usually your own — so it is named nowhere in the sentence and no amount of
+re-reading finds it. `--counts` prints a `sees:` list for every piece the sentence
+names: a bishop on g2 that `sees:f1,f3,h1,h3` settles the question in one line.
+Check it for every claim about a diagonal, a file or a rank.
+
 **A clean `verify-branches.py` report means the labels survive, not the sentences.**
 Every error found in review so far sat on a row the script printed as clean, and
 almost all of them were arithmetic rather than judgement: a "bishop pair" where
@@ -321,10 +330,12 @@ Then `git status` should show `docs/` rebuilt — committing that is the deploy.
 ## Scope of a single pass
 
 An opening at Italian depth is roughly: 20–30 branch positions, 70–90 deviations,
-a plan card per line, one or two model games, `drill: True` everywhere. Shipped:
-Italian 28/106, Ruy 24/86, Four Knights 30/88, Scotch 32/104, Queen's Gambit
-23/90, London 25/87, Sicilian 26/90, French 24/89, Slav 23/86, King's Indian
-28/90.
+a plan card per line, one or two model games, `drill: True` everywhere. All
+thirteen openings are now at that depth — 345 branch positions and 1185
+deviations between them, none above 32 positions and none below 23. That spread
+is the evidence for the budget: the openings with the most theory in the world
+(the Sicilian, the Nimzo, the Catalan) landed in the same range as the Scotch,
+because what limits a page is what a reader will click through, not what exists.
 
 Treat those as a **budget and count as you go**. It is not a floor to beat: past
 about 30 positions the page asks the reader to click through deviations nobody

@@ -162,7 +162,7 @@ STRUCTURES = [
         ],
         "black_plans": [
             "Blockade d5 with a knight, then trade every other piece. A blockaded isolani is just a weak pawn.",
-            "...Be6 and ...Rc8, pressing on c-file and d-file at once.",
+            "...Rc8 and ...Rd8, pressing on both files at once. The blockading bishop goes to e6 only when the e-file is clear — and it usually is not: every line in this course that reaches this structure still has a black pawn on e6, so the bishop belongs on b7 after ...b6, or on g4 to trade off the knight that defends d4.",
             "Head for the endgame. Every trade helps the side playing against the isolani.",
         ],
         "key_squares": ["d5 (the blockade square)", "e5", "c5", "h7"],
@@ -241,7 +241,6 @@ STRUCTURES = [
         ],
         "endgame_note": "Queenless, the doubled pawns are simply a pawn worse: three pawns on the queenside doing the work of four. So the side with them wants pieces on and the centre alive, and the side against them wants trades. That is the same rule as the isolani card, and it is not a coincidence — every structural weakness gets worse as the pieces come off.",
         "also_in": [
-            "nimzo — every ...Bxc3 bxc3 line reaches the identical pawns one rank higher; the Sämisch is the same bargain with the centre already committed.",
             "italian — the Evans Gambit reaches a version of it after ...Bxb4 and c2–c3, except that there the pawns are a sacrifice rather than a structure.",
         ],
     },
@@ -374,6 +373,38 @@ STRUCTURES = [
         "endgame_note": "Once both c-pawns die on d4 the count is two, two and three a side: no majority anywhere and no passer to make, so the ending turns entirely on the bishops. White's dark-squared bishop is walled in by White's own pawn on d4; Black's light-squared bishop has one diagonal shut by Black's own pawn on e6 and one wide open toward b5 and a4. Whoever solves their bad bishop first wins — which is what all four of those bishop routes are for.",
         "also_in": [
             "carokann — the Advance Caro-Kann reaches the identical chain with Black's pawn on c6 instead of e6. That one square is the whole difference between the two openings: the bishop comes out before the wall goes up, and the ...c5 break then costs a tempo.",
+        ],
+    },
+
+    {
+        "id": "catalan-held-queenside",
+        "name": "The Catalan queenside — a2+b2 against a6+b5+c7, and the long diagonal",
+        "tier": "Structure",
+        "taxonomy": "Neither Flores Rios nor Soltis gives it a chapter; the literature describes it by variation — 'the Open Catalan' — rather than by pawns. It earns a card anyway, because the pawn count is what decides every plan in the variation.",
+        "fen": "rn1q1rk1/2p1bppp/p3pn2/1p6/3Pb3/5NP1/PP1BPPBP/RNQ2RK1 b - - 5 11",
+        "white_plans": [
+            "a2–a4 and only a4. You have two queenside pawns against three, so b4 is not a plan — the a-file you open is the plan, and b5 is the target on it. Count b5's defenders and there is exactly one, the pawn on a6; behind that is a rook that cannot leave a8.",
+            "Get the pieces there first: Bc3, Nbd2–b3, Rfc1. Pushing a4 before they arrive lets Black answer ...c5 with a free hand and the whole idea evaporates.",
+            "Ne5 and Bc3 fight for c6 and d5. The pawn you gave up on c4 bought this time; spend it on squares, not on winning the pawn back.",
+            "Look at the bishop on g2 before you rely on it. With your own knight on f3 it attacks f1, f3, h1 and h3 and nothing else — the diagonal only opens when the knight moves, which is what Ne5 is really for.",
+        ],
+        "black_plans": [
+            "...c5 in one move, never ...c6 first. The whole point of ...a6 and ...b5 was to make that break possible with the queenside intact.",
+            "...Bb7–e4 to shut the long diagonal down, and keep it shut. A bishop on e4 is worth more than the tempo it costs.",
+            "Count the wing: three pawns against two is a real majority, and it survives losing b5. Every trade takes you closer to the ending where it tells.",
+            "Do not spend the b-pawn defending itself. If a4 costs you b5 but wins the a-file for your rook and gets ...c5 in, that is a fair trade.",
+        ],
+        "key_squares": ["b5", "c6", "d5", "the a-file", "the long diagonal"],
+        "pawn_breaks": ["White: a2–a4, and e2–e4 when the centre allows it",
+                        "Black: ...c7–c5 against d4, and ...b5–b4 to fix a2 and b2 if White ever plays a4 too early"],
+        "pitfalls": [
+            "Reading this as the Carlsbad. It is the reverse bargain: there the minority side has the target, here the side with two pawns is the one whose pawns can be attacked, and it is Black who owns the majority.",
+            "As White, trading into a pawn ending. Black's three against two on the queenside does not stop being a majority because you won a pawn back somewhere else.",
+            "As Black, treating the extra pawn on c4 as material. It is a tempo you sold — spend the time it bought on ...c5, or you have simply lost a pawn for nothing.",
+        ],
+        "endgame_note": "Black's queenside majority is the long-term asset and White's initiative is the short-term one, which is the whole tension of the opening: White has to make the a-file and the diagonal count before the pieces come off, and Black has to survive to an ending where three pawns against two on one wing is worth more than anything White has left.",
+        "also_in": [
+            "slav — the ...dxc4 and ...b5 lines reach the same bargain from the other side of the board: Black holds the pawn with ...a6 and ...b5, and White plays a4 against it. The pawns are the same and the piece placement is not.",
         ],
     },
 

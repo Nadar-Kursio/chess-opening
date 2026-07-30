@@ -190,10 +190,10 @@ moves — you do not write those by hand.
 
 Every one of these can be left out, and an opening without them still builds and
 still works — the drill, the deviation panel and the plan card all degrade rather
-than disappear. Ten of the thirteen openings carry the full set today — the
-Italian, Ruy Lopez, Four Knights, Scotch, Queen's Gambit, London, Sicilian,
-French, Slav and King's Indian; the Caro-Kann, Nimzo-Indian and Catalan carry
-none of it and still work.
+than disappear. All thirteen openings carry the full set today: 345 branch
+positions, 1185 deviations and 27 annotated games between them. The degradation
+still matters, because it is what let the course grow one opening at a time
+without a flag day.
 
 | Key | Where | What it does |
 | --- | --- | --- |
