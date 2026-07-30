@@ -81,6 +81,16 @@ OPENING = {
         {
             "name": "Panov-Botvinnik Attack",
             "note": "White refuses the quiet game, opens the centre and plays for an isolated-pawn attack. Every Caro-Kann player must know this.",
+            "plan": {
+                "structure": 'isolani',
+                "point": "You have swapped the Caro-Kann's reputation for a middlegame: an isolated pawn on d4, the c5 and e5 squares that come with it, and a clock that starts running the moment the queens come off.",
+                "next": [
+                    'Re1 and Bg5 or Bf4, then Ne5. Three pieces at the kingside before Black finishes untangling — the isolani pays for activity, so spend it.',
+                    'The d4–d5 break at the moment Black stops covering it. The pawn stops being weak the instant it advances.',
+                    "Refuse every trade that is not part of a concrete win, and especially the queens. Each pair off the board moves the game from your half to Black's.",
+                ],
+                "endgame": 'You do not want one. A blockaded d4-pawn with a knight in front of it is simply a weak pawn, and the same structure you are attacking with is the one you lose in a rook ending. If it simplifies, aim for opposite-coloured bishops and a draw.',
+            },
             "moves": "e4 c6 d4 d5 exd5 cxd5 c4 Nf6 Nc3 e6 Nf3 Bb4 cxd5 Nxd5 Bd2 Nc6 Bd3 O-O O-O Be7",
             "notes": {
                 5: "The Exchange. Now Black has a pawn on d5 and an open c-file, and the position resembles a Queen's Gambit with colours reversed.",

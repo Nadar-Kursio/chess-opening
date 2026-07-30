@@ -451,7 +451,7 @@ OPENING = {
              "why": "Black fianchettoes instead of blocking with ...Nf6. Sound but slow: 4.d4! exd4 5.Nxd4 Bg7 6.Be3 and you have the full centre and a lead in development. This is the position ...Nf6 was supposed to prevent.",
              "line": "d4 exd4 Nxd4 Bg7 Be3"},
             {"san": "Nd4", "severity": "inaccuracy", "tier": "Foundation",
-             "why": "The Rubinstein idea one move too early — there is no bishop on b5 to attack. 4.Nxe5! and Black cannot regain the pawn cleanly: 4...Nxe4?? 5.Nxe4 and the knight on d4 hangs, so Black must play 4...d6 a pawn down.",
+             "why": "The Rubinstein idea one move too early — there is no bishop on b5 to attack, so the knight on d4 is just a knight in the way. 4.Nxe5! takes the pawn and keeps it: count the attackers on e5 and Black has none, so there is no recapture to prepare. The greedy 4...Nxc2+ 5.Qxc2 is a knight for a pawn. Black's best is 4...d6, a pawn down with a game.",
              "line": "Nxe5 d6 Nf3 Bg4 Be2"},
             {"san": "f5", "severity": "inaccuracy", "tier": "Mastery",
              "why": "The Latvian idea in a worse version: the f-file opens toward Black's own king with a knight already on c3 eyeing d5. 4.d4! and the centre opens while Black's king has nowhere to go.",
@@ -575,7 +575,7 @@ OPENING = {
              "why": "The outpost, backed up this time. 7...Nxd5 8.exd5 and you have a space-gaining pawn on d5 and the half-open e-file. Less rich than 7.Bg5 and easier to play.",
              "line": "Nxd5 exd5 Ne7 Bc4 Ng6"},
             {"san": "Bxc6", "severity": "inaccuracy", "tier": "Foundation",
-             "why": "The trade that helps Black. 7...bxc6 repairs nothing and 7...dxc6 is even better — the bishop pair, an open d-file and no weaknesses. Take on c6 when it damages Black's pawns, not when it improves them.",
+             "why": "The trade that costs more than it wins. Black has already played ...d6, so the only recapture is 7...bxc6 — and yes, that doubles the c-pawns, but you have handed over the bishop pair to double them, and the pawn on c6 covers b5 and d5 twice over. Take on c6 when the recapture damages Black, not when it is the price of your best bishop.",
              "line": "bxc6 Ne2 Re8 Ng3 d5"},
         ],
 

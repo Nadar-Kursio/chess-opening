@@ -28,9 +28,30 @@ Deep pages exist for the main lines (the 9.h3 crossroads of the Closed Ruy has
 its own page listing Chigorin / Breyer / Zaitsev / Karpov / Smyslov). Not every
 position has a page; a miss returns an empty-ish answer rather than a 404.
 
+**Take moves and names from these pages. Never take adjectives.** The move lists
+and the variation names are what the page is good at; the verdicts are old,
+unsourced and sometimes attached to the wrong position. Both of these came from
+Wikibooks in the Scotch session and both are false:
+
+- "5.Nf5 … it is losing to 5...d5" — the engine says −0.6, an inaccuracy.
+- "5.Nb5 Blumenfeld loses to 6...Bxe3 7.fxe3 Qh4+" — that refutation belongs to a
+  different position (after 5.Be3 Qf6 6.Nb5). It does not play from where the
+  page puts it.
+
+A wrong verdict costs you nothing if you were always going to run the position
+through the engine, and ships as a confident lie if you were not.
+
 ## Wikipedia — the opening article
 
-**Best for: variation names, ECO codes, named traps, historical context.**
+**Best for: named traps, historical context, and the shape of a whole opening.**
+The same rule applies as above: names and moves yes, assessments no.
+
+**For a name attached to a specific move, go to Wikibooks instead** — the article
+is organised by story, not by position. The Scotch article lists neither Haxo nor
+Benima nor London, gives no ECO codes, and does not say which of two moves the
+Blumenfeld Attack is, which is how that name ended up on the wrong move here. The
+Wikibooks page for the position the move is played from named all four fifth moves
+correctly in one fetch.
 
 Ask for one bounded thing. This worked (Four Knights, one call, complete):
 
@@ -84,10 +105,28 @@ by ECO, opponent, year, result and length. Player names are the file names on
 chessgames.com returns 403 to fetchers and Blogspot bounces through a Google
 interstitial, so neither is usable in an agent run.
 
+Archives are cached under `.engine/pgn/` after the first fetch, so filtering the
+same player again is free. `--headers` prints every PGN tag: Round and Site are
+the two a `note` needs before it can say "the sixteenth game of the match".
+
 Cross-check what you pull: the header should agree with the event and year you
 expect, and the ECO code should match the line you are illustrating. A game whose
 first ten moves do not reach the position you are teaching is the wrong game,
 however famous it is.
+
+**Attributions are verifiable from these archives too, not just scores.** "Karpov
+played this in game 16 of the 1990 match", "Kasparov used it against Short,
+Yusupov, Topalov and Anand", "Carlsen played it four times at the 2009 World
+Blitz" — all of that is a filter away, and all of it is the kind of claim that
+otherwise gets written from memory and is wrong about the round, the year or the
+opponent. Filter, read the headers, then write the sentence.
+
+"Anand and Caruana play this move here" is checkable the same way, and it is worth
+doing before you write it: replay every one of their games in that ECO code up to
+the tabiya and count what they actually chose. Twenty lines of python-chess over
+the cached archives confirmed the two names and showed the claim was overstated —
+the move they play most from that position is the one the text said was *never*
+urgent.
 
 ## Engine
 

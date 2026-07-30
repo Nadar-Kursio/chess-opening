@@ -79,6 +79,16 @@ OPENING = {
         {
             "name": "Queen's Gambit Accepted",
             "note": "Black takes the pawn, gives up the centre, and hits back with ...c5. Fast development and clean structures.",
+            "plan": {
+                "structure": 'isolani',
+                "point": "The same isolated d-pawn the Panov and the Nimzo reach, arrived at from 1.d4 — and with a2–a4 already in, so Black's queenside has no ...b5 to gain space with while you attack.",
+                "next": [
+                    'Nc3 and Bg5, then Rac1 or Ne5. The d-pawn buys you c5 and e5; a knight on either is worth more than the pawn is weak.',
+                    'd4–d5 when Black stops watching it — usually the moment a piece leaves the kingside.',
+                    'a4 has cost you b4 as a square. Do not put a piece there and expect it to stay.',
+                ],
+                "endgame": 'The pawn is a liability the instant the queens come off, and Black knows it. Trade only when the trade wins something concrete; otherwise keep four pieces each on the board and keep asking questions.',
+            },
             "moves": "d4 d5 c4 dxc4 Nf3 Nf6 e3 e6 Bxc4 c5 O-O a6 a4 Nc6 Qe2 cxd4 Rd1 Be7 exd4",
             "notes": {
                 4: "The Queen's Gambit Accepted. Black does not intend to keep the pawn — the idea is to give up the centre now and attack it later with ...c5 and ...e5.",

@@ -381,7 +381,8 @@ function dxPanelHTML(line){
           <button class="ctl" data-act="retry">Drill again <kbd>R</kbd></button>
           <button class="ctl" data-act="mode" data-v="read">Read this line</button>
         </div>
-      </div>`;
+      </div>
+      ${planFor(dxOp(), line)}`;
   }
 
   if(d.phase === "right" || d.phase === "reveal"){

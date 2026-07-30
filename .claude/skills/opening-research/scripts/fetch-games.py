@@ -4,6 +4,7 @@
     .claude/skills/opening-research/scripts/fetch-games.py Karpov --eco C98 --opponent Unzicker
     … fetch-games.py Morphy --eco C4 --result 0-1 --max-plies 60
     … fetch-games.py Capablanca --year 1914 --print          # full move lists
+    … fetch-games.py Kasparov --year 1990 --headers           # Round, Site, every tag
 
 Archives come from pgnmentor.com, whose file names are the player names on
 <https://www.pgnmentor.com/files.html>. They are cached under .engine/pgn/ (that
@@ -11,7 +12,9 @@ directory is gitignored) so a second query costs nothing.
 
 `--eco` matches a prefix, so C4 catches every Four Knights code. Without
 `--print` you get one line per game: players, event, year, result, ECO and
-length, which is enough to choose one.
+length, which is enough to choose one. `--headers` adds the rest of the tags,
+which is where Round and Site live -- the two facts a `note` needs to say "the
+sixteenth game of the match" and be right about it.
 """
 import argparse
 import io
@@ -103,10 +106,14 @@ def main():
     p.add_argument("player")
     p.add_argument("--eco", default="", help="ECO prefix, e.g. C67 or C4")
     p.add_argument("--opponent", default="")
+    p.add_argument("--event", default="",
+                   help="substring of the Event tag — the only way to skip a modern "
+                        "player's blitz and rapid, which dominate their archive")
     p.add_argument("--year", default="")
     p.add_argument("--result", default="", choices=["", "1-0", "0-1", "1/2-1/2"])
     p.add_argument("--max-plies", type=int, default=0)
     p.add_argument("--print", action="store_true", help="print the SAN move list")
+    p.add_argument("--headers", action="store_true", help="print every PGN tag, Round and Site included")
     args = p.parse_args()
 
     hits = 0
@@ -115,6 +122,8 @@ def main():
         if args.eco and not tags.get("ECO", "").startswith(args.eco):
             continue
         if args.opponent and args.opponent.lower() not in names.lower():
+            continue
+        if args.event and args.event.lower() not in tags.get("Event", "").lower():
             continue
         if args.year and not tags.get("Date", "").startswith(args.year):
             continue
@@ -129,6 +138,9 @@ def main():
               f"{tags.get('Date','?')[:4]} | {tags.get('Result','?')} | {tags.get('ECO','?')} "
               f"| {plies} plies ({(plies + 1) // 2} moves)"
               f"{'  !! ' + broken if broken else ''}")
+        if args.headers:
+            for tag in sorted(tags):
+                print(f"    {tag:12s} {tags[tag]}")
         if args.print:
             # A game that does not replay is not a game -- printing it invites a
             # copy-paste of moves that were never played.

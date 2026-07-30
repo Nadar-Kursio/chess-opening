@@ -85,7 +85,7 @@ OPENING = {
             "moves": "d4 d5 Bf4 c5 e3 cxd4 exd4 Nc6 Nf3 Bg4 Be2 e6 c3 Bd6 Bxd6 Qxd6 O-O Nge7 Nbd2",
             "notes": {
                 4: "The critical challenge. Black hits d4 immediately, before White gets in c3.",
-                5: "White calmly builds anyway. Note that grabbing with 4.dxc5 gives Black easy equality with ...e6 and ...Bxc5.",
+                5: "White calmly builds anyway. Note that grabbing with 3.dxc5 gives Black easy equality with ...e6 and ...Bxc5.",
                 6: "Black releases the tension. This is a concession — it gives White a healthy symmetrical structure and the open e-file.",
                 7: "Recapturing toward the centre and opening the e-file.",
                 8: "Development with pressure on d4.",

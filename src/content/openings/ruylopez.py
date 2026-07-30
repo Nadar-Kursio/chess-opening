@@ -146,7 +146,7 @@ OPENING = {
             "tier": 'Plans',
             "point": "Thirty-five moves to reach the position the opening was designed for: a pawn duo on d4 and e4, the c-file yours, the light-squared bishop pointing at h7 and every piece on the square it wanted. Black's version of the structure still has the e5-pawn, so d4–d5 closes the centre here rather than winning space — the c-file and the battery are the assets. Now, and only now, the attack starts.",
             "next": [
-                '18...h6 19.Qd3 and the battery is loaded. The threat is not mate; the threat is that Black can never move the h- or g-pawn again.',
+                '18...h6 19.Qc2 and the battery is loaded — c2, not d3, because your own knight on d2 is standing on that square. The threat is not mate; the threat is that Black can never move the h- or g-pawn again.',
                 'Nf1–g3–f5 next. The knight is the third attacker, and three is the number an attack needs.',
                 'Watch d4. Every attacking move you make on the kingside has to leave the centre standing, because ...exd4 followed by ...d5 undoes thirty-five moves of work.',
             ],

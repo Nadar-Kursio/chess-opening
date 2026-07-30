@@ -34,7 +34,10 @@ function loadJsdom() {
 const { JSDOM, VirtualConsole } = loadJsdom();
 
 const ROOT = execSync("git rev-parse --show-toplevel", { cwd: __dirname }).toString().trim();
-const PAGE = path.join(ROOT, "docs", "chess-opening-course.html");
+// PAGE lets you point at a page built somewhere other than docs/ -- useful when
+// something else is mid-rebuild, or to check a page before you write over the
+// committed one.
+const PAGE = process.env.PAGE || path.join(ROOT, "docs", "chess-opening-course.html");
 const only = process.argv.slice(2);
 
 const errors = [];
@@ -75,7 +78,7 @@ whenReady(() => {
 
     ev(`go("${id}")`);
     const nlines = ev(`DATA.find(o=>o.id==="${id}").lines.length`);
-    let panels = 0, cards = 0;
+    let panels = 0, cards = 0, seen = 0;
     for (let i = 0; i < nlines; i++) {
       const nplies = ev(`DATA.find(o=>o.id==="${id}").lines[${i}].plies.length`);
       for (let ply = 0; ply < nplies; ply++) {
@@ -90,6 +93,15 @@ whenReady(() => {
           // A one-move branch renders no tape by design; anything longer must
           // render every ply of it.
           if (plies > 1 && tape !== plies) errors.push(`${where}: tape shows ${tape} of ${plies} plies`);
+          // A `see` that resolves to nothing is a cross-reference the reader
+          // cannot follow -- the build does not check the target exists.
+          const see = ev(`brCur().see || ""`);
+          if (see) {
+            if (!ev(`brSee(brCur().see) !== null`)) errors.push(`${where}: see "${see}" resolves to nothing`);
+            else if (!ev(`document.querySelector(".branch .brsee") !== null`))
+              errors.push(`${where}: see "${see}" resolved but rendered no link`);
+            else seen++;
+          }
           panels++;
           ev(`brExit()`);
         }
@@ -116,11 +128,20 @@ whenReady(() => {
           errors.push(`${id} line ${i}: the line's own next move reads as illegal in the drill`);
         if (ev(`mvIsLegal(curSeq()[state.ply], "a1", "a8")`))
           errors.push(`${id} line ${i}: the legal-move list accepts an impossible move`);
+        // Drill the first line to the end: the score panel and the plan card
+        // both live in the `done` phase, and nothing else exercises it.
+        if (i === 0) {
+          for (let n = 0; n < 80 && ev(`state.drill.phase !== "done"`); n++) ev(`dxShow(); dxContinue();`);
+          if (!ev(`state.drill.phase === "done"`))
+            errors.push(`${id} line 0: the drill never reached the end of the line`);
+          else if (!ev(`document.querySelector(".plan .planpoint") !== null`))
+            errors.push(`${id} line 0: finishing the drill shows no plan card`);
+        }
         ev(`dxSetMode("read")`);
       }
     }
     must(id, true, `${level}, ${sets} branch positions / ${devs} deviations, ` +
-         `${panels} panels opened, ${cards}/${nlines} authored plan cards`);
+         `${panels} panels opened, ${cards}/${nlines} authored plan cards, ${seen} see-links`);
   }
 
   for (const gid of ev("GAMES.map(g=>g.id)")) {

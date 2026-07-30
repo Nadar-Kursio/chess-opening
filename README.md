@@ -92,7 +92,8 @@ shell. Using the system `python3` by mistake fails with a message telling you
 this, rather than a bare `ModuleNotFoundError`.
 
 `src/build.py` does three things:
-1. Validates that **every move in every line is legal** (fails loudly if not).
+1. Validates that **every move in every line is legal**, and that its notation does
+   not claim more than the move does (fails loudly on either).
 2. Generates arrows + a plain-language tactical summary for each move (`engine/intel.py`).
 3. Writes `docs/`, inlining the data, styles and scripts into one HTML file.
 
@@ -100,6 +101,13 @@ If a move is illegal, the build prints every problem it found — naming the ope
 line, ply, and for a deviation the branch — and then stops without writing. That
 matters: `build_line` breaks out of a bad line, so carrying on would write a
 silently truncated line into `docs/` that `--check` would then call up to date.
+
+Legality alone is not enough, because python-chess is lenient about markers:
+`Bxd4` on an empty d4 parses happily as `Bd4`, a different legal move that the
+surrounding explanation is not about. So a capture marker on a non-capture, a `+`
+on a move that gives no check and a `#` on a move that is not mate are all content
+errors (`san_overclaim`). Disambiguation is not policed — `Nge7` where `Ne7` would
+do names the knight for the reader, and two lines use it deliberately.
 
 `python3 src/build.py --check` verifies `docs/` matches the sources without
 writing anything — use it to catch a data edit that was never rebuilt.
@@ -182,8 +190,8 @@ moves — you do not write those by hand.
 
 Every one of these can be left out, and an opening without them still builds and
 still works — the drill, the deviation panel and the plan card all degrade rather
-than disappear. The Italian, the Ruy Lopez and the Four Knights carry the full set
-today; the other ten openings carry none of it and still work.
+than disappear. The Italian, the Ruy Lopez, the Four Knights and the Scotch carry
+the full set today; the other nine openings carry none of it and still work.
 
 | Key | Where | What it does |
 | --- | --- | --- |
@@ -193,6 +201,12 @@ today; the other ten openings carry none of it and still work.
 | `branches` | opening | Deviations, keyed by the **SAN prefix that reaches the position** — not by ply. A branch written once fires in every line of *that opening* which passes through the position; a second opening that transposes there writes its own, because the index is built per opening. |
 | `games` | opening | Annotated model games, replayed with the same board and tape. |
 
+A branch entry is `san` + `severity` (`blunder` / `inaccuracy` / `playable`) +
+`why`, optionally `name`, `line` (the continuation that proves the point) and
+`see` — a cross-reference the panel renders as a button. `see` takes `"opening"`,
+`"opening#slug"` or `"structure#id"`, the slug matched against that opening's line
+names first and its game ids second. A slug matching nothing renders no button.
+
 A branch that happens to be the move some line plays is not an error: positions are
 shared, so the same move can be a deviation from one line and the main move of
 another. The line being rendered drops it.
@@ -200,6 +214,12 @@ another. The line being rendered drops it.
 Structures live in `src/content/structures.py` and belong to no single opening. A
 line points at one from its `plan`; the reverse list — which openings reach a
 structure — is derived by the build and must never be written by hand.
+
+**Before writing any of it, read `.claude/skills/opening-research/SKILL.md`.** The
+build proves a move legal; nothing here proves a claim *true*, and "this wins a
+piece" ships unchallenged. That skill is the research-and-verify loop that closes
+the gap, and it has caught wrong lines — including "refutations" that hung a
+piece — in every authoring pass so far.
 
 ## Design notes (why things are the way they are)
 

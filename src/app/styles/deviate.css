@@ -61,6 +61,19 @@
 .brclose:hover{color:var(--text)}
 
 .brwhy{margin:0 0 12px;font-size:14.5px;line-height:1.62}
+/* "Covered in full over here" -- same affordance as the plan card's structure
+   button, so the two read as one gesture rather than two features. */
+.brsee{
+  display:block;width:100%;text-align:left;margin:0 0 12px;padding:8px 12px;
+  border:1px solid var(--line2);border-radius:6px;transition:.13s;
+}
+.brsee:hover{background:var(--panel2);border-color:var(--green)}
+.brseelbl{
+  display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);
+}
+.brseename{display:block;font-size:13.5px;color:var(--green);margin-top:2px}
+
 .brtape{
   display:flex;flex-wrap:wrap;gap:2px;align-items:center;
   border-top:1px solid var(--line);padding-top:10px;margin-bottom:6px;

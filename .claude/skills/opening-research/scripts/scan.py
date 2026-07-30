@@ -10,6 +10,11 @@
 Output is one row per candidate: the eval after it and the engine's principal
 variation, which is where the `line` for a branch usually comes from. Sort order
 is the order you passed them, so the main move first makes the comparison easy.
+
+A row shows `Bxd4 -> Bd4` when the move you typed is not how the position writes
+it. python-chess accepts a spurious capture marker, a missing check marker and
+loose disambiguation, so `Bxd4` on an empty d4 is parsed, analysed and reported
+without complaint -- an eval for a move you did not ask about.
 """
 import sys
 
@@ -38,16 +43,19 @@ def main():
         for prefix, candidates in positions(sys.argv[1:]):
             base = board_after(prefix)
             here, pv = score(eng, base)
-            print(f"\n=== after {prefix}   [{here:+5d}, engine likes {pv}]")
+            print(f"\n=== after {prefix}   [{here:+5d}, engine likes {pv}]", flush=True)
             for san in candidates:
                 board = base.copy()
                 try:
-                    board.push_san(san)
+                    move = board.parse_san(san)
                 except Exception as e:
-                    print(f"   {san:8s} ILLEGAL — {e}")
+                    print(f"   {san:8s} ILLEGAL — {e}", flush=True)
                     continue
+                canonical = board.san(move)
+                board.push(move)
                 after, line = score(eng, board)
-                print(f"   {san:8s} {after:+6d}  {line}")
+                shown = san if canonical == san else f"{san} -> {canonical}"
+                print(f"   {shown:16s} {after:+6d}  {line}", flush=True)
 
 
 if __name__ == "__main__":

@@ -44,10 +44,14 @@ function planEndHTML(op, line){
       </div>`;
 }
 
+function planFor(op, line){
+  return line.plan ? planCardHTML(op, line) : planEndHTML(op, line);
+}
+
 function planHTML(op, line){
   if(state.branch || state.mode === "drill") return "";
   if(curIdx() < curSeq().length - 1) return "";
-  return line.plan ? planCardHTML(op, line) : planEndHTML(op, line);
+  return planFor(op, line);
 }
 
 ACTIONS.structure = t=>{

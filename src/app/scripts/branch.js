@@ -92,6 +92,45 @@ function brPickerHTML(){
       </div>`;
 }
 
+/* A branch's `see` names where the idea is covered in full: an opening, one of
+   its lines, one of its model games, or a structure card. It is authored as
+   "opening", "opening#slug" or "structure#id", with the slug matched loosely
+   against line names and game ids -- content should not have to know the index
+   of a line that moves. Lines win over games, so "rubinstein" finds the
+   variation and "spielmann-rubinstein" finds the game. */
+function brSlug(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-"); }
+
+function brSee(see){
+  if(!see) return null;
+  const [opId, slug] = String(see).split("#");
+  if(opId === "structure"){
+    const s = STRUCTURES.find(x=>x.id === slug);
+    return s ? {label:s.name, lead:"The structure card", go:`structure:${s.id}`, line:-1} : null;
+  }
+  const op = DATA.find(o=>o.id === opId);
+  if(!op) return null;
+  if(slug){
+    const i = op.lines.findIndex(l=>brSlug(l.name).indexOf(slug) >= 0);
+    if(i >= 0) return {label:op.lines[i].name, lead:`In ${op.name}`, go:op.id, line:i};
+    const g = GAMES.find(x=>x.op === opId && x.id.indexOf(slug) >= 0);
+    if(g) return {label:g.name, lead:"The model game", go:`game:${g.id}`, line:-1};
+    // Deliberately not falling back to the opening: a slug that matches nothing
+    // is a typo or a line that has been renamed, and silently landing the reader
+    // somewhere plausible is how that goes unnoticed.
+    return null;
+  }
+  return {label:op.name, lead:"The opening", go:op.id, line:-1};
+}
+
+function brSeeHTML(b){
+  const t = brSee(b.see);
+  return t ? `
+        <button class="brsee" data-act="see" data-go="${t.go}" data-line="${t.line}">
+          <span class="brseelbl">${t.lead}</span>
+          <span class="brseename">${t.label}</span>
+        </button>` : "";
+}
+
 function brTapeHTML(b){
   return b.plies.map((p,i)=>{
     const num = p.turn==="w" ? `<span class="mvnum">${Math.ceil((i+1)/2)}.</span>` : "";
@@ -116,6 +155,7 @@ function brPanelHTML(){
           <button class="brclose" data-act="brexit" title="Back to the line (Esc)">&#10005;</button>
         </div>
         <p class="brwhy">${b.why}</p>
+        ${brSeeHTML(b)}
         ${b.plies.length>1?`
         <div class="brtape">${brTapeHTML(b)}</div>
         <div class="cmtop">
@@ -146,3 +186,8 @@ ACTIONS.brexit = ()=>brExit();
 ACTIONS.brprev = ()=>step(-1);
 ACTIONS.brnext = ()=>step(1);
 ACTIONS.brat   = t=>{ state.branch.at = +t.dataset.i; render(); };
+ACTIONS.see    = t=>{
+  const line = +t.dataset.line;
+  go(t.dataset.go);              // clears the branch and resets to ply 0 for us
+  if(line >= 0){ state.line = line; render(); }
+};

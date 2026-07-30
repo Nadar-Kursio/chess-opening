@@ -12,6 +12,9 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
+import chess
+
+from build import san_overclaim
 from content.openings import ORDER, load
 from content.sections import SECTIONS
 from content.structures import STRUCTURES
@@ -184,6 +187,43 @@ class TestStructures(unittest.TestCase):
         for s in STRUCTURES:
             if s.get("tier"):
                 self.assertIn(s["tier"], TIERS, s["id"])
+
+
+class TestSanClaims(unittest.TestCase):
+    """The build's guard against a legal move whose notation lies.
+
+    Worth a test of its own because the failure it prevents is invisible: a
+    spurious capture marker parses to a different, legal move, and the page then
+    teaches that move with the wrong explanation attached.
+    """
+
+    def claim(self, prefix, san):
+        board = chess.Board()
+        for move in prefix.split():
+            board.push_san(move)
+        return san_overclaim(board, board.parse_san(san), san)
+
+    def test_honest_notation_passes(self):
+        for prefix, san in [("e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Bc5 Nb5", "Bd4"),
+                            ("e4 e5 Nf3 Nc6 d4", "exd4"),
+                            ("e4 e5 Bc4 Bc5 Qh5 Nf6", "Qxf7#"),
+                            ("e4 e5 Qh5 Nf6", "Qxe5+"),
+                            ("e4 e5 Nf3 Nc6 Bb5", "a6")]:
+            self.assertIsNone(self.claim(prefix, san), f"{prefix} / {san}")
+
+    def test_capture_marker_must_match(self):
+        # The real case: on an empty d4, `Bxd4` parses as `Bd4` and analyses clean.
+        self.assertIn("not one", self.claim("e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Bc5 Nb5", "Bxd4"))
+        self.assertIn("does not say so", self.claim("e4 e5 Nf3 Nc6 d4 exd4", "Nd4"))
+
+    def test_check_and_mate_markers_must_be_earned(self):
+        self.assertIn("gives none", self.claim("e4 e5 Nf3 Nc6 Bb5", "a6+"))
+        # A real check on the open e-file, which ...Be7 answers -- so not mate.
+        self.assertIn("not mate", self.claim("e4 e5 Qh5 Nf6", "Qxe5#"))
+
+    def test_disambiguation_is_not_a_claim(self):
+        """Only Ng1 can reach e2, and `Nge2` still names it. Two lines ship this."""
+        self.assertIsNone(self.claim("e4 e5", "Nge2"))
 
 
 class TestSections(unittest.TestCase):

@@ -32,6 +32,16 @@ OPENING = {
         {
             "name": "Rubinstein Variation — 4.e3",
             "note": "White's most popular and most flexible line. The game usually transposes into an isolated-pawn or hanging-pawn middlegame.",
+            "plan": {
+                "structure": 'isolani',
+                "point": "Black traded the bishop pair for time and a blockade, and you took an isolated d-pawn in exchange for the two bishops and the squares in front of it. Both sides got what they wanted; now one of you has to prove it was worth more.",
+                "next": [
+                    'Ne5 or Bg5 and Rac1, aiming at h7 and c7 while the blockade is still being organised.',
+                    'd4–d5 the moment the knight leaves d5 or f6 — it is the only move that turns the weakness into an attack.',
+                    "Watch the b7-bishop. It is the piece that makes ...Nxd4 sacrifices work, so keep a piece on f3 or a rook on d1.",
+                ],
+                "endgame": 'The blockading knight on d5 is worth more than your bishop the moment the queens are gone. This is the ending Rubinstein built the variation to reach as Black — do not walk into it, and if you are Black, trade toward it deliberately.',
+            },
             "moves": "d4 Nf6 c4 e6 Nc3 Bb4 e3 O-O Bd3 d5 Nf3 c5 O-O dxc4 Bxc4 Nbd7 Qe2 b6 Rd1 cxd4 exd4 Bb7",
             "notes": {
                 4: "Preparing ...d5 or ...Bb4 and keeping every option open.",

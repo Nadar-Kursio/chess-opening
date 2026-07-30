@@ -80,8 +80,7 @@ STRUCTURES = [
         ],
         "endgame_note": "With queens off, the extra central pawn tells: White's d4+e4 gives an extra tempo in every pawn race and a shelter for the king on e3. Trade into it when Black's pieces are passive, avoid it when Black has the bishop pair.",
         "also_in": [
-            "fourknights — Spanish Four Knights (Metger) reaches it with doubled c-pawns after ...Bxc3 bxc3.",
-            "scotch — the Classical Variation reaches the same duo once White plays c3 and Black answers ...d6.",
+            "fourknights — the Metger reaches this centre with an extra pawn on c2 after ...Bxc3 bxc3. Same duo, same plans, one more pawn to explain: it has its own card.",
         ],
     },
 
@@ -111,7 +110,7 @@ STRUCTURES = [
         ],
         "endgame_note": "The half-open c-file plus the duo usually means a healthy queenside majority. Simplify toward a rook endgame and push the majority; the extra central pawn covers the squares your king needs to march through.",
         "also_in": [
-            "scotch — the Classical Variation arrives at a related version with e4 against ...d6 and no d-pawn.",
+            "scotch — no Scotch line reaches the duo at all, because the d-pawn is traded on move three. The Göring Gambit reaches the other half of this card: e4 against ...d6 with the c-file half-open and nothing on d4.",
             "italian — the Pianissimo reaches it whenever Black answers the delayed d4 with ...exd4 and White recaptures with the c-pawn.",
         ],
     },
@@ -142,10 +141,8 @@ STRUCTURES = [
         ],
         "endgame_note": "This is the whole point of the structure. With queens and a pair of rooks off, the d4-pawn is simply weak and the blockading knight is simply strong. If you have the isolani, your endgame plan is to not reach one.",
         "also_in": [
-            "italian — reached directly from the Giuoco Piano main line 5.d4 exd4 6.cxd4 Bb4+ 7.Bd2 Bxd2+ 8.Nbxd2 d5 9.exd5 Nxd5.",
-            "carokann — the Panov-Botvinnik Attack ends on the identical White skeleton (a2,b2,d4,f2,g2,h2).",
-            "queensgambit — the Queen's Gambit Accepted ends on the same skeleton with the a-pawn on a4.",
-            "nimzo — the Rubinstein Variation (4.e3) ends on the identical White skeleton.",
+            "italian — the Giuoco Piano main line 5.d4 exd4 6.cxd4 Bb4+ 7.Bd2 Bxd2+ 8.Nbxd2 d5 9.exd5 Nxd5 reaches it as a deviation rather than as a line of its own.",
+            "scotch — the Göring and the 4.Nxd4 lines transpose here whenever Black answers the centre with ...d5 and White recaptures with a piece.",
         ],
     },
 
@@ -177,7 +174,8 @@ STRUCTURES = [
         ],
         "endgame_note": "This is the endgame the whole variation is played for. Four against three on the kingside produces a passed pawn by force; four against three on the queenside with two on the c-file produces nothing at all. If every piece comes off, White wins — so White should be counting trades and Black should be counting attackers.",
         "also_in": [
-            "fourknights — the Scotch Four Knights hands the SAME doubled c-pawns to Black after 6.Nxc6 bxc6, and 7...d5 dissolves them. Comparing the two is the fastest way to understand this card: doubled pawns you can cure are a structure, doubled pawns you cannot are a verdict.",
+            "fourknights — the Scotch Four Knights doubles Black's c-pawns the same way after 6.Nxc6 bxc6, and ...d5 dissolves them. Doubled pawns you can cure are a structure; doubled pawns you cannot are a verdict.",
+            "scotch — the Mieses looks like this card and is not it. Four against three makes a passer by force; three against three, which is what the Scotch reaches, is a dead draw with the pieces off. Read the two endgame notes side by side — it is the clearest way to see that 'doubled pawns lose the endgame' is about the count, not the doubling.",
             "italian — Bxc6 in an Italian move order produces the identical trade, and the identical bargain.",
         ],
     },
@@ -216,16 +214,50 @@ STRUCTURES = [
     },
 
     {
+        "id": "mieses-wedge",
+        "name": "The Mieses structure — a wedge on e5 against doubled c-pawns",
+        "tier": "Structure",
+        "taxonomy": "No chapter in Flores Rios or Soltis, and no settled name in the literature either — it is known by the variation, the Mieses. Worth a card anyway, because it is the structure the whole Scotch is played for, and because it is the one place in this course where doubled pawns do NOT hand anybody an endgame.",
+        "fen": "2kr1b1r/p1ppqppp/b1p5/3nP3/2P5/1P4P1/P3QP1P/RNB1KB1R b KQ - 0 10",
+        "white_plans": [
+            "Play against c6, not against the pawn count. It has exactly one pawn defender — d7 — and ...d6 or ...d7-d5 is also Black's only freeing move, so Black cannot free the position and defend c6 with the same pawn.",
+            "That is what g3 and Bg2 are for. The bishop's diagonal to c6 is blocked by one thing, Black's knight on d5, so every time that knight moves the target is live.",
+            "Castle before you defend e5. It is guarded once, by the queen down the file the pawn vacated, and 12.Qxe5 loses to ...Qxe5+ and ...Qxa1 while the rook is still at home.",
+            "Keep c4. It is the only pawn or piece attacking d5, which is why Black's bishop goes to a6 rather than b7, and why b3 is a real move rather than a formality.",
+        ],
+        "black_plans": [
+            "Aim everything at e5. ...Re8, ...f6 and ...Qe6 turn one attacker into three, and White cannot add defenders as fast as Black adds attackers.",
+            "Win that pawn and know what it buys: after ...f6 and ...fxe5 Black is a pawn up and the engine still prefers White by half a pawn. It is compensation for the structure, not an advantage on top of it.",
+            "...Ba6 hits c4 with White's queen behind it on the same diagonal — the move that argues about d5 instead of conceding it.",
+            "Head for a pure pawn ending. The queenside that looks broken is a draw with only kings left, so every piece that comes off helps Black.",
+        ],
+        "key_squares": ["e5 (the wedge)", "c6 (the target)", "d5", "c4", "the e-file"],
+        "pawn_breaks": ["White: f2–f4 to prop e5; a2–a4 and b3–b4 only with pieces behind them, never as an endgame plan",
+                        "Black: ...f7–f6 and ...d7–d6 against the wedge — the only two breaks that matter"],
+        "pitfalls": [
+            "Counting the queenside as a majority. It is three against three, and three pawns on three files do not beat three on two files by themselves: with only kings left it is 0.00 at depth 26, in every pawn placement the variation reaches. The doubling is a target, not a won endgame.",
+            "Trading pieces on the strength of that count — the exact opposite of what the Exchange Ruy teaches with the same-looking pawns. Here the pieces are the advantage and the pawn ending is the draw.",
+            "Treating e5 as a pawn to hold. It is a tempo-generator to spend: it cramps Black for a dozen moves and then comes off. Defending it is how White ends up worse.",
+            "As Black, playing ...c5 to tidy the pawns up in the middlegame. It fixes nothing, takes support off d5 and costs about a pawn — even though the same move is the drawing move once the pieces are gone.",
+        ],
+        "endgame_note": "The honest evaluation, and the reason this card exists: with everything traded, White is not winning. The bare queenside is a dead draw and the full pawn ending is barely a third of a pawn, because Black's king simply collects the wedge on e5. So the doubled c-pawns are worth playing against only while pieces are on the board and c6 needs defending — White plays for the middlegame here, and Black plays for every trade.",
+        "also_in": [
+            "fourknights — the Scotch Four Knights hands Black the identical doubled c-pawns after 6.Nxc6 bxc6, with White's pawn still on e4 rather than wedged on e5. Same pawn count, none of the pressure — and ...d5 dissolves it, which is exactly what the Mieses does not allow.",
+            "scotch — the Scotch Gambit reaches the same queenside after 8.Bxc6 bxc6, with pawns facing off on d5 and e5 instead of a wedge. Same target on c6, and the same warning about the endgame.",
+        ],
+    },
+
+    {
         "id": "evans-open-lines",
-        "name": "The gambit imbalance — open lines for two pawns",
+        "name": "The gambit imbalance — open lines for three pawns, two once you take on c3",
         "tier": "Plans",
         "taxonomy": "Not a pawn structure in the taxonomic sense, and it would be dishonest to pretend otherwise. It is a material-for-time imbalance, and it needs its own card because the plans are nothing like the Italian's.",
         "fen": "r1b1k1nr/pppp1ppp/2n3q1/b3P3/2B5/1Qp2N2/P4PPP/RNB2RK1 w kq - 1 10",
         "white_plans": [
-            "Re1 and Ba3 — the two files and diagonals that Black's king cannot cover.",
-            "Nbd2–e4 or –c4, bringing the last piece before the first threat.",
+            "Nxc3 first. It is the only move that takes the pawn back and develops in the same breath — the knight leaves b1 for a square it wants anyway. Recapturing is not spending your tempo here; it is the cheapest way to bring the last piece.",
+            "Then Re1 and Ba3 — the file and the diagonal Black's king cannot cover. How much Ba3 is worth depends on what Black has on e7: with the diagonal clear it hits f8 and castling stops being simple, and with a knight there it is just a good bishop.",
             "e4–e5 as a wedge: it takes f6 and d6 from Black's pieces and it is worth more than the pawn it costs.",
-            "Never recapture on c3 if recapturing costs a tempo. You bought time; do not spend it buying a pawn back.",
+            "Do not go pawn-hunting with Qxb7 or a4. You are three pawns down and none of them is coming back by force — what you bought was time, and a queen on b7 is a queen not attacking the king.",
         ],
         "black_plans": [
             "Give one pawn back to finish developing. ...d6 and ...Nge7 is worth more than a pawn on c3.",

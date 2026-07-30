@@ -65,6 +65,12 @@ def opening(name):
     return import_module(f"content.openings.{name}").OPENING
 
 
+def source_of(name):
+    """The file an opening module was read from, for staleness checks."""
+    from importlib import import_module
+    return import_module(f"content.openings.{name}").__file__
+
+
 def numbered(ply, san):
     """'12.Nbd2' / '12...Nc6' -- the same shape the page shows."""
     return f"{(ply + 1) // 2}.{'' if ply % 2 else '..'}{san}"

@@ -67,6 +67,29 @@ TIERS = ("Foundation", "Structure", "Plans", "Mastery")
 SEVERITIES = ("blunder", "inaccuracy", "playable")
 
 
+def san_overclaim(board, move, san):
+    """What an authored SAN token claims and the move does not do, or None.
+
+    Legality is not enough. python-chess reads `Bxd4` on an empty d4 as `Bd4` and
+    `Qh4#` on a mere check as `Qh4+`, so a marker that lies is legal, silent, and
+    ships to the learner as a fact about the position.
+
+    Disambiguation is deliberately not compared: `Nge7` where `Ne7` is
+    unambiguous names the knight for the reader, and that is a choice, not a
+    claim.
+    """
+    if ("x" in san) != board.is_capture(move):
+        return "says a capture that is not one" if "x" in san else "is a capture and does not say so"
+    if san.endswith("#"):
+        after = board.copy()
+        after.push(move)
+        if not after.is_checkmate():
+            return "claims mate, and the move is not mate"
+    elif san.endswith("+") and not board.gives_check(move):
+        return "claims check, and the move gives none"
+    return None
+
+
 class BranchIndex:
     """The opening's deviations, resolved from SAN prefixes to positions.
 
@@ -156,6 +179,9 @@ def build_branches(where, board, entries, ply, errors):
             except Exception as e:
                 errors.append(f"{where} branch '{san}' / continuation {i} '{step}': {e}")
                 break
+            claim = san_overclaim(work, played, step)
+            if claim:
+                errors.append(f"{where} branch '{san}' / continuation {i} '{step}': {claim}")
             mover = "w" if work.turn == chess.WHITE else "b"
             arrows, tactics = move_data(work, played)
             work.push(played)
@@ -258,6 +284,9 @@ def build_line(op_id, index, line, errors, side=None, branches=None):
         except Exception as e:
             errors.append(f"{op_id} / line {index} '{line['name']}' / ply {i+1} '{san}': {e}")
             break
+        claim = san_overclaim(board, move, san)
+        if claim:
+            errors.append(f"{op_id} / line {index} '{line['name']}' / ply {i+1} '{san}': {claim}")
         mover = "w" if board.turn == chess.WHITE else "b"
         arrows, tactics = move_data(board, move)   # board is the position BEFORE the move
         board.push(move)
@@ -310,7 +339,7 @@ def build_openings(games):
         for e in errors:
             print(" ", e)
         raise SystemExit(f"{len(errors)} content error(s) — nothing written")
-    print("All moves legal.")
+    print("All moves legal, and every capture, check and mate marker true.")
 
     total = missing = 0
     for op in out:
@@ -343,6 +372,9 @@ def build_game(op_id, index, game, errors):
         except Exception as e:
             errors.append(f"{op_id} / game {index} '{game['id']}' / ply {i + 1} '{san}': {e}")
             break
+        claim = san_overclaim(board, move, san)
+        if claim:
+            errors.append(f"{op_id} / game {index} '{game['id']}' / ply {i + 1} '{san}': {claim}")
         mover = "w" if board.turn == chess.WHITE else "b"
         board.push(move)
         ply = i + 1
