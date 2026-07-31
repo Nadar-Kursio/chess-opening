@@ -141,6 +141,8 @@ OPENING = {
         "name": "Deep dive — the Chigorin middlegame",
         "note": "From the tabiya into the real fight: the centre resolves, the knight comes home, and both sides commit to a wing.",
         "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7 Nbd2 cxd4 cxd4 Nc6 Nb3 a5 Be3 a4 Nbd2 Bd7 Rc1 Qb7 Bb1",
+        "tier": "Plans",
+        "drill": True,
         "plan": {
             "structure": 'broad-centre-open-c-file',
             "tier": 'Plans',

@@ -392,6 +392,8 @@ OPENING = {
         "name": "Deep dive — the Metger middlegame",
         "note": "The Spanish main line continued into the middlegame: White pushes d5, Black gets the bishop pair and a kingside pawn, and both sides reroute their knights.",
         "moves": "e4 e5 Nf3 Nc6 Nc3 Nf6 Bb5 Bb4 O-O O-O d3 d6 Bg5 Bxc3 bxc3 Qe7 Re1 Nd8 d4 Ne6 Bc1 c5 d5 Nf4 Bxf4 exf4 Nd2 g5 Nf1 Bd7 Bxd7 Qxd7 Ne3 Qe7",
+        "tier": "Plans",
+        "drill": True,
         "plan": {
             "structure": 'doubled-c-pawns-open-b-file',
             "tier": 'Plans',
