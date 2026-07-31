@@ -112,7 +112,8 @@ function studyHTML(op, line, p){
         : `Move ${state.ply} of ${line.plies.length-1}`} &nbsp;\u00B7&nbsp; ${state.flip?"Black":"White"} at the bottom</div>
       <div class="hint">${state.mode==="drill"
         ? "Click a piece then its square, or drag it. <b>H</b> hint &middot; <b>S</b> show &middot; <b>M</b> back to reading."
-        : "Use \u2190 and \u2192 keys, or click any move in the list."}</div>
+        : "Move a piece to play it &mdash; the line follows, or I answer the move you chose. "
+        + "<b>\u2190</b> <b>\u2192</b> to step."}</div>
     </div>
 
     <div class="studycol">
@@ -123,7 +124,10 @@ function studyHTML(op, line, p){
       <div class="tape${inBranch?" brmuted":""}" id="tape">${tapeHTML(line)}</div>
       ${state.pick ? brPickerHTML() : ""}
       ${inBranch ? brPanelHTML()
-        : state.mode==="drill" ? dxPanelHTML(line) : commentaryHTML(p)}
+        : state.mode==="drill" ? dxPanelHTML(line)
+        : `${state.drill.msg && state.drill.msgPly === state.ply
+              ? `<p class="dxmsg readmsg" data-tone="${state.drill.tone||"flat"}">${state.drill.msg}</p>` : ""}
+           ${commentaryHTML(p)}`}
       ${planHTML(op, line)}
     </div>
   </section>

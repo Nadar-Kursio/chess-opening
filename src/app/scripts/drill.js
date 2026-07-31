@@ -508,36 +508,57 @@ function dxMoverSide(){
 function dxArmed(){
   if(state.branch) return false;
   if(state.pick) return true;
+  // Reading is not watching. The board is the most obvious thing on the page, so
+  // it answers a move at all times rather than only after you have found a mode
+  // switch -- and in read mode answering means the deviation library, which is
+  // otherwise reachable only by hunting through a list.
+  if(state.view === "op" && !dxOn()) return true;
   if(!dxOn()) return false;
   const p = state.drill.phase;
   return p === "ask" || p === "wrong" || p === "right" || p === "reveal";
 }
 
 function dxBoardMove(from, to){
-  if(state.pick) brTry(from, to);
+  if(state.pick || !dxOn()) brTry(from, to);
   else dxTry(from, to);
 }
 
-/* Read mode: the learner is showing me what the opponent played. */
+/* Read mode: the learner is showing me a move -- either the one this line plays
+   next, or the one they want to know about instead. */
 function brTry(from, to){
   const here = curSeq()[state.ply];
   const pair = mvNormalise(here.fen, from, to);
   from = pair[0]; to = pair[1];
 
+  // Playing the move the line plays walks it forward. `brAt` drops that move
+  // from the deviation list -- from here it is the main line -- so without this
+  // the most natural move on the board would answer "I have no notes on that".
+  const next = curSeq()[state.ply + 1];
+  if(next && next.from === from && next.to === to){
+    state.sel = null;
+    state.drill.msg = ""; state.drill.tone = "";
+    step(1);
+    dxSay(next.san + ".");
+    return;
+  }
+
   const hit = brMatch(state.ply, from, to);
-  if(hit >= 0){ brEnter(state.ply, hit, "read"); return; }
+  if(hit >= 0){ state.sel = null; brEnter(state.ply, hit, "read"); return; }
 
   const name = mvName(here.fen, from, to);
   if(mvIsLegal(here, from, to) === false){
     state.drill.msg = `<b>${name}</b> isn't a legal move in this position.`;
     state.drill.tone = "bad";
   } else {
-    const next = curSeq()[state.ply + 1];
     state.drill.msg = `<b>${name}</b> isn't one I have notes on. `
       + (next?`This line plays <b>${next.san}</b>. `:"")
       + dxPrinciple(here, from, to);
     state.drill.tone = "flat";
   }
+  // The answer belongs to the position that produced it. Tying it to the ply
+  // means every way of leaving -- arrow keys, the move list, another line --
+  // drops it without a single navigation hook knowing this feature exists.
+  state.drill.msgPly = state.ply;
   state.sel = null;
   render();
   dxSay(name + ".");
