@@ -2099,8 +2099,10 @@ function dxPaint(){
 function dxClearMsg(){
   const d = state.drill;
   d.msg = ""; d.tone = "";
-  const msg = document.querySelector(".drill .dxmsg");
-  if(msg) msg.remove();
+  // Every .dxmsg on the page, not just the drill panel's: read mode renders the
+  // same answer outside the panel, and a selector scoped to .drill left it on
+  // screen after the mark under it had already gone.
+  document.querySelectorAll(".dxmsg").forEach(n=>n.remove());
   const panel = document.querySelector(".drill");
   if(panel) panel.setAttribute("data-tone", "flat");
   dxPaint();
@@ -2167,17 +2169,18 @@ function brTry(from, to){
   const next = curSeq()[state.ply + 1];
   if(next && next.from === from && next.to === to){
     state.sel = null;
-    state.drill.msg = ""; state.drill.tone = "";
+    state.drill.msg = ""; state.drill.tone = ""; state.drill.bad = null;
     step(1);
     dxSay(next.san + ".");
     return;
   }
 
   const hit = brMatch(state.ply, from, to);
-  if(hit >= 0){ state.sel = null; brEnter(state.ply, hit, "read"); return; }
+  if(hit >= 0){ state.sel = null; state.drill.bad = null; brEnter(state.ply, hit, "read"); return; }
 
   const name = mvName(here.fen, from, to);
-  if(mvIsLegal(here, from, to) === false){
+  const illegal = mvIsLegal(here, from, to) === false;
+  if(illegal){
     state.drill.msg = `<b>${name}</b> isn't a legal move in this position.`;
     state.drill.tone = "bad";
   } else {
@@ -2186,6 +2189,11 @@ function brTry(from, to){
       + dxPrinciple(here, from, to);
     state.drill.tone = "flat";
   }
+  // Mark the board, in the same two colours the drill uses and for the same two
+  // reasons: red for a move that cannot be played, amber for a legal one that is
+  // not the move this line plays. Reading and drilling disagreeing about what a
+  // rejected move looks like would teach the colours twice.
+  state.drill.bad = {from, to, kind: illegal ? "illegal" : "wrong"};
   // The answer belongs to the position that produced it. Tying it to the ply
   // means every way of leaving -- arrow keys, the move list, another line --
   // drops it without a single navigation hook knowing this feature exists.
