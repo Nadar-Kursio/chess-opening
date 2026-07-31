@@ -1310,11 +1310,16 @@ function buildRail(){
     ops.forEach(o=>{
       const on = state.view==="op" && state.opId===o.id;
       const lv = opLevel(o);
-      const tag = DX_LEVELS[lv].tag;
+      // The badge marks an opening that cannot yet answer a wrong move. Once
+      // every opening is Coached it says the same thing thirteen times, which is
+      // no longer information -- so it only shows when it means something, the
+      // same way the structure and game groups below vanish when empty. Add a
+      // fourteenth opening with a line that has no deviations and it comes back.
+      const tag = lv < 2 ? DX_LEVELS[lv].tag : "";
       html += `<button class="railitem${on?" on":""}" data-go="${o.id}" title="${opLevelTitle(o)}">`
-            + `<span class="railtop">${o.name}<b class="lvtag lv${lv}">${tag}</b></span>`
+            + `<span class="railtop">${o.name}${tag?`<b class="lvtag lv${lv}">${tag}</b>`:""}</span>`
             + `<span class="eco">${o.eco}</span></button>`;
-      opts += `<option value="${o.id}"${on?" selected":""}>${sec.label} — ${o.name} · ${tag}</option>`;
+      opts += `<option value="${o.id}"${on?" selected":""}>${sec.label} — ${o.name}${tag?` · ${tag}`:""}</option>`;
     });
     const nextGroup = SECTIONS[SECTIONS.indexOf(sec)+1];
     if(!nextGroup || nextGroup.group!==sec.group){ html += `</div>`; opts += `</optgroup>`; }
