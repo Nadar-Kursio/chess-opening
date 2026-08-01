@@ -18,13 +18,13 @@ pull requests that turn out wrong is worse than an empty one.
 
 | Label | Means |
 |---|---|
-| `agent-planning` | an idea, not yet a spec — draft a plan, do not write code |
+| `agent-plan` | an idea, not yet a spec — draft a plan, do not write code |
 | `agent-ready` | a human approved the plan; safe to work |
 | `agent-working` | claimed, in flight |
 | `agent-blocked` | tried and failed; needs a human |
 
-Only `agent-ready` is workable. `agent-planning` means the spec is what's missing,
-so the deliverable is a plan posted as a comment — nothing else.
+Only `agent-ready` is workable. `agent-plan` means the spec is what's missing, so
+the deliverable is a plan posted as a comment — nothing else.
 
 ## 1. Claim it first
 
