@@ -4,5 +4,7 @@ __pycache__/
 .venv/
 *.zip
 .worktrees/
+docs/
+.wrangler/
 
 .engine/
