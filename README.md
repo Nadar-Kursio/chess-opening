@@ -16,11 +16,12 @@ isolani once pays out in four of them.
 
 ## Quick start
 
-Online: **https://nadar-kursio.github.io/chess-opening/**
+Online: **https://chesslab.dev**
 
-Or open the built file locally:
+Or build it and open the file locally:
 
 ```
+python3 src/build.py
 open docs/chess-opening-course.html          # macOS
 xdg-open docs/chess-opening-course.html      # Linux
 start docs/chess-opening-course.html         # Windows
@@ -31,18 +32,15 @@ thing, keep that.
 
 ## Project layout
 
-Everything under `src/` is source; everything under `docs/` is generated and is
-what GitHub Pages serves. Never edit `docs/` by hand — run the build.
+Everything under `src/` is source; everything under `docs/` is generated and
+gitignored. Never edit `docs/` by hand — run the build.
 
-> **Why `docs/` and not `build/`?** Not a choice. GitHub Pages' deploy-from-a-branch
-> mode accepts exactly two source folders — the repo root, or `/docs`. Since the
-> root is where the source lives, `/docs` is the only option left. Read it as
-> "the folder Pages serves", not as documentation. Using `build/` would mean
-> dropping branch deployment and publishing through a GitHub Actions workflow
-> instead.
+> **Why `docs/` and not `build/`?** Read it as "where the build writes", not as
+> documentation. The name is a holdover from GitHub Pages, which served from the
+> repo root or `/docs` and nowhere else.
 
 ```
-docs/                          <- generated; served by GitHub Pages
+docs/                          <- generated and gitignored; CI uploads it
   chess-opening-course.html      the built, shippable app
   index.html                     redirect so / opens the course
   .nojekyll                      switches off Pages' Jekyll pass
@@ -156,19 +154,18 @@ anything under `src/app/scripts/` and check the console.
 
 ## Publishing
 
-There is no deploy step. Pages is configured to deploy from `main`, folder
-`/docs`, so **committing a rebuilt `docs/` is the deploy**:
+Push to `main`. `.github/workflows/deploy.yml` runs the tests, builds, and uploads
+`docs/` to Cloudflare Pages, which serves https://chesslab.dev.
 
-```
-python3 src/build.py
-git add -A && git commit -m "…" && git push
-```
+Every pull request gets the whole site to itself at
+`https://<branch>.chesslab.pages.dev`, posted as a comment on the PR, so a change
+can be read in a browser before it is merged. Branch names are lowercased and
+non-alphanumeric characters become hyphens, so `issue-42` serves at
+`issue-42.chesslab.pages.dev`.
 
-The site updates about a minute later at
-https://nadar-kursio.github.io/chess-opening/. Push without rebuilding and the
-site keeps serving the previous version — `--check` exists to catch exactly that.
-`gh api repos/Nadar-Kursio/chess-opening/pages/builds/latest` shows the last
-build's status if a change does not appear.
+Because `docs/` is never committed, the page that ships is always the one CI built
+from the `src/` in that commit — there is no way to push a stale page. Locally,
+`python3 src/build.py --check` still tells you whether your `docs/` is current.
 
 ## How to add a new opening
 

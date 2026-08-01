@@ -1,0 +1,54 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: deploy-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install -r requirements.txt
+
+      - run: python3 -m unittest discover tests
+
+      - run: python3 src/build.py
+
+      - uses: cloudflare/wrangler-action@v3
+        id: deploy
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy docs --project-name=chesslab --branch=${{ github.head_ref || github.ref_name }}
+
+      - name: Comment the preview link
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment-url }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Pages derives a branch alias by lowercasing and hyphenating; it is the
+          # stable URL, whereas deployment-url changes with every commit.
+          alias=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
+          body="📖 Preview: https://${alias}.chesslab.pages.dev
+
+          This commit: ${DEPLOY_URL:-_not reported_}"
+          gh pr comment "${{ github.event.number }}" --body "$body" --edit-last \
+            || gh pr comment "${{ github.event.number }}" --body "$body"
