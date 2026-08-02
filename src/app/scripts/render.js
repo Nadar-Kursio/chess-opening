@@ -63,6 +63,31 @@ function tapeHTML(line){
   }).join("");
 }
 
+/* How the games that reached this line's key position actually finished.
+   `at` is a ply and not the whole line, because master practice thins out fast:
+   twenty plies in, a variation has a few dozen games and the percentages are
+   noise. The number worth showing is the one from the move the variation is
+   named for, so the record says which move it counted from -- except in drill,
+   where naming a move ahead of the reader is the one thing the tape is masked
+   to prevent. */
+function recordHTML(line){
+  const r = line.record;
+  if(!r) return "";
+  const seg = (cls,n)=>`<span class="${cls}" style="width:${n}%">${n>=12?n+"%":""}</span>`;
+  const games = r.games.toLocaleString();
+  const at = state.mode==="drill" ? "" : line.plies[r.at].num;
+  return `
+      <div class="record">
+        <div class="recbar" role="img" aria-label="Of ${games} master games from this position, White won ${r.white}%, ${r.draw}% were drawn, and Black won ${r.black}%.">
+          ${seg("recw",r.white)}${seg("recd",r.draw)}${seg("recb",r.black)}
+        </div>
+        <p class="reccap">${games} master games${at?` after <b>${at}</b>`:""}
+          <span class="sep">&middot;</span> White ${r.white}%
+          <span class="sep">&middot;</span> Draw ${r.draw}%
+          <span class="sep">&middot;</span> Black ${r.black}%</p>
+      </div>`;
+}
+
 function commentaryHTML(p){
   return `
       <div class="commentary">
@@ -121,6 +146,7 @@ function studyHTML(op, line, p){
         ${op.lines.map((l,i)=>`<button class="vartab${i===state.line?" on":""}" data-line="${i}">${l.name}</button>`).join("")}
       </div>
       <p class="varnote">${line.note}</p>
+      ${recordHTML(line)}
       <div class="tape${inBranch?" brmuted":""}" id="tape">${tapeHTML(line)}</div>
       ${state.pick ? brPickerHTML() : ""}
       ${inBranch ? brPanelHTML()

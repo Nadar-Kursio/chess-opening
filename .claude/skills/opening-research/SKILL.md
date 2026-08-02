@@ -45,6 +45,28 @@ failed, and what each source is and is not good for.
 A move list retyped from a video description or an article summary will be legal
 and wrong, and the build will accept it.
 
+**What players actually play from a position is a count, not an opinion.**
+`explorer.py` replays pgnmentor's per-variation archives and reports, for each
+position you name, how many master games reached it, how they finished, and the
+replies in order of popularity:
+
+```bash
+.claude/skills/opening-research/scripts/explorer.py --fetch RuyLopezMarshall,RuyLopezOpen \
+    "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 O-O c3 d5"
+.claude/skills/opening-research/scripts/explorer.py --file positions.txt --top 8
+```
+
+Use it *before* writing a line, to pick the main line from what was played rather
+than from what you remember, and again for each branch, so a `line` continuation
+is a move real players chose. It matches by position rather than by move order, so
+transpositions are counted; one pass answers every position in the file, which is
+why the file form is the one to use. Archive names are the zip files under
+"Openings" on <https://www.pgnmentor.com/files.html>; the whole Ruy Lopez is
+fifteen of them and about 190k games, which takes three or four minutes to scan.
+
+It also prints the `record` line a variation ships (see below), which is the only
+way that key should ever be filled in.
+
 ## 2. Author
 
 Copy the shape of `src/content/openings/italian.py` for a White repertoire and
@@ -95,6 +117,15 @@ the second one shows what the inversion below actually looks like on the page.
   near-miss card onto a line is worse than no card, because the reader studies a
   pawn count that is not on their board. Count the pawns before you point at a
   card: two of the cards there have had their own wing counts corrected.
+- **`record`** is the win bar: `{"at": ply, "games": n, "white": %, "draw": %,
+  "black": %}`, straight out of `explorer.py`. Two judgement calls are yours.
+  **Which ply** — measure at the move the variation is *named* for, not at the end
+  of the line: twenty plies in, a variation has a few dozen games and the bar is
+  noise. **Whether the numbers survive the text** — a bar saying Black scores
+  better sits badly under prose promising an edge, and the honest fix is to say so
+  in the plan card, which is what the Marshall does. The build rejects shares that
+  do not total 100 and an `at` past the end of the line; nothing can check that the
+  count is real, so never write one by hand.
 - **`games`** are annotated by hand — `build_game` deliberately skips engine
   intel, so a game with no `notes` ships with no commentary at all. Nothing
   validates note keys against a game's length beyond a range check, which is why

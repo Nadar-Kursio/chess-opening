@@ -24,8 +24,8 @@ System `python3` has no `python-chess`. Use the venv.
   dead page and the build still reports success. Open the page and check the
   console after touching anything under `src/app/scripts/`.
 - Every claim about a position comes from the engine, never from memory —
-  severities from `.engine/stockfish`, game scores from pgnmentor. The
-  `opening-research` skill has the procedure.
+  severities from `.engine/stockfish`, game scores and win bars (`record`) from
+  pgnmentor. The `opening-research` skill has the procedure.
 - Browser-layer tests use jsdom, not Playwright.
 - Changes under `.github/workflows/` can read repository secrets. Review them as
   security changes, not as config.
