@@ -117,6 +117,15 @@ Archives are cached under `.engine/pgn/` after the first fetch, so filtering the
 same player again is free. `--headers` prints every PGN tag: Round and Site are
 the two a `note` needs before it can say "the sixteenth game of the match".
 
+pgnmentor also publishes archives **by variation** rather than by player, under
+`openings/` on the same page — `RuyLopezMarshall`, `RuyLopezBerlin`,
+`RuyLopezOther5` and so on. `scripts/explorer.py` fetches those (into
+`.engine/openings/`) and counts them, which is where a `record` comes from and the
+cheapest way to find out what is actually played in a position. The per-variation
+files partition an opening between them, so fetch the whole family — the fifteen
+`RuyLopez*` files are the Ruy Lopez, and a subset silently under-counts every
+position that lives in the file you left out.
+
 Cross-check what you pull: the header should agree with the event and year you
 expect, and the ECO code should match the line you are illustrating. A game whose
 first ten moves do not reach the position you are teaching is the wrong game,

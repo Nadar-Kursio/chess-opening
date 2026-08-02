@@ -1,6 +1,6 @@
 # Chess Opening Course — interactive, self-contained
 
-An interactive opening trainer: 13 openings, 59 variations, 1,359 engine-validated
+An interactive opening trainer: 13 openings, 66 variations, 1,518 engine-validated
 moves, chess.com-style arrows (including bent knight arrows), and an auto-generated
 "what this move does" line under every move. The whole app is a single HTML file
 with no external dependencies — open it in any browser.
@@ -12,7 +12,9 @@ into blunder / inaccuracy / playable — because most deviations are none of the
 two, and a trainer that answers every one with a red cross teaches you to hunt for
 refutations that were never there. Every line ends with a plan card naming the pawn
 structure it reached, and structures are shared across openings, so learning the
-isolani once pays out in four of them.
+isolani once pays out in four of them. A variation can also carry a **win bar** —
+the chess.com-style white/draw/black split of the master games that reached its key
+position, counted from real PGN rather than quoted from anywhere.
 
 ## Quick start
 
@@ -61,7 +63,7 @@ src/
     page.html                    document skeleton with the build's placeholders
     primer.html                  the "how openings work" primer, as plain HTML
     index.html                   the redirect stub copied to docs/
-    styles/                      13 stylesheets, concatenated in build.py's order
+    styles/                      14 stylesheets, concatenated in build.py's order
     scripts/                     14 scripts, concatenated in build.py's order
 
 scripts/serve.sh               <- build and preview locally; sets up .venv if needed
@@ -187,16 +189,17 @@ moves — you do not write those by hand.
 
 Every one of these can be left out, and an opening without them still builds and
 still works — the drill, the deviation panel and the plan card all degrade rather
-than disappear. All thirteen openings carry the full set today: 345 branch
-positions, 1185 deviations and 27 annotated games between them. The degradation
-still matters, because it is what let the course grow one opening at a time
-without a flag day.
+than disappear. All thirteen openings carry `tier`, `drill`, `plan`, `branches` and
+`games`: 353 branch positions, 1207 deviations and 27 annotated games between them.
+`record` is newer and only the Ruy Lopez has it. The degradation still matters,
+because it is what let the course grow one opening at a time without a flag day.
 
 | Key | Where | What it does |
 | --- | --- | --- |
 | `tier` | line, branch, structure, game | Hides it below that setting in the **Show** bar. Absent = always visible. |
 | `drill` | line | Ships a legal-move list per position, so the drill can tell *illegal* from merely *not this line*. |
 | `plan` | line | The end-of-line card: `point`, optional `structure` id, `next`, `endgame`. |
+| `record` | line | The win bar: `at` (the ply the games were counted from), `games`, and `white` / `draw` / `black` percentages that must add up to 100. Counted with the research skill's `explorer.py`; the build rejects a record whose shares do not total 100 or whose `at` is past the end of the line. |
 | `branches` | opening | Deviations, keyed by the **SAN prefix that reaches the position** — not by ply. A branch written once fires in every line of *that opening* which passes through the position; a second opening that transposes there writes its own, because the index is built per opening. |
 | `games` | opening | Annotated model games, replayed with the same board and tape. |
 

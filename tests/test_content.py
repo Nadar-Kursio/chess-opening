@@ -26,7 +26,8 @@ STAGE_KEYS = {"tier", "when", "goal", "learn", "drill", "mistake", "ready"}
 
 OPENING_EXTRA = {"branches", "games"}
 LINE_KEYS = {"name", "note", "moves", "notes"}
-LINE_EXTRA = {"tier", "drill", "plan"}
+LINE_EXTRA = {"tier", "drill", "plan", "record"}
+RECORD_KEYS = {"at", "games", "white", "draw", "black"}
 BRANCH_KEYS = {"san", "severity", "why"}
 BRANCH_EXTRA = {"tier", "name", "line", "see"}
 PLAN_KEYS = {"point"}
@@ -149,6 +150,24 @@ class TestCatalogue(unittest.TestCase):
                         1 <= ply <= count,
                         f"{op['id']} / {line['name']}: note {ply} but the line is {count} moves",
                     )
+
+    def test_records_are_whole_results_counted_on_the_line(self):
+        """A win bar is three shares of one position on this line, and both halves matter.
+
+        build.py checks the same things and stops the build; they are here as well
+        because a record adding up to 99% is a rendering bug nobody would go
+        looking for in the content, and the failure should name the line.
+        """
+        for op in self.openings:
+            for line in op["lines"] + [op["deep"]]:
+                record = line.get("record")
+                if not record:
+                    continue
+                where = f"{op['id']} / {line['name']} / record"
+                self.assertEqual(set(record), RECORD_KEYS, where)
+                self.assertEqual(record["white"] + record["draw"] + record["black"], 100, where)
+                self.assertTrue(0 <= record["at"] <= len(line["moves"].split()), where)
+                self.assertGreater(record["games"], 0, where)
 
     def test_deep_dive_continues_the_main_line(self):
         for op in self.openings:

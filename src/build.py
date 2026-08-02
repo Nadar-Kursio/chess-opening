@@ -52,7 +52,7 @@ DOCS = os.path.join(os.path.dirname(SRC), "docs")
 # HEAD_SCRIPTS go in <head> ahead of the styles, which is the point of them:
 # theme.js has to set the theme before the first paint, not after it.
 HEAD_SCRIPTS = ["shim", "theme"]
-STYLES = ["base", "layout", "tiers", "study", "board", "arrows", "drill",
+STYLES = ["base", "layout", "tiers", "study", "record", "board", "arrows", "drill",
           "deviate", "theory", "primer", "path", "structures", "responsive"]
 SCRIPTS = ["state", "store", "chrome", "rail", "board", "arrows",
            "move", "drill", "branch", "plan", "structure", "render", "primer", "boot"]
@@ -61,7 +61,9 @@ OPENING_NOTE = ("The starting position. White moves first — and that single te
                 "is the whole reason opening theory exists.")
 
 
-LINE_EXTRAS = ("tier", "drill", "plan")
+LINE_EXTRAS = ("tier", "drill", "plan", "record")
+
+RECORD_KEYS = ("at", "games", "white", "draw", "black")
 
 TIERS = ("Foundation", "Structure", "Plans", "Mastery")
 SEVERITIES = ("blunder", "inaccuracy", "playable")
@@ -88,6 +90,31 @@ def san_overclaim(board, move, san):
     elif san.endswith("+") and not board.gives_check(move):
         return "claims check, and the move gives none"
     return None
+
+
+def record_errors(where, record, moves):
+    """What a line's `record` gets wrong about the games behind it, if anything.
+
+    The numbers come from counting real games (the `explorer.py` script in the
+    research skill), so nothing here can tell a true count from an invented one.
+    What it can do is stop the two mistakes that make the bar lie about itself:
+    shares that do not add up to a whole result, and a ply that is not on this
+    line -- `at` names the position counted, and a record measured somewhere the
+    reader never visits is a number about a different opening.
+    """
+    out = []
+    missing = [k for k in RECORD_KEYS if k not in record]
+    if missing:
+        return [f"{where}: record is missing {missing}"]
+    if not 0 <= record["at"] <= len(moves):
+        out.append(f"{where}: record counted at ply {record['at']}, "
+                   f"and the line is {len(moves)} moves long")
+    share = record["white"] + record["draw"] + record["black"]
+    if share != 100:
+        out.append(f"{where}: record shares add up to {share}%, not 100%")
+    if record["games"] < 1:
+        out.append(f"{where}: record covers no games")
+    return out
 
 
 class BranchIndex:
@@ -326,10 +353,14 @@ def build_line(op_id, index, line, errors, side=None, branches=None):
             "arrows": arrows, "tactics": tactics,
         })
 
+    if line.get("record"):
+        errors.extend(record_errors(f"{op_id} / line {index} '{line['name']}'",
+                                    line["record"], line["moves"].split()))
+
     out = {"name": line["name"], "note": line.get("note", ""), "plies": plies}
     # Forward the optional line-level settings. Building the record from a fixed
     # set of keys is what would otherwise drop them without a word.
-    for key in ("tier", "plan"):
+    for key in ("tier", "plan", "record"):
         if line.get(key):
             out[key] = line[key]
     return out
