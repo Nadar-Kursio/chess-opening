@@ -12,6 +12,9 @@
   --record-on-white:#2A2724; --record-on-dark:#F1EDE4;
 }
 
+/* Bar and caption are one unit, so the gap between them lives here rather than
+   as a margin on whichever of the two happens to be second. */
+.record{display:grid;gap:var(--space-2)}
 .record__bar{
   display:flex;height:22px;border-radius:5px;overflow:hidden;
   border:1px solid var(--border);
@@ -27,7 +30,7 @@
 
 .record__caption{
   font-family:var(--font-mono);font-size:var(--text-label);letter-spacing:.04em;
-  color:var(--text-faint);margin:var(--space-2) 0 0;
+  color:var(--text-faint);margin:0;
 }
 .record__caption b{color:var(--text-soft);font-weight:600}
 .record__caption .sep{color:var(--border-strong);margin:0 3px}

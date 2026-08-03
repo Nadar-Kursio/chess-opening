@@ -142,6 +142,26 @@ step("read: variations", () => {
   click(tabs[0]);
 });
 
+step("read: the win bar", () => {
+  // Not every line carries a record, so find one that does rather than assume.
+  const found = app(`DATA.flatMap(o=>o.lines.map((l,i)=>({op:o.id,line:i,rec:!!l.record})))
+                        .find(x=>x.rec)`);
+  report.recordAt = found || null;
+  want("some line ships a record", found);
+  if (!found) return;
+  app("go")(found.op);
+  app("state").line = found.line;
+  app("render")();
+  want("the win bar draws", $(".record__bar .record__share--white"));
+  want("and says what it counted", $(".record__caption"));
+  // In drill the caption must not name the move the scoresheet is masking.
+  click($('[data-act="mode"][data-v="drill"]'));
+  want("drill hides the move the record counted from",
+       !/after/.test($(".record__caption")?.textContent || ""));
+  click($('[data-act="mode"][data-v="read"]'));
+  checkLeaks("win bar");
+});
+
 step("read: playing a move on the board", () => {
   app("go")(opening);
   const next = app("currentPlies()[1]");
