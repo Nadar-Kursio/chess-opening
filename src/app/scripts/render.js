@@ -15,50 +15,52 @@ function viewHTML(){
     case "progress":  return progressHTML();
     case "structure": return structureHTML(STRUCTURES.find(s=>s.id===state.structId));
     case "game":      return gameHTML(GAMES.find(g=>g.id===state.gameId));
-    default:          return opHTML();
+    default:          return openingHTML();
   }
 }
 
-function opHTML(){
-  const op = DATA.find(o=>o.id===state.opId);
+/* Every view opens the same way: where this sits in the course, what it is
+   called, and one line on why you would read it. */
+function pageHeadHTML(meta, title, lede){
+  const parts = meta.filter(Boolean).map(x=>`<span>${x}</span>`);
+  return `
+  <header class="page-head">
+    <div class="page-head__meta label label--accent">${parts.join('<span class="sep">/</span>')}</div>
+    <h1 class="page-title">${title}</h1>
+    ${lede?`<p class="page-lede">${lede}</p>`:""}
+  </header>`;
+}
+
+function openingHTML(){
+  const op = currentOpening();
   const line = op.lines[state.line];
-  return opHeadHTML(op) + jumpHTML(op) + studyHTML(op, line, curPly())
-       + theoryHTML(op) + pathHTML(op);
-}
-
-function opHeadHTML(op){
   const sec = SECTIONS.find(s=>s.id===op.section);
-  return `
-  <div class="ophead">
-    <div class="opkicker">
-      <span>${sec.group}</span><span class="sep">/</span><span>${sec.label}</span>
-      <span class="sep">/</span><span class="lvl">${op.eco}</span>
-      <span class="sep">/</span><span class="lvl">${op.level}</span>
-    </div>
-    <h2 class="opname">${op.name}</h2>
-    <p class="optag">${op.tagline}</p>
-  </div>
-`;
+  return pageHeadHTML(
+      [sec.group, sec.label, `<span class="mono">${op.eco}</span>`, `<span class="mono">${op.level}</span>`],
+      op.name, op.tagline)
+    + sectionNavHTML(op)
+    + studyHTML(op, line, currentPly())
+    + strategyHTML(op)
+    + pathHTML(op);
 }
 
-function jumpHTML(op){
+function sectionNavHTML(op){
   return `
-  <nav class="jump">
-    <a href="#study-${op.id}">Play through the moves</a>
-    <a href="#theory-${op.id}">Strategy</a>
+  <nav class="sections" aria-label="Sections of this opening">
+    <a href="#moves-${op.id}">The moves</a>
+    <a href="#ideas-${op.id}">The ideas</a>
     <a href="#path-${op.id}">Learning path</a>
-  </nav>
-`;
+  </nav>`;
 }
 
-function tapeHTML(line){
+function scoresheetHTML(line){
   const hide = state.mode === "drill";
   return line.plies.slice(1).map((q,i)=>{
     const idx = i+1;
-    const num = q.turn==="w" ? `<span class="mvnum">${Math.ceil(idx/2)}.</span>` : "";
+    const num = q.turn==="w" ? `<span class="scoresheet__no">${Math.ceil(idx/2)}.</span>` : "";
     // In drill the move list is the answer sheet, so everything ahead is masked.
-    if(hide && idx > state.ply) return `${num}<span class="mv mask" aria-hidden="true">••</span>`;
-    const cls = idx===state.ply ? "mv on" : (idx<state.ply ? "mv seen" : "mv");
+    if(hide && idx > state.ply) return `${num}<span class="move--masked" aria-hidden="true">••</span>`;
+    const cls = idx===state.ply ? "move current" : (idx<state.ply ? "move played" : "move");
     return `${num}<button class="${cls}" data-ply="${idx}">${q.san}</button>`;
   }).join("");
 }
@@ -68,125 +70,110 @@ function tapeHTML(line){
    twenty plies in, a variation has a few dozen games and the percentages are
    noise. The number worth showing is the one from the move the variation is
    named for, so the record says which move it counted from -- except in drill,
-   where naming a move ahead of the reader is the one thing the tape is masked
-   to prevent. */
+   where naming a move ahead of the reader is the one thing the scoresheet is
+   masked to prevent. */
 function recordHTML(line){
   const r = line.record;
   if(!r) return "";
-  const seg = (cls,n)=>`<span class="${cls}" style="width:${n}%">${n>=12?n+"%":""}</span>`;
+  const share = (who,n)=>`<span class="record__share record__share--${who}"
+    style="width:${n}%">${n>=12?n+"%":""}</span>`;
   const games = r.games.toLocaleString();
   const at = state.mode==="drill" ? "" : line.plies[r.at].num;
   return `
       <div class="record">
-        <div class="recbar" role="img" aria-label="Of ${games} master games from this position, White won ${r.white}%, ${r.draw}% were drawn, and Black won ${r.black}%.">
-          ${seg("recw",r.white)}${seg("recd",r.draw)}${seg("recb",r.black)}
+        <div class="record__bar" role="img" aria-label="Of ${games} master games from this position, White won ${r.white}%, ${r.draw}% were drawn, and Black won ${r.black}%.">
+          ${share("white",r.white)}${share("draw",r.draw)}${share("black",r.black)}
         </div>
-        <p class="reccap">${games} master games${at?` after <b>${at}</b>`:""}
+        <p class="record__caption">${games} master games${at?` after <b>${at}</b>`:""}
           <span class="sep">&middot;</span> White ${r.white}%
           <span class="sep">&middot;</span> Draw ${r.draw}%
           <span class="sep">&middot;</span> Black ${r.black}%</p>
       </div>`;
 }
 
-function commentaryHTML(p){
+function tacticsLineHTML(tactics){
+  return `<div class="tactics"><span class="label">On the board</span>
+    <span>${tacticsHTML(tactics)}.</span></div>`;
+}
+
+function coachNoteHTML(p){
   return `
-      <div class="commentary">
-        <div class="cmtop">
-          <span class="cmmove">${state.ply===0?"Start":p.num}</span>
-          <span class="cmwho">${state.ply===0?"Before the first move":(p.turn==="w"?"White to have moved":"Black to have moved")}</span>
-        </div>
-        <p class="cmtext">${p.note}</p>
-        ${state.ply>0 && p.tactics?`<div class="tactics"><span class="lbl">On the board</span><span class="body">${tacticsHTML(p.tactics)}.</span></div>`:""}
-      </div>`;
+      <article class="coach">
+        <header class="coach__head">
+          <span class="coach__move">${state.ply===0?"Start":p.num}</span>
+          <span class="label">${state.ply===0?"Before the first move"
+            :(p.turn==="w"?"White to have moved":"Black to have moved")}</span>
+        </header>
+        <p class="coach__body">${p.note}</p>
+        ${state.ply>0 && p.tactics?tacticsLineHTML(p.tactics):""}
+      </article>`;
 }
 
 function studyHTML(op, line, p){
-  const inBranch = !!state.branch;
-  const seq = curSeq(), idx = curIdx();
-  const atEnd = idx >= seq.length-1;
-  const atStart = idx === 0;
-  const locked = dxAsking();     // stepping forward in drill would reveal the answer
-  const showArrows = state.arrows && !dxHideArrows();
-  return `
-  <section class="study" id="study-${op.id}">
-    ${dxBarHTML(line)}
-    <div class="boardcol">
-      <div class="boardframe">
-        <div class="boardwrap">${boardCells(p.fen,p.from,p.to,p.check?(p.turn==="w"?"b":"w"):null,state.flip)}<canvas class="arrows" id="arrowlayer"></canvas></div>
-      </div>
-      <div class="controls">
-        <button class="ctl" id="b-first" ${atStart?"disabled":""} title="Start (Home)">&#8676;</button>
-        <button class="ctl wide" id="b-prev" ${atStart?"disabled":""} title="Back (\u2190)">&#8592; Back</button>
-        <button class="ctl wide" id="b-next" ${atEnd||locked?"disabled":""} title="Forward (\u2192)">Next &#8594;</button>
-        <button class="ctl" id="b-last" ${atEnd||locked?"disabled":""} title="End (End)">&#8677;</button>
-      </div>
-      <div class="ctlbar2">
-        <button class="ctl${state.timer?" on":""}" id="b-play" ${state.mode==="drill"?"disabled":""}>${state.timer?"\u25A0 Stop":"\u25B6 Play through"}</button>
-        <button class="ctl" id="b-flip">\u21C5 Flip board</button>
-        <button class="ctl${state.arrows?" on":""}" id="b-arrows" ${dxHideArrows()?"disabled":""}>\u2197 Arrows: ${state.arrows?"On":"Off"}</button>
-      </div>
-      ${showArrows?`<div class="legend">
-        <span><i class="mv"></i>the move</span>
-        <span><i class="atk"></i>attacks</span>
-        <span><i class="chk"></i>check</span>
-        <span><i class="def"></i>defends</span>
-        <span><i class="ctrl"></i>controls a key square</span>
-      </div>`:""}
-      <div class="counter">${inBranch
-        ? `Deviation &mdash; move ${idx+1} of ${seq.length}`
-        : `Move ${state.ply} of ${line.plies.length-1}`} &nbsp;\u00B7&nbsp; ${state.flip?"Black":"White"} at the bottom</div>
-      <div class="hint">${state.mode==="drill"
-        ? "Click a piece then its square, or drag it. <b>H</b> hint &middot; <b>S</b> show &middot; <b>M</b> back to reading."
-        : "Move a piece to play it &mdash; the line follows, or I answer the move you chose. "
-        + "<b>\u2190</b> <b>\u2192</b> to step."}</div>
-    </div>
+  const inDeviation = !!state.deviation;
+  const plies = currentPlies(), idx = currentIndex();
+  const locked = drillAsking();     // stepping forward in drill would reveal the answer
 
-    <div class="studycol">
-      <div class="vartabs">
-        ${op.lines.map((l,i)=>`<button class="vartab${i===state.line?" on":""}" data-line="${i}">${l.name}</button>`).join("")}
+  return `
+  <section class="study" id="moves-${op.id}">
+    ${modeBarHTML(line)}
+
+    ${boardColumnHTML({
+      ply:p, index:idx, total:plies.length-1, locked, arrows:true,
+      canPlay:state.mode!=="drill" && !inDeviation,
+      readout: inDeviation
+        ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
+        : `Move <b>${state.ply}</b> of ${line.plies.length-1}`,
+      hint: state.mode==="drill"
+        ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
+        : "Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step."
+    })}
+
+    <div class="study__notes">
+      <div class="variations" role="group" aria-label="Variations of ${op.name}">
+        ${op.lines.map((l,i)=>`<button class="variation"
+          aria-pressed="${i===state.line}" data-line="${i}">${l.name}</button>`).join("")}
       </div>
-      <p class="varnote">${line.note}</p>
+      <p class="variation__note">${line.note}</p>
       ${recordHTML(line)}
-      <div class="tape${inBranch?" brmuted":""}" id="tape">${tapeHTML(line)}</div>
-      ${state.pick ? brPickerHTML() : ""}
-      ${inBranch ? brPanelHTML()
-        : state.mode==="drill" ? dxPanelHTML(line)
-        : `${state.drill.msg && state.drill.msgPly === state.ply
-              ? `<p class="dxmsg readmsg" data-tone="${state.drill.tone||"flat"}">${state.drill.msg}</p>` : ""}
-           ${commentaryHTML(p)}`}
+      <div class="scoresheet scroller${inDeviation?" scoresheet--muted":""}" id="tape">${scoresheetHTML(line)}</div>
+      ${state.picking ? devPickerHTML() : ""}
+      ${inDeviation ? devPanelHTML()
+        : state.mode==="drill" ? drillPanelHTML(line)
+        : `${state.drill.verdict && state.drill.verdictPly === state.ply
+              ? `<p class="verdict verdict--framed" data-tone="${state.drill.tone||"flat"}">${state.drill.verdict}</p>` : ""}
+           ${coachNoteHTML(p)}`}
       ${planHTML(op, line)}
     </div>
-  </section>
-`;
+  </section>`;
 }
 
-function theoryHTML(op){
+function strategyHTML(op){
   const t = op.theory;
   return `
-  <div class="theory" id="theory-${op.id}">
-    <div class="card span">
-      <p class="cardhead">The idea in one paragraph</p>
+  <div class="strategy" id="ideas-${op.id}">
+    <div class="card card--wide">
+      <p class="card__head label label--accent">The idea in one paragraph</p>
       <p>${t.big_idea}</p>
     </div>
-    <div class="card span">
-      <p class="cardhead">The pawn structure</p>
+    <div class="card card--wide">
+      <p class="card__head label label--accent">The pawn structure</p>
       <p>${t.structure}</p>
     </div>
     <div class="card">
-      <p class="cardhead">\u2654 White's plans</p>
+      <p class="card__head label label--accent">♔ White's plans</p>
       <ul>${t.white_plans.map(x=>`<li>${x}</li>`).join("")}</ul>
     </div>
     <div class="card">
-      <p class="cardhead">\u265A Black's plans</p>
+      <p class="card__head label label--accent">♚ Black's plans</p>
       <ul>${t.black_plans.map(x=>`<li>${x}</li>`).join("")}</ul>
     </div>
-    <div class="card warn span">
-      <p class="cardhead">Traps and things that lose games</p>
+    <div class="card card--warn card--wide">
+      <p class="card__head label label--danger">Traps and things that lose games</p>
       <ul>${t.traps.map(x=>`<li>${x}</li>`).join("")}</ul>
     </div>
-    <div class="who"><p>${t.who}</p></div>
-  </div>
-`;
+    <div class="strategy__who"><p>${t.who}</p></div>
+  </div>`;
 }
 
 function pathHTML(op){
@@ -194,87 +181,94 @@ function pathHTML(op){
   const shown = pr.stages.filter(st=>tierVisible(st.tier));
   const hidden = pr.stages.length - shown.length;
   return `
-  <section class="prog" id="path-${op.id}">
-    <p class="cardhead">Your learning path &mdash; ${op.name}</p>
-    <p class="progarc">${pr.arc}</p>
-    <ol class="steps">
+  <section class="path" id="path-${op.id}">
+    <p class="label label--accent">Your learning path &mdash; ${op.name}</p>
+    <p class="path__arc">${pr.arc}</p>
+    <ol class="stages">
       ${shown.map(st=>`
         <li>
-          <div class="steptop"><span class="tier">${st.tier}</span><span class="when">${st.when}</span></div>
-          <p class="goal"><b>Goal.</b> ${st.goal}</p>
-          <ul class="learn">${st.learn.map(x=>`<li>${x}</li>`).join("")}</ul>
-          <div class="micro"><b>Drill</b><span>${st.drill}</span></div>
-          <div class="micro warn"><b>Common mistake</b><span>${st.mistake}</span></div>
-          <div class="micro ok"><b>Move on when</b><span>${st.ready}</span></div>
+          <div class="stage__top"><span class="stage__name">${st.tier}</span>
+            <span class="label">${st.when}</span></div>
+          <p class="stage__goal"><b>Goal.</b> ${st.goal}</p>
+          <ul class="stage__learn">${st.learn.map(x=>`<li>${x}</li>`).join("")}</ul>
+          <div class="stage__fact"><span class="label">Drill</span><span>${st.drill}</span></div>
+          <div class="stage__fact stage__fact--warn"><span class="label">Common mistake</span><span>${st.mistake}</span></div>
+          <div class="stage__fact stage__fact--ok"><span class="label">Move on when</span><span>${st.ready}</span></div>
         </li>`).join("")}
     </ol>
-    ${hidden?`<p class="tiermore">${hidden} later stage${hidden===1?"":"s"} hidden &mdash;
-      raise <b>Show</b> above ${state.tier} to see ${hidden===1?"it":"them"}.</p>`:""}
-    <div class="progfoot">
-      <div class="card"><p class="cardhead">Whose games to study</p><p>${pr.study}</p></div>
-      <div class="card"><p class="cardhead">What to learn after this</p><p>${pr.next}</p></div>
+    ${hidden?`<p class="hidden-note">${hidden} later stage${hidden===1?"":"s"} hidden &mdash;
+      raise <b>How deep to go</b> above ${state.tier} to see ${hidden===1?"it":"them"}.</p>`:""}
+    <div class="path__foot">
+      <div class="card"><p class="card__head label label--accent">Whose games to study</p><p>${pr.study}</p></div>
+      <div class="card"><p class="card__head label label--accent">What to learn after this</p><p>${pr.next}</p></div>
     </div>
-  </section>
-`;
+  </section>`;
 }
 
 function bindView(el){
   if(state.view!=="op" && state.view!=="game") return;
-  const jump = n=>{ if(state.branch) state.branch.at=n; else state.ply=n; render(); };
-  document.getElementById("b-first").onclick = ()=>{stopPlay();jump(0)};
-  document.getElementById("b-prev").onclick  = ()=>{stopPlay();step(-1)};
-  document.getElementById("b-next").onclick  = ()=>{stopPlay();step(1)};
-  document.getElementById("b-last").onclick  = ()=>{stopPlay();jump(curSeq().length-1)};
-  document.getElementById("b-flip").onclick  = ()=>{state.flip=!state.flip;render()};
+  const jump = n=>{ if(state.deviation) state.deviation.at=n; else state.ply=n; render(); };
+  document.getElementById("b-first").onclick = ()=>{stopAutoplay();jump(0)};
+  document.getElementById("b-prev").onclick  = ()=>{stopAutoplay();step(-1)};
+  document.getElementById("b-next").onclick  = ()=>{stopAutoplay();step(1)};
+  document.getElementById("b-last").onclick  = ()=>{stopAutoplay();jump(currentPlies().length-1)};
+  document.getElementById("b-flip").onclick  = ()=>{state.flipped=!state.flipped;render()};
   document.getElementById("b-arrows").onclick = ()=>{state.arrows=!state.arrows;render()};
-  document.getElementById("b-play").onclick  = togglePlay;
+  document.getElementById("b-play").onclick  = toggleAutoplay;
   el.querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>{
-    stopPlay(); state.branch=null; state.pick=false;
+    stopAutoplay(); state.deviation=null; state.picking=false;
     state.line=+b.dataset.line; state.ply=0;
-    if(state.mode==="drill") dxStart(); else render();
+    if(state.mode==="drill") drillStart(); else render();
   });
   el.querySelectorAll("[data-ply]").forEach(b=>b.onclick=()=>{
-    stopPlay(); state.branch=null; state.pick=false;
+    stopAutoplay(); state.deviation=null; state.picking=false;
     state.ply=+b.dataset.ply; render();
   });
 }
 
-/* Keep the current move visible inside the move list, and nowhere else.
+/* Keep the current move visible inside the scoresheet, and nowhere else.
    scrollIntoView cannot do this: it scrolls every scrollable ancestor up to and
-   including the document, which on the one-column mobile layout -- where the
-   list sits below the board -- drags the board off the screen on every move. */
-function scrollTapeToCurrent(){
-  const tape = document.getElementById("tape");
-  const on = tape && tape.querySelector(".mv.on");
-  if(!on) return;
-  const t = tape.getBoundingClientRect(), r = on.getBoundingClientRect();
-  if(r.top < t.top)         tape.scrollTop -= (t.top - r.top);
-  else if(r.bottom > t.bottom) tape.scrollTop += (r.bottom - t.bottom);
+   including the document, which on a phone -- where the scoresheet sits under a
+   pinned board -- drags the board off the screen on every move.
+
+   Both axes, because the sheet wraps into rows on a wide screen and scrolls
+   sideways as one ribbon on a narrow one. */
+function scrollScoresheetToCurrent(){
+  const sheet = document.getElementById("tape");
+  const current = sheet && sheet.querySelector(".move.current");
+  if(!current) return;
+  const box = sheet.getBoundingClientRect(), move = current.getBoundingClientRect();
+  if(move.top < box.top)            sheet.scrollTop -= (box.top - move.top);
+  else if(move.bottom > box.bottom) sheet.scrollTop += (move.bottom - box.bottom);
+  if(sheet.scrollWidth > sheet.clientWidth){
+    sheet.scrollLeft += (move.left + move.width/2) - (box.left + box.width/2);
+  }
 }
 
 function afterRender(){
-  sizeBoard();
+  sizePieces();
   drawArrows();
-  dxArm();
-  scrollTapeToCurrent();
+  drillArm();
+  scrollScoresheetToCurrent();
+  syncAppbar();
   dbRemember();   // debounced, so stepping a line with the arrow keys costs one write
 }
 
 function step(d){
-  const seq = curSeq();
-  const n = curIdx() + d;
-  if(n<0 || n>seq.length-1) return false;
-  if(state.branch) state.branch.at = n; else state.ply = n;
+  const plies = currentPlies();
+  const n = currentIndex() + d;
+  if(n<0 || n>plies.length-1) return false;
+  if(state.deviation) state.deviation.at = n; else state.ply = n;
   render(); return true;
 }
-function togglePlay(){
-  if(state.timer){ stopPlay(); render(); return; }
-  state.timer = setInterval(()=>{ if(!step(1)) { stopPlay(); render(); } }, 1500);
+function toggleAutoplay(){
+  if(state.autoplay){ stopAutoplay(); render(); return; }
+  state.autoplay = setInterval(()=>{ if(!step(1)) { stopAutoplay(); render(); } }, 1500);
   render();
 }
-function stopPlay(){
-  if(state.timer){ clearInterval(state.timer); state.timer=null; }
-  if(dxTimer){ clearTimeout(dxTimer); dxTimer=null; }
+function stopAutoplay(){
+  if(state.autoplay){ clearInterval(state.autoplay); state.autoplay=null; }
+  if(drillTimer){ clearTimeout(drillTimer); drillTimer=null; }
 }
 
 /* One delegated listener on #content. render() refills that node but never
@@ -290,11 +284,12 @@ document.getElementById("content").addEventListener("click", e=>{
 });
 
 document.addEventListener("keydown",e=>{
-  if(dxKey(e)){ e.preventDefault(); return; }
+  if(drillKey(e)){ e.preventDefault(); return; }
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if(state.view!=="op" && state.view!=="game") return;
-  const jump = n=>{ if(state.branch) state.branch.at=n; else state.ply=n; render(); };
-  if(e.key==="ArrowRight"){ stopPlay(); step(1); e.preventDefault(); }
-  if(e.key==="ArrowLeft"){ stopPlay(); step(-1); e.preventDefault(); }
-  if(e.key==="Home"){ stopPlay(); jump(0); e.preventDefault(); }
-  if(e.key==="End"){ stopPlay(); jump(curSeq().length-1); e.preventDefault(); }
+  const jump = n=>{ if(state.deviation) state.deviation.at=n; else state.ply=n; render(); };
+  if(e.key==="ArrowRight"){ stopAutoplay(); step(1); e.preventDefault(); }
+  if(e.key==="ArrowLeft"){ stopAutoplay(); step(-1); e.preventDefault(); }
+  if(e.key==="Home"){ stopAutoplay(); jump(0); e.preventDefault(); }
+  if(e.key==="End"){ stopAutoplay(); jump(currentPlies().length-1); e.preventDefault(); }
 });

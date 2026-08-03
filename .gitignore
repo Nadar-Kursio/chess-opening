@@ -5,6 +5,7 @@ __pycache__/
 *.zip
 .worktrees/
 docs/
+node_modules/
 .wrangler/
 
 .engine/

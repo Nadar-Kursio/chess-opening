@@ -1,32 +1,33 @@
-/* ---------- the win bar under a variation ---------- */
-/* Fixed colours, like the board and unlike everything else here: the three
-   shares mean White, drawn and Black, so the white share has to read as white
-   in both themes. A palette that followed the theme would print Black's share
-   pale on a pale page. Each label is chosen against its own fill, which is why
-   the drawn share is darker than a neutral grey wants to be -- white text on it
-   has to clear AA at 10px. */
+/* The win bar under a variation: how the master games from this position
+   actually finished.
+
+   Fixed colours, like the board and unlike everything else here: the three
+   shares mean White, drawn and Black, so the white share has to read as white in
+   both themes. A palette that followed the theme would print Black's share pale
+   on a pale page. Each label is chosen against its own fill, which is why the
+   drawn share is darker than a neutral grey wants to be -- white text on it has
+   to clear AA at the size it is set. */
 :root{
-  --rec-white:#E8E3D7; --rec-draw:#6F6960; --rec-black:#2E2B28;
-  --rec-on-white:#2A2724; --rec-on-dark:#F1EDE4;
+  --record-white:#E8E3D7; --record-draw:#6F6960; --record-black:#2E2B28;
+  --record-on-white:#2A2724; --record-on-dark:#F1EDE4;
 }
 
-.record{margin:-4px 0 14px}
-.recbar{
+.record__bar{
   display:flex;height:22px;border-radius:5px;overflow:hidden;
-  border:1px solid var(--line);
+  border:1px solid var(--border);
 }
-.recbar span{
+.record__share{
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.04em;
+  font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.04em;
   min-width:0;overflow:hidden;
 }
-.recw{background:var(--rec-white);color:var(--rec-on-white)}
-.recd{background:var(--rec-draw);color:var(--rec-on-dark)}
-.recb{background:var(--rec-black);color:var(--rec-on-dark)}
+.record__share--white{background:var(--record-white);color:var(--record-on-white)}
+.record__share--draw{background:var(--record-draw);color:var(--record-on-dark)}
+.record__share--black{background:var(--record-black);color:var(--record-on-dark)}
 
-.reccap{
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;
-  color:var(--dim);margin:6px 0 0;
+.record__caption{
+  font-family:var(--font-mono);font-size:var(--text-label);letter-spacing:.04em;
+  color:var(--text-faint);margin:var(--space-2) 0 0;
 }
-.reccap b{color:var(--muted);font-weight:600}
-.reccap .sep{color:var(--line2);margin:0 3px}
+.record__caption b{color:var(--text-soft);font-weight:600}
+.record__caption .sep{color:var(--border-strong);margin:0 3px}

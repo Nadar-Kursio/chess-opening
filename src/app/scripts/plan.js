@@ -14,16 +14,16 @@ function planCardHTML(op, line){
   const st = plan.structure ? planStructure(plan.structure) : null;
   return `
       <div class="plan">
-        <p class="cardhead">You're on your own from here</p>
-        <p class="planpoint">${plan.point}</p>
-        ${st?`<button class="planstruct" data-act="structure" data-id="${st.id}">
-          <span class="planstructlbl">The structure you reached</span>
-          <span class="planstructname">${st.name}</span>
+        <p class="label label--accent">You're on your own from here</p>
+        <p class="plan__point">${plan.point}</p>
+        ${st?`<button class="structure-link" data-act="structure" data-id="${st.id}">
+          <span class="label">The structure you reached</span>
+          <span class="structure-link__name">${st.name}</span>
         </button>`:""}
         ${plan.next && plan.next.length?`
-        <p class="plansub">What usually happens next</p>
-        <ul class="plannext">${plan.next.map(x=>`<li>${x}</li>`).join("")}</ul>`:""}
-        ${plan.endgame?`<p class="planend"><b>If it simplifies.</b> ${plan.endgame}</p>`:""}
+        <p class="label plan__sub">What usually happens next</p>
+        <ul class="plan__next">${plan.next.map(x=>`<li>${x}</li>`).join("")}</ul>`:""}
+        ${plan.endgame?`<p class="plan__endgame"><b>If it simplifies.</b> ${plan.endgame}</p>`:""}
       </div>`;
 }
 
@@ -33,14 +33,14 @@ function planCardHTML(op, line){
 function planEndHTML(op, line){
   const mine = op.orientation === "black" ? op.theory.black_plans : op.theory.white_plans;
   return `
-      <div class="plan generic">
-        <p class="cardhead">You're on your own from here</p>
-        <p class="planpoint">${line.name} ends here. There is no move ${
+      <div class="plan plan--generic">
+        <p class="label">You're on your own from here</p>
+        <p class="plan__point">${line.name} ends here. There is no move ${
           Math.ceil(line.plies.length/2)+1} written down &mdash; from this position you are
           playing on the ideas, not the moves.</p>
-        <p class="plansub">What you are trying to do in this opening</p>
-        <ul class="plannext">${mine.slice(0,3).map(x=>`<li>${x}</li>`).join("")}</ul>
-        <p class="planend"><b>The structure.</b> ${op.theory.structure}</p>
+        <p class="label plan__sub">What you are trying to do in this opening</p>
+        <ul class="plan__next">${mine.slice(0,3).map(x=>`<li>${x}</li>`).join("")}</ul>
+        <p class="plan__endgame"><b>The structure.</b> ${op.theory.structure}</p>
       </div>`;
 }
 
@@ -49,15 +49,15 @@ function planFor(op, line){
 }
 
 function planHTML(op, line){
-  if(state.branch || state.mode === "drill") return "";
-  if(curIdx() < curSeq().length - 1) return "";
+  if(state.deviation || state.mode === "drill") return "";
+  if(currentIndex() < currentPlies().length - 1) return "";
   return planFor(op, line);
 }
 
 ACTIONS.structure = t=>{
   state.view = "structure";
   state.structId = t.dataset.id;
-  state.branch = null; state.pick = false;
-  buildRail(); render();
+  state.deviation = null; state.picking = false;
+  buildNav(); render();
   window.scrollTo({top:0,behavior:"instant"});
 };

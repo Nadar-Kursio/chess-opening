@@ -1,0 +1,49 @@
+/* The scoresheet: the line written out, and clickable.
+
+   Laid out the way a scoresheet is -- move number in a lighter gutter, the pair
+   of plies beside it -- because that is the notation a player already reads. On
+   a phone it becomes one horizontally scrolling ribbon rather than a six-row
+   block: the moves are a place marker, and the board is what deserves the
+   height. */
+
+.scoresheet{
+  display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start;
+  background:var(--layer-2);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:var(--space-2);max-height:184px;overflow:auto;
+}
+.scoresheet__no{
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-faint);
+  padding:4px 2px 4px var(--space-2);align-self:center;
+}
+.move{
+  font-family:var(--font-mono);font-size:var(--text-ui);
+  padding:5px var(--space-2);border-radius:5px;
+  color:var(--text-faint);white-space:nowrap;transition:background .1s var(--ease),color .1s var(--ease);
+}
+.move:hover{background:var(--layer-3);color:var(--text)}
+/* Three states, and they read as a past, a present and a future. */
+.move.played{color:var(--text)}
+.move.current{background:var(--accent);color:var(--on-accent);font-weight:700}
+/* In drill the scoresheet is the answer sheet, so what is ahead is blanked but
+   its shape is kept -- you can still see how much line is left. */
+.move--masked{
+  display:inline-block;color:var(--text-faint);opacity:.4;letter-spacing:.1em;
+  padding:5px var(--space-2);user-select:none;
+}
+/* While a deviation is open the real line stays visible but stands down. */
+.scoresheet--muted{opacity:.38}
+
+/* The continuation inside a deviation card: same tokens, no panel of its own. */
+.scoresheet--inline{
+  background:none;border:none;border-top:1px solid var(--border);border-radius:0;
+  padding:var(--space-3) 0 0;max-height:none;overflow:visible;
+}
+
+@media (max-width:900px){
+  .scoresheet{
+    flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;
+    scroll-snap-type:x proximity;
+  }
+  .move,.move--masked{scroll-snap-align:center}
+  .scoresheet--inline{flex-wrap:wrap;overflow:visible}
+}

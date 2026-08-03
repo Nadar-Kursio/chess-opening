@@ -14,51 +14,51 @@ function tacticsHTML(t){
   return t.replace(/\b([a-h][1-8])\b/g, "<b>$1</b>");
 }
 
-function sqCenter(name, sq, flip){
+function squareCenter(name, size, flipped){
   const file = FILES.indexOf(name[0]), rank = (+name[1]) - 1;
-  const col = flip ? 7-file : file;
-  const row = flip ? rank  : 7-rank;
-  return { x:(col+0.5)*sq, y:(row+0.5)*sq };
+  const col = flipped ? 7-file : file;
+  const row = flipped ? rank  : 7-rank;
+  return { x:(col+0.5)*size, y:(row+0.5)*size };
 }
-function colrow(name, flip){
+function squareGrid(name, flipped){
   const file = FILES.indexOf(name[0]), rank = (+name[1]) - 1;
-  return { col: flip ? 7-file : file, row: flip ? rank : 7-rank };
+  return { col: flipped ? 7-file : file, row: flipped ? rank : 7-rank };
 }
-function center(cr, sq){ return { x:(cr.col+0.5)*sq, y:(cr.row+0.5)*sq }; }
+function gridCenter(cr, size){ return { x:(cr.col+0.5)*size, y:(cr.row+0.5)*size }; }
 
 function drawArrows(){
-  const cv = document.getElementById("arrowlayer");
+  const canvas = document.getElementById("arrowlayer");
   const board = document.getElementById("board");
-  if(!cv || !board) return;
+  if(!canvas || !board) return;
   const size = board.clientWidth;
   if(!size) return;
   const dpr = window.devicePixelRatio || 1;
-  cv.width = size * dpr; cv.height = size * dpr;
-  cv.style.width = size + "px"; cv.style.height = size + "px";
-  const ctx = cv.getContext("2d");
+  canvas.width = size * dpr; canvas.height = size * dpr;
+  canvas.style.width = size + "px"; canvas.style.height = size + "px";
+  const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,size,size);
 
-  // Ahead of both gates below: a rejected attempt has to stay visible in the
+  // Ahead of both gates below: a refused attempt has to stay visible in the
   // phase where the book arrows are suppressed, and whether the learner has the
   // arrow overlay switched on is a separate question from whether they can see
   // the move they just tried.
-  dxDrawBad(ctx, size/8);
+  drillDrawRejected(ctx, size/8);
 
-  if(!state.arrows || dxHideArrows()) return;
+  if(!state.arrows || drillHidesArrows()) return;
 
-  const ply = curPly();
+  const ply = currentPly();
   const arrows = (ply && ply.arrows) || [];
-  const sq = size/8;
+  const square = size/8;
 
   // draw control rings first (under the lines)
   arrows.filter(a=>a.k==="ctrl" && ARROW_ON.ctrl).forEach(a=>{
-    const c = sqCenter(a.t, sq, state.flip);
+    const c = squareCenter(a.t, square, state.flipped);
     ctx.beginPath();
-    ctx.arc(c.x, c.y, sq*0.34, 0, Math.PI*2);
-    ctx.lineWidth = Math.max(2, sq*0.05);
+    ctx.arc(c.x, c.y, square*0.34, 0, Math.PI*2);
+    ctx.lineWidth = Math.max(2, square*0.05);
     ctx.strokeStyle = ARROW_COLORS.ctrl;
-    ctx.setLineDash([sq*0.14, sq*0.10]);
+    ctx.setLineDash([square*0.14, square*0.10]);
     ctx.stroke();
     ctx.setLineDash([]);
   });
@@ -69,15 +69,15 @@ function drawArrows(){
         .sort((a,b)=>(order[a.k]||0)-(order[b.k]||0))
         .forEach(a=>{
     const color = ARROW_COLORS[a.k]||"#999";
-    const width = a.k==="chk" ? sq*0.16 : (a.k==="move" ? sq*0.10 : sq*0.13);
-    const A = colrow(a.f, state.flip), B = colrow(a.t, state.flip);
+    const width = a.k==="chk" ? square*0.16 : (a.k==="move" ? square*0.10 : square*0.13);
+    const A = squareGrid(a.f, state.flipped), B = squareGrid(a.t, state.flipped);
     const dcol = Math.abs(A.col-B.col), drow = Math.abs(A.row-B.row);
     const isKnight = (dcol===1 && drow===2) || (dcol===2 && drow===1);
     if(isKnight){
-      drawBentArrow(ctx, A, B, color, width, sq);   // L-shaped, chess.com style
+      drawBentArrow(ctx, A, B, color, width, square);   // L-shaped, chess.com style
     } else {
-      const p1 = center(A, sq), p2 = center(B, sq);
-      drawArrow(ctx, p1.x, p1.y, p2.x, p2.y, color, width, sq);
+      const p1 = gridCenter(A, square), p2 = gridCenter(B, square);
+      drawArrow(ctx, p1.x, p1.y, p2.x, p2.y, color, width, square);
     }
   });
 }
@@ -91,11 +91,11 @@ function arrowHead(ctx, tipx, tipy, ux, uy, head){
   ctx.closePath(); ctx.fill();
 }
 
-function drawArrow(ctx, x1, y1, x2, y2, color, width, sq){
+function drawArrow(ctx, x1, y1, x2, y2, color, width, square){
   const dx = x2-x1, dy = y2-y1, len = Math.hypot(dx,dy) || 1;
   const ux = dx/len, uy = dy/len;
-  const head = Math.max(sq*0.28, width*2.4);
-  const startGap = sq*0.30, endGap = sq*0.34;
+  const head = Math.max(square*0.28, width*2.4);
+  const startGap = square*0.30, endGap = square*0.34;
   const sx = x1 + ux*startGap, sy = y1 + uy*startGap;
   const exLine = x2 - ux*(endGap+head*0.55), eyLine = y2 - uy*(endGap+head*0.55);
   const tipx = x2 - ux*endGap, tipy = y2 - uy*endGap;
@@ -106,12 +106,12 @@ function drawArrow(ctx, x1, y1, x2, y2, color, width, sq){
 }
 
 // L-shaped knight arrow: long leg (2 squares) first, then the short leg (1 square).
-function drawBentArrow(ctx, A, B, color, width, sq){
+function drawBentArrow(ctx, A, B, color, width, square){
   const bend = (Math.abs(A.col-B.col)===2) ? {col:B.col, row:A.row}   // long leg horizontal
-                                            : {col:A.col, row:B.row};  // long leg vertical
-  const pA = center(A, sq), pM = center(bend, sq), pB = center(B, sq);
-  const head = Math.max(sq*0.28, width*2.4);
-  const startGap = sq*0.30, endGap = sq*0.34;
+                                           : {col:A.col, row:B.row};  // long leg vertical
+  const pA = gridCenter(A, square), pM = gridCenter(bend, square), pB = gridCenter(B, square);
+  const head = Math.max(square*0.28, width*2.4);
+  const startGap = square*0.30, endGap = square*0.34;
 
   // first leg direction (origin -> bend), used only to trim the start
   const d1x = pM.x-pA.x, d1y = pM.y-pA.y, L1 = Math.hypot(d1x,d1y)||1;

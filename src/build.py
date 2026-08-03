@@ -52,10 +52,12 @@ DOCS = os.path.join(os.path.dirname(SRC), "docs")
 # HEAD_SCRIPTS go in <head> ahead of the styles, which is the point of them:
 # theme.js has to set the theme before the first paint, not after it.
 HEAD_SCRIPTS = ["shim", "theme"]
-STYLES = ["base", "layout", "tiers", "study", "record", "board", "arrows", "drill",
-          "deviate", "theory", "primer", "path", "structures", "responsive"]
-SCRIPTS = ["state", "store", "chrome", "rail", "board", "arrows",
-           "move", "drill", "branch", "plan", "structure", "render", "primer", "boot"]
+STYLES = ["tokens", "base", "controls", "shell", "page", "board", "notation",
+          "record", "coach", "deviation", "study", "strategy", "path",
+          "structures", "primer", "progress", "responsive"]
+SCRIPTS = ["state", "store", "appbar", "nav", "board", "arrows", "move",
+           "drill", "deviation", "plan", "structure", "render", "primer",
+           "progress", "boot"]
 
 OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
                 "is the whole reason opening theory exists.")
