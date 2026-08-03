@@ -6,36 +6,35 @@ __HEAD_SCRIPTS__
 </script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Opening Repertoire — an interactive course</title>
+<meta name="color-scheme" content="dark light">
+<title>Opening Lab — the opening, explained move by move</title>
 <style>
 __STYLES__
 </style>
 </head>
 <body>
-<div class="wrap">
+<a class="skip" href="#main">Skip to the board</a>
 
-<header class="masthead">
-  <div class="mastcopy">
-    <p class="eyebrow" id="eyebrow"></p>
-    <h1 class="title">The opening, <em>explained move by move</em></h1>
-    <p class="standfirst">Every move on this page comes with a reason. Step through the board, read why the move was played, then read the strategy behind the whole system. Start with the primer if you want the rules that all of this is built on.</p>
-  </div>
-  <!-- Top of the header, where a site's display settings live. Deliberately not
-       in the chrome bar below: that row changes what you are taught, and a theme
-       is not a thing you are taught. -->
-  <div class="mastacts" id="mastacts"></div>
+<!-- Where you are, how you are doing, and how the page looks. What you are
+     TAUGHT is chosen in the nav, next to the list it filters. -->
+<header class="appbar">
+  <button class="appbar__menu" id="navtoggle" aria-expanded="false" aria-controls="nav"
+    aria-label="Open the course menu"><span aria-hidden="true">&#9776;</span></button>
+  <a class="appbar__brand" href="#" id="brand">
+    <span class="appbar__mark" aria-hidden="true">&#9822;</span>
+    <span class="appbar__name">Opening Lab</span>
+  </a>
+  <span class="appbar__where" id="appbar-where"></span>
+  <div class="appbar__actions" id="appbar-actions"></div>
 </header>
 
-<div class="chrome" id="chrome"></div>
+<button class="scrim" id="scrim" hidden aria-label="Close the course menu"></button>
 
-<div class="layout">
-  <nav class="rail" id="rail"></nav>
-  <main>
-    <div class="mobnav"><select id="mobsel"></select></div>
+<div class="shell">
+  <nav class="nav scroller" id="nav" aria-label="Course"></nav>
+  <main class="main" id="main" tabindex="-1">
     <div id="content"></div>
   </main>
-</div>
-
 </div>
 
 <template id="primer">
@@ -44,7 +43,7 @@ __PRIMER__
 
 <!-- Outside #content on purpose: a live region that render() destroys and
      recreates does not reliably announce. -->
-<div class="sr" id="dxlive" role="status" aria-live="polite"></div>
+<div class="sr" id="announce" role="status" aria-live="polite"></div>
 
 <script>
 __SCRIPTS__

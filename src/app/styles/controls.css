@@ -1,0 +1,81 @@
+/* One vocabulary for every control on the page: a control is a .btn, a .pill or
+   a .seg, and a feature that needs a button does not get to invent a seventh
+   shape that differs by a pixel here and a letter-spacing there.
+
+   Sizes are floored at --tap on touch pointers only, so a phone gets 44px
+   targets without a mouse-driven layout growing to match. */
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  min-height:var(--control-h);padding:var(--space-2) var(--space-3);
+  background:var(--layer-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text-soft);font-size:var(--text-ui);font-weight:500;
+  text-align:center;white-space:nowrap;transition:background var(--speed) var(--ease),
+  border-color var(--speed) var(--ease),color var(--speed) var(--ease);
+}
+.btn:hover:not(:disabled){background:var(--layer-3);color:var(--text);border-color:var(--border-strong)}
+.btn:disabled{opacity:.34;cursor:default}
+.btn--primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn--primary:hover:not(:disabled){background:var(--accent-deep);border-color:var(--accent-deep);color:var(--on-accent)}
+.btn--grow{flex:1 1 auto}
+.btn--wide{flex:1.6 1 auto}
+/* Square, and the glyph is the whole label -- always paired with an aria-label. */
+.btn--icon{width:var(--control-h);min-width:var(--control-h);padding:0;flex:none;font-size:var(--text-lg)}
+.btn.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+
+/* A keyboard shortcut printed on its control. */
+.btn kbd,.pill kbd{
+  font-family:var(--font-mono);font-size:var(--text-label);
+  border:1px solid currentColor;border-radius:3px;padding:0 4px;opacity:.62;
+}
+
+/* ---------- pills ---------- */
+/* A small tracked capsule. Static ones state a fact, button ones toggle it. */
+.pill{
+  display:inline-flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-label);letter-spacing:.1em;text-transform:uppercase;font-weight:600;
+  color:var(--text-faint);background:none;
+  border:1px solid var(--border);border-radius:var(--radius-pill);
+  padding:5px var(--space-3);transition:background var(--speed) var(--ease),
+  border-color var(--speed) var(--ease),color var(--speed) var(--ease);
+}
+button.pill:hover:not(:disabled){color:var(--text);border-color:var(--border-strong);background:var(--layer-1)}
+.pill:disabled{opacity:.4;cursor:default}
+.pill.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pill--warn.on{background:var(--warn);border-color:var(--warn);color:var(--on-accent)}
+.pill b{color:var(--accent);font-weight:700}
+.pill .sep{opacity:.5}
+/* Glyphs inside a tracked pill must not be tracked out with the letters. */
+.pill .glyph{letter-spacing:0;font-style:normal}
+
+/* ---------- segmented control ---------- */
+/* Two or three exclusive choices, shown together because the alternatives are
+   the point: you should be able to see that Drill exists without opening a menu. */
+.segmented{
+  display:inline-flex;padding:3px;gap:2px;
+  background:var(--layer-2);border:1px solid var(--border);border-radius:var(--radius-pill);
+}
+.seg{
+  padding:6px var(--space-4);border-radius:var(--radius-pill);
+  font-size:var(--text-ui);font-weight:600;color:var(--text-faint);white-space:nowrap;
+  transition:background var(--speed) var(--ease),color var(--speed) var(--ease);
+}
+.seg:hover{color:var(--text)}
+.seg[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+
+/* ---------- text field ---------- */
+.field{
+  width:100%;min-height:var(--control-h);
+  padding:var(--space-2) var(--space-3);
+  background:var(--layer-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text);font-size:var(--text-ui);
+}
+.field::placeholder{color:var(--text-faint)}
+.field:focus{border-color:var(--accent);outline:none}
+
+@media (pointer:coarse){
+  .btn,.seg,.field{min-height:var(--tap)}
+  .btn--icon{width:var(--tap);min-width:var(--tap)}
+  .pill{padding:9px var(--space-3)}
+}

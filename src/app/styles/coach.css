@@ -1,0 +1,111 @@
+/* The coach card.
+
+   One slot beside the board answers you, and it is one component whichever of
+   the three things is happening: reading a move's note, being marked in drill,
+   or being shown what a deviation does. Three differently-shaped boxes in the
+   same position would make the page read as though it had changed subject every
+   time it answered.
+
+   The tone rule down the left is the only thing that varies, and it always has
+   a word beside it: severity and correctness are never carried by colour alone. */
+
+.coach{
+  background:var(--layer-2);border:1px solid var(--border);
+  border-left:3px solid var(--border-strong);border-radius:var(--radius-md);
+  padding:var(--space-4);
+}
+.coach[data-tone="ok"]{border-left-color:var(--accent)}
+.coach[data-tone="warn"]{border-left-color:var(--warn)}
+.coach[data-tone="bad"]{border-left-color:var(--danger)}
+.coach[data-tone="flat"]{border-left-color:var(--neutral)}
+.coach[data-tone="blunder"]{border-left-color:var(--sev-blunder)}
+.coach[data-tone="inaccuracy"]{border-left-color:var(--sev-inaccuracy)}
+.coach[data-tone="playable"]{border-left-color:var(--sev-playable)}
+
+.coach__head{
+  display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap;
+  margin-bottom:var(--space-3);padding-bottom:var(--space-3);
+  border-bottom:1px solid var(--border);
+}
+.coach__head--plain{border-bottom:none;padding-bottom:0}
+.coach__move{
+  font-family:var(--font-mono);font-size:var(--text-lg);font-weight:700;color:var(--accent);
+}
+.coach__name{font-size:var(--text-ui);color:var(--text-faint);font-style:italic}
+.coach__close{
+  margin-left:auto;color:var(--text-faint);font-size:var(--text-lg);line-height:1;
+  padding:0 var(--space-1);
+}
+.coach__close:hover{color:var(--text)}
+
+.coach__body{margin:0;font-size:var(--text-body);line-height:1.65;color:var(--text)}
+.coach__body + .coach__body{margin-top:var(--space-3)}
+.coach__aside{margin:var(--space-3) 0 0;font-size:var(--text-ui);color:var(--text-soft)}
+.coach__aside b{color:var(--text-soft);font-family:var(--font-mono)}
+
+/* What the learner just tried, quoted back. */
+.verdict{margin:0 0 var(--space-3);font-size:var(--text-ui);color:var(--text)}
+.verdict b{color:var(--warn);font-family:var(--font-mono)}
+/* In read mode the answer arrives above the note rather than inside a card, so
+   it has to carry its own frame -- otherwise it reads as part of the note for
+   the move actually on the board. */
+.verdict--framed{
+  padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);
+  background:var(--layer-1);border-left:3px solid var(--neutral);
+}
+.verdict--framed[data-tone="bad"]{border-left-color:var(--danger)}
+.verdict--framed[data-tone="ok"]{border-left-color:var(--accent)}
+
+/* ---------- engine-derived line under a move ---------- */
+.tactics{
+  margin-top:var(--space-3);padding:var(--space-2) var(--space-3);
+  background:var(--layer-3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:var(--text-ui);color:var(--text-soft);
+  display:flex;gap:var(--space-3);align-items:flex-start;
+}
+.tactics .label{flex-shrink:0;padding-top:2px;color:var(--accent)}
+.tactics b{color:var(--text);font-weight:600}
+
+/* ---------- drill scoring ---------- */
+.coach__score{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--space-3);flex-wrap:wrap;
+}
+.coach__turn{font-size:var(--text-body)}
+.coach__turn b{color:var(--accent)}
+.coach__tally{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-faint)}
+.coach__tally b{color:var(--text-soft)}
+.coach__tally .sep{opacity:.5;margin:0 2px}
+.coach__progress{
+  height:4px;background:var(--border);border-radius:2px;
+  margin:var(--space-3) 0;overflow:hidden;
+}
+.coach__progress i{display:block;height:100%;background:var(--accent);transition:width .2s var(--ease)}
+
+.coach__prompt{margin:0;font-size:var(--text-body);color:var(--text)}
+.coach__context{margin:var(--space-2) 0 0;font-size:var(--text-ui);color:var(--text-soft)}
+
+/* ---------- hint ladder ---------- */
+.coach__hints{list-style:none;margin:var(--space-3) 0 0;padding:0;display:grid;gap:var(--space-2)}
+.coach__hints li{
+  font-size:var(--text-ui);color:var(--text-soft);
+  border-left:2px solid var(--border-strong);padding-left:var(--space-3);
+}
+.coach__hints b{color:var(--accent)}
+
+/* ---------- actions ---------- */
+.coach__actions{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+.coach__actions .btn{flex:1 1 auto}
+
+/* ---------- cross-reference ---------- */
+/* "Covered in full over here" -- the same affordance as the plan card's
+   structure button, so the two read as one gesture rather than two features. */
+.jump-card{
+  display:block;width:100%;text-align:left;margin:var(--space-3) 0 0;
+  padding:var(--space-2) var(--space-3);
+  border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+  transition:background var(--speed) var(--ease),border-color var(--speed) var(--ease);
+}
+.jump-card:hover{background:var(--layer-1);border-color:var(--accent)}
+.jump-card__lead{display:block}
+.jump-card__name{display:block;font-size:var(--text-ui);color:var(--accent);margin-top:2px}

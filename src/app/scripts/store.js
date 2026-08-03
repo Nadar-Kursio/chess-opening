@@ -25,7 +25,7 @@ const dbOK = (function(){
 function dbDefaults(){
   return {
     v: DB_VERSION,
-    ui: {tier:"Mastery", mode:"read", arrows:true},
+    ui: {tier:"Mastery", arrows:true},
     last: {view:"primer", opId:null, line:0, ply:0},
     streak: {cur:0, best:0, day:""},
     lines: {}
@@ -92,7 +92,7 @@ function dbRestore(){
   const ui = db.ui || {};
   if(TIERS.indexOf(ui.tier) >= 0) state.tier = ui.tier;
   if(typeof ui.arrows === "boolean") state.arrows = ui.arrows;
-  if(typeof ui.both === "boolean") state.drill.both = ui.both;
+  if(typeof ui.bothSides === "boolean") state.drill.bothSides = ui.bothSides;
 
   const last = db.last || {};
   const op = DATA.find(o=>o.id===last.opId);
@@ -101,7 +101,7 @@ function dbRestore(){
   state.opId = op.id;
   state.line = Math.min(Math.max(0, last.line|0), op.lines.length - 1);
   state.ply  = Math.min(Math.max(0, last.ply|0), op.lines[state.line].plies.length - 1);
-  state.flip = op.orientation === "black";
+  state.flipped = op.orientation === "black";
 }
 
 function dbLineKey(opId, line){ return opId + "/" + line; }

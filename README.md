@@ -63,11 +63,18 @@ src/
     page.html                    document skeleton with the build's placeholders
     primer.html                  the "how openings work" primer, as plain HTML
     index.html                   the redirect stub copied to docs/
-    styles/                      14 stylesheets, concatenated in build.py's order
-    scripts/                     14 scripts, concatenated in build.py's order
+    styles/                      17 stylesheets, concatenated in build.py's order
+      tokens.css                   the design system: palette, type scale, spacing
+      base.css                     reset and the text primitives
+      controls.css                 .btn / .pill / .seg -- every control on the page
+      shell.css                    app bar, course nav, the two-column frame
+      …then one file per component, and responsive.css last
+    scripts/                     15 scripts, concatenated in build.py's order
 
 scripts/serve.sh               <- build and preview locally; sets up .venv if needed
 tests/test_content.py          <- shape checks over the opening catalogue
+tests/test_smoke.py            <- loads the built page in a DOM and drives every view
+tests/smoke.mjs                <- what it drives it with
 ```
 
 `STYLES` and `SCRIPTS` in `build.py` are the real file lists; a file not named
@@ -150,9 +157,24 @@ server would serve your first build all afternoon — the styles and scripts are
 read from disk every time, so only content edits would silently fail to appear.
 
 **The build does not parse the JavaScript.** It concatenates it, so a syntax error
-in a script ships a dead page and the build still reports success. Nothing in the
-repo catches that; load `docs/chess-opening-course.html` in a browser after touching
-anything under `src/app/scripts/` and check the console.
+in a script ships a dead page and the build still reports success.
+
+`tests/test_smoke.py` is the guard: it loads the built page in jsdom and drives
+every view, every mode and every control, failing on anything thrown and on any
+view that renders `undefined` into the page. That catches a syntax error, and it
+catches the subtler version -- a function renamed in one file and not in the file
+that calls it.
+
+It needs node and jsdom, and **skips loudly** when they are missing:
+
+```
+npm install jsdom            # once; node_modules/ is gitignored
+python3 -m unittest discover tests
+```
+
+What it cannot see is layout, because jsdom has no layout engine. After a change
+to `src/app/styles/`, open the page — or the pull request's preview URL — and look
+at it on a phone as well as a desktop.
 
 ## Publishing
 
@@ -236,6 +258,24 @@ piece — in every authoring pass so far.
 - **The build concatenates rather than bundles.** No npm, no bundler, and no ES
   modules — the output has to keep working from a `file://` URL with no server,
   which ES modules would refuse to load.
+- **One nav, two presentations.** The rail beside the content on a wide screen
+  and the drawer on a narrow one are the same markup, built once by `nav.js`. The
+  page used to carry a second, cut-down copy of the nav as a `<select>` for
+  phones, which meant every navigation idea had to be built twice and the phone
+  got the worse half.
+- **The board is pinned on a phone.** It stays under the app bar while the notes
+  scroll beneath it, because reading "this move attacks f7" with the board off
+  the top of the screen is not reading. That is why `.study` is a grid on a wide
+  screen and a flex column on a narrow one: a grid item's sticky positioning is
+  bounded by its own grid area, so a board in a one-column grid has nowhere to
+  travel.
+- **One coach card.** Reading a note, being marked in drill, and being shown what
+  a deviation does are the same slot beside the board, so they are the same
+  component with a different tone rule — not three differently-shaped boxes that
+  make the page look like it changed subject every time it answers.
+- **Severity is never colour alone.** Every mark states its word, and the live
+  region announces the same word. The `??` / `?!` / `=` glyph beside it is the
+  notation a player already reads.
 - **One module per opening.** Content used to be grouped by *kind* — all the deep
   dives in one file, all the learning paths in another — which meant adding an
   opening touched three files and, in the Four Knights' case, the build script

@@ -17,12 +17,21 @@ one self-contained HTML file into `docs/`. See README.md for the layout.
 
 System `python3` has no `python-chess`. Use the venv.
 
+The suite includes a jsdom smoke test over the built page. It skips unless jsdom
+is installed — `npm install jsdom` once, and `node_modules/` is gitignored.
+
 ## Rules
 
 - `docs/` is generated and gitignored. Never edit it, never commit it.
 - The build does not parse the JavaScript it concatenates: a syntax error ships a
-  dead page and the build still reports success. Open the page and check the
-  console after touching anything under `src/app/scripts/`.
+  dead page and the build still reports success. `tests/test_smoke.py` is what
+  catches that — run the suite with jsdom installed after touching anything under
+  `src/app/scripts/`, and add a step to `tests/smoke.mjs` for anything new.
+- jsdom has no layout engine, so nothing automated sees the design. After a
+  change under `src/app/styles/`, look at the page on a phone width as well as a
+  desktop one.
+- `src/app/styles/tokens.css` is the design system. No file below it names a raw
+  colour or a raw pixel size; add a token rather than a literal.
 - Every claim about a position comes from the engine, never from memory —
   severities from `.engine/stockfish`, game scores and win bars (`record`) from
   pgnmentor. The `opening-research` skill has the procedure.
