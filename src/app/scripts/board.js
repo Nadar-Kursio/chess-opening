@@ -78,8 +78,8 @@ function boardColumnHTML(opts){
         <button class="btn${showMine?" on":""}" id="b-mine"
           aria-pressed="${!!showMine}"
           ${opts.notes&&!drillHidesArrows()?"":"disabled"}
-          title="${opts.notes?"Your own notes on this line, and the marks that go with them"
-                             :"You have written no notes on this line"}">
+          title="${opts.notes?"Your own notes, the marks that go with them, and the way to write more"
+                             :"This view carries no notes"}">
           <span class="glyph" aria-hidden="true">✎</span>Notes</button>
       </div>
 

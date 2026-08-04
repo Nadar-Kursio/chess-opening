@@ -510,6 +510,9 @@ function moverSide(){
    forward -- the board is the interface, a button is the fallback. */
 function boardLive(){
   if(state.deviation) return false;
+  // With the note editor open the board is a drawing surface, so a left-drag
+  // pulls out an arrow instead of playing the move it lands on.
+  if(state.note) return false;
   if(state.picking) return true;
   // Reading is not watching. The board is the most obvious thing on the page, so
   // it answers a move at all times rather than only after you have found a mode
@@ -588,6 +591,9 @@ function drillPick(sq){
 }
 
 document.getElementById("content").addEventListener("pointerdown", e=>{
+  // Primary button only. A right-press is the annotation gesture, and picking a
+  // piece up with it would leave a selection nothing ever puts down.
+  if(e.button !== 0) return;
   if(!boardLive()) return;
   const cell = e.target.closest("[data-sq]");
   if(!cell) return;
@@ -625,6 +631,7 @@ function drillKey(e){
 
   // Escape unwinds one layer at a time, innermost first.
   if(k === "Escape"){
+    if(state.note){ noteCancel(); return true; }
     if(state.selected){ state.selected = null; drillPaint(); return true; }
     if(state.picking){ state.picking = false; render(); return true; }
     if(state.deviation){ devExit(); return true; }

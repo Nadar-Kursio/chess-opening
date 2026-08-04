@@ -33,6 +33,19 @@ function progressHTML(){
     </div>
 
     <div class="card">
+      <p class="card__head label label--accent">Notes you have written</p>
+      <p>${noteCount()
+        ? `${noteCount()} position${noteCount()===1?"":"s"} annotated in this browser.
+           They ride along with the export below — and a note worth keeping belongs
+           in <span class="mono">src/content/notes/</span>, which is what the button writes.`
+        : `None yet. Open any opening, right-drag on the board or press
+           <b>Write a note on this position</b>, and it is saved here.`}</p>
+      <div class="transfer">
+        <button class="btn" data-act="notesource" ${noteCount()?"":"disabled"}>Copy as a notes file</button>
+      </div>
+    </div>
+
+    <div class="card">
       <p class="card__head label label--accent">Keep or move your progress</p>
       <p>Progress lives in this browser only. Export it to keep a copy, or to carry it
         to another machine.</p>
@@ -55,6 +68,11 @@ ACTIONS.openline = t=>{
   state.ply = 0;
   state.flipped = op.orientation === "black";
   buildNav(); render(); window.scrollTo({top:0,behavior:"instant"});
+};
+ACTIONS.notesource = ()=>{
+  document.getElementById("transferbox").value = noteSourceText();
+  document.getElementById("transfermsg").textContent =
+    "In the box below, in the format src/content/notes/ reads. One file per opening.";
 };
 ACTIONS.export = ()=>{
   document.getElementById("transferbox").value = dbExport();

@@ -33,6 +33,12 @@ const state = {
   structId:null,   // view === "structure"
   gameId:null,     // view === "game"; a game reuses state.ply, so the transport works unchanged
 
+  /* Writing your own note on the position on screen. `note` is the open editor,
+     holding a working copy so Cancel costs nothing; `drawing` is a live drag on
+     the board. Both are session-only -- what is kept lives in db.notes. */
+  note:null,       // {key, text, arrows, spots, tool, from, focus}
+  drawing:null,    // {from, to, id} while a mark is being dragged out
+
   /* Session-only, except `bothSides`, which is a preference and is restored from
      the store. `rejected` is the last refused attempt, kept so the board can show
      what was tried -- the move was never played, so nothing else records it. */
