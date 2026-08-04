@@ -57,3 +57,16 @@
   .hero__lede,.page-lede{display:none}
   .board-hint{display:none}
 }
+
+/* iOS Safari zooms the whole page in when it focuses a text control set below
+   16px, and does not zoom back out when that control is blurred -- so the page
+   is left magnified, scrolling sideways, with nothing on screen offering a way
+   back. overflow-x:clip cannot help: the page is not overflowing, the visual
+   viewport is smaller than the layout one.
+
+   A floor rather than a size, set on the elements so a control added later
+   cannot reintroduce it, and important because it has to beat whatever size the
+   component picked -- .field and .transfer__box both chose smaller. */
+@media (pointer:coarse){
+  input,select,textarea{font-size:var(--text-body)!important}
+}

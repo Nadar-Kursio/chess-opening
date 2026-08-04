@@ -105,11 +105,16 @@ function applyNavFilter(){
 /* Only on a narrow screen -- the rail is always open on a wide one -- but the
    handlers are unconditional, because the button that calls them is what is
    hidden by the media query. */
+/* Focus lands on Close, not on the filter. This only ever runs on a narrow
+   screen -- the button that calls it is display:none on a wide one -- so
+   focusing the text field opened the keyboard over the nav it had just opened,
+   and took the page's zoom with it. Focus still enters the drawer, which is what
+   the trap and a screen reader need; the filter is one Tab away. */
 function openNav(){
   state.navOpen = true;
   syncNav();
-  const filter = document.getElementById("navfilter");
-  if(filter) filter.focus();
+  const close = document.querySelector('#nav [data-nav="close"]');
+  if(close) close.focus();
 }
 function closeNav(){
   if(!state.navOpen) return;
