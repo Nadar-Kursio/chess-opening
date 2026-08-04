@@ -108,6 +108,11 @@ step("nav: drawer", () => {
   want("drawer opens", $("#nav").classList.contains("open"));
   want("toggle reports open", $("#navtoggle").getAttribute("aria-expanded") === "true");
   want("scrim shows", !$("#scrim").hidden);
+  // The drawer is narrow-screen only, so autofocusing a text field here opens the
+  // keyboard over it and, on iOS, zooms the page and never zooms back.
+  want("focus enters the drawer", $("#nav").contains(doc.activeElement));
+  want("opening the drawer does not focus a text field",
+       !/^(INPUT|TEXTAREA)$/.test(doc.activeElement.tagName));
   // Tab out of the last control and focus has to come back, not land behind the scrim.
   const items = app("navFocusables")();
   items[items.length - 1].focus();
