@@ -66,7 +66,8 @@ function syncAppbar(){
     // Until a choice is stored the page is following the system, and only the
     // tooltip can say so -- the label has to keep naming the destination.
     const how = (db.ui || {}).theme ? "" : ", which is currently following your system";
-    toggle.innerHTML = `<span class="glyph" aria-hidden="true">${to === "light" ? "☀" : "☾"}</span>${to}`;
+    toggle.innerHTML = `<span class="glyph" aria-hidden="true">${to === "light" ? "☀" : "☾"}</span>`
+                     + `<span class="pill__word">${to}</span>`;
     toggle.setAttribute("aria-label", `Switch to the ${to} theme`);
     toggle.title = `Switch to the ${to} theme${how}`;
   }
@@ -74,11 +75,16 @@ function syncAppbar(){
 
 function drilledCount(){ return Object.keys(db.lines).length; }
 
+/* Glyph, then count, then the prose about the count -- in that order, because a
+   phone drops .pill__word and what is left has to still say something. The
+   accessible name is set beside this and does not depend on any of it. */
 function progressChipHTML(){
   const n = drilledCount();
-  if(!n) return `Progress`;
-  return `<b>${n}</b> drilled` +
-         (db.streak.best ? ` <span class="sep">·</span> best <b>${db.streak.best}</b>` : "");
+  const mark = `<span class="glyph" aria-hidden="true">◔</span>`;
+  if(!n) return mark + `<span class="pill__word">Progress</span>`;
+  return mark + `<b>${n}</b><span class="pill__word">drilled`
+       + (db.streak.best ? ` <span class="sep">·</span> best <b>${db.streak.best}</b>` : "")
+       + `</span>`;
 }
 
 /* Announce to assistive tech. Also the single place that guarantees every piece

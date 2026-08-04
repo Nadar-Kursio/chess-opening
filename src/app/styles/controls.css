@@ -32,7 +32,8 @@
 /* ---------- pills ---------- */
 /* A small tracked capsule. Static ones state a fact, button ones toggle it. */
 .pill{
-  display:inline-flex;align-items:center;gap:var(--space-2);
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  white-space:nowrap;
   font-size:var(--text-label);letter-spacing:.1em;text-transform:uppercase;font-weight:600;
   color:var(--text-faint);background:none;
   border:1px solid var(--border);border-radius:var(--radius-pill);

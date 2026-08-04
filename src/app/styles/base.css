@@ -7,7 +7,11 @@
    because body's overflow only reaches the viewport by propagation and that
    propagation is not something every engine does for clip. */
 html,body{margin:0;padding:0;overflow-x:clip}
-html{-webkit-text-size-adjust:100%}
+/* manipulation drops the double-tap-to-zoom gesture and keeps panning and pinch
+   zoom, so the page stays zoomable the accessible way. Without it every tap on a
+   square waits to find out whether a second one is coming, and a board where
+   taps are moves gets double-tapped constantly. */
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 body{
   background:var(--bg); color:var(--text); font-family:var(--font-body);
   font-size:var(--text-body); line-height:1.6; -webkit-font-smoothing:antialiased;
