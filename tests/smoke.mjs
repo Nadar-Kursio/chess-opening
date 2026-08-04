@@ -73,7 +73,7 @@ step("shell", () => {
   report.title = doc.title;
   want("app bar", $(".appbar"));
   want("nav", $("#nav .nav__item"));
-  want("tier picker", $(".tiers__step"));
+  want("openings are grouped by family", $("#nav .nav__moves"));
   want("live region", $("#announce"));
   want("theme toggle", $("#themetoggle"));
   want("hero on the front page", $(".hero__title"));
@@ -258,13 +258,16 @@ step("theme", () => {
   want("and changes back", doc.documentElement.getAttribute("data-theme") === before);
 });
 
-step("tiers", () => {
+step("nothing is hidden behind a setting", () => {
+  // Every structure, game and opening in the data is reachable from the nav.
+  const listed = new Set($$("#nav [data-go]").map(b => b.dataset.go));
+  for (const id of app("DATA.map(o=>o.id)")) want(`${id} is listed`, listed.has(id));
+  for (const id of app("STRUCTURES.map(s=>s.id)")) want(`structure ${id} is listed`, listed.has("structure:" + id));
+  for (const id of app("GAMES.map(g=>g.id)")) want(`game ${id} is listed`, listed.has("game:" + id));
+  // …and every stage of a learning path is on the page, not just the early ones.
   app("go")(opening);
-  for (const t of app("TIERS")) {
-    click($(`[data-tier="${t}"]`));
-    want(`tier ${t} renders`, $("#content").innerHTML.length);
-  }
-  want("the picker reports the current tier", $('.tiers__step[aria-checked="true"]'));
+  const stages = app("currentOpening().progression.stages.length");
+  want("every learning-path stage renders", $$(".stages > li").length === stages);
 });
 
 await new Promise(r => setTimeout(r, 100));

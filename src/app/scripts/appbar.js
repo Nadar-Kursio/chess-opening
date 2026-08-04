@@ -6,24 +6,6 @@
    the page looks. What you are being TAUGHT is chosen in the nav, next to the
    list it filters. */
 
-/* Untiered content ranks 0 and is therefore always visible. That is what lets an
-   opening carry no tier at all and lose nothing. */
-function tierRank(t){
-  if(!t) return 0;
-  const i = TIERS.findIndex(x=>x.toLowerCase()===String(t).toLowerCase());
-  return i < 0 ? 0 : i;
-}
-function tierVisible(t){ return tierRank(t) <= tierRank(state.tier); }
-
-function setTier(t){
-  if(t === state.tier) return;
-  state.tier = t;
-  dbRemember();
-  buildNav();
-  render();
-  announce(`Showing the course down to ${t}.`);
-}
-
 /* The one-line answer to "what am I looking at", shown beside the wordmark and
    used as the drawer's heading on a phone. */
 function whereAmI(){

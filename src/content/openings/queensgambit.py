@@ -2,7 +2,7 @@ OPENING = {
     "id": "queensgambit",
     "name": "Queen's Gambit",
     "eco": "D06–D69",
-    "section": "white-d4",
+    "section": "closed",
     "orientation": "white",
     "tagline": "The most trusted 1.d4 opening in history. Not really a gambit at all.",
     "level": "Beginner → World Championship",

@@ -2,7 +2,7 @@ OPENING = {
     "id": "london",
     "name": "London System",
     "eco": "D02 / A46 / A48",
-    "section": "white-d4",
+    "section": "closed",
     "orientation": "white",
     "tagline": "One setup against almost anything. The lowest-theory way to play 1.d4 well.",
     "level": "Beginner → Grandmaster",

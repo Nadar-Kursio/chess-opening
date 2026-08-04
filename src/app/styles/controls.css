@@ -11,14 +11,13 @@
   min-height:var(--control-h);padding:var(--space-2) var(--space-3);
   background:var(--layer-2);border:1px solid var(--border);border-radius:var(--radius-sm);
   color:var(--text-soft);font-size:var(--text-ui);font-weight:500;
-  text-align:center;white-space:nowrap;transition:background var(--speed) var(--ease),
+  text-align:center;white-space:nowrap;overflow:hidden;transition:background var(--speed) var(--ease),
   border-color var(--speed) var(--ease),color var(--speed) var(--ease);
 }
 .btn:hover:not(:disabled){background:var(--layer-3);color:var(--text);border-color:var(--border-strong)}
 .btn:disabled{opacity:.34;cursor:default}
 .btn--primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 .btn--primary:hover:not(:disabled){background:var(--accent-deep);border-color:var(--accent-deep);color:var(--on-accent)}
-.btn--grow{flex:1 1 auto}
 .btn--wide{flex:1.6 1 auto}
 /* Square, and the glyph is the whole label -- always paired with an aria-label. */
 .btn--icon{width:var(--control-h);min-width:var(--control-h);padding:0;flex:none;font-size:var(--text-lg)}

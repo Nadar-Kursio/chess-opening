@@ -25,7 +25,7 @@ const dbOK = (function(){
 function dbDefaults(){
   return {
     v: DB_VERSION,
-    ui: {tier:"Mastery", arrows:true},
+    ui: {arrows:true},
     last: {view:"primer", opId:null, line:0, ply:0},
     streak: {cur:0, best:0, day:""},
     lines: {}
@@ -71,7 +71,6 @@ window.addEventListener("pagehide", dbFlush);
 
 function dbRemember(){
   db.last = {view:state.view, opId:state.opId, line:state.line, ply:state.ply};
-  db.ui.tier = state.tier;
   db.ui.arrows = state.arrows;
   dbSave();
 }
@@ -90,7 +89,6 @@ function dbTheme(name){
    an opening that was removed, or a line that got shorter, must not throw. */
 function dbRestore(){
   const ui = db.ui || {};
-  if(TIERS.indexOf(ui.tier) >= 0) state.tier = ui.tier;
   if(typeof ui.arrows === "boolean") state.arrows = ui.arrows;
   if(typeof ui.bothSides === "boolean") state.drill.bothSides = ui.bothSides;
 

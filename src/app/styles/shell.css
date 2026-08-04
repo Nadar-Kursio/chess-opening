@@ -36,7 +36,8 @@
 }
 .appbar__where::before{content:"/";margin-right:var(--space-2);opacity:.6}
 
-.appbar__actions{display:flex;align-items:center;gap:var(--space-2);margin-left:auto;flex:none}
+.appbar__actions{display:flex;align-items:center;gap:var(--space-2);margin-left:auto;min-width:0}
+.appbar__actions .pill{min-width:0;overflow:hidden}
 
 /* ---------- layout ---------- */
 .shell{
@@ -56,36 +57,17 @@
 
 .nav__tools{display:flex;flex-direction:column;gap:var(--space-3)}
 
-/* The tier picker lives here rather than in the app bar because it changes what
-   this list contains: raise it and structures and games appear in the nav below. */
-.tiers{display:flex;flex-direction:column;gap:var(--space-2)}
-.tiers__head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2)}
-.tiers__value{font-size:var(--text-sm);color:var(--accent);font-weight:600}
-.tiers__track{display:flex;gap:3px}
-.tiers__step{
-  flex:1;height:26px;border:1px solid var(--border);border-radius:var(--radius-sm);
-  background:var(--layer-2);color:var(--text-faint);
-  font-size:var(--text-label);font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-  transition:background var(--speed) var(--ease),color var(--speed) var(--ease);
-}
-.tiers__step:hover{color:var(--text);border-color:var(--border-strong)}
-/* Every step up to the chosen one fills, so the control reads as a level rather
-   than as four unrelated buttons. */
-.tiers__step.reached{background:var(--accent-wash);border-color:var(--accent-deep);color:var(--accent)}
-.tiers__step[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.tiers__note{font-size:var(--text-xs);color:var(--text-faint);margin:0}
-
 .nav__group{display:flex;flex-direction:column;gap:2px}
 .nav__head{
-  display:flex;align-items:center;gap:var(--space-2);
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;
   padding-bottom:var(--space-2);border-bottom:1px solid var(--border);
   margin-bottom:var(--space-2);
 }
-.nav__head .glyph{font-size:var(--text-body);letter-spacing:0}
-.nav__sub{
-  font-size:var(--text-xs);color:var(--text-faint);
-  padding:var(--space-3) 0 var(--space-1) 2px;
+/* The move order that defines the family. Notation, so it is set as notation --
+   and allowed to wrap, because the drawer is narrower than a rail. */
+.nav__moves{
+  font-family:var(--font-mono);font-size:var(--text-label);
+  color:var(--text-faint);
 }
 .nav__item{
   display:block;width:100%;text-align:left;

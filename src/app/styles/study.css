@@ -40,7 +40,7 @@
 /* ---------- variations ---------- */
 .variations{display:flex;flex-wrap:wrap;gap:var(--space-2)}
 .variation{
-  flex:none;scroll-snap-align:start;
+  flex:none;
   padding:7px var(--space-3);border:1px solid var(--border);border-radius:var(--radius-pill);
   font-size:var(--text-ui);color:var(--text-soft);background:var(--layer-2);
   white-space:nowrap;transition:color var(--speed) var(--ease),border-color var(--speed) var(--ease);
@@ -63,22 +63,20 @@
   .study__notes{gap:var(--space-3)}
   .feedback-level__what{display:none}
 
-  /* Reading is not watching: the board answers moves, so it has to stay on
-     screen while the note about the move is being read. Portrait only -- a
-     phone on its side has no height to spare for a pinned anything. */
-  /* Four variations wrap to three rows on a phone, and every row is a row the
-     board is pushed down by. They ride sideways instead. */
-  .variations{
-    flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:2px;
-    margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter);
-  }
-  .variation{scroll-snap-align:start}
+  /* Every wrapped row is a row the board is pushed down by, but riding sideways
+     cost the reader the variations that were off the right edge -- and a strip
+     bled to both gutters is indistinguishable from the page sliding. They wrap,
+     set small enough that four of them take two rows rather than three. */
+  .variation{padding:5px var(--space-3);font-size:var(--text-sm)}
 
   /* The arrow key is worth its height on a wide screen and not on a phone,
      where the primer covers the same ground and the board needs the pixels. */
   .legend{display:none}
 }
 
+/* Reading is not watching: the board answers moves, so it has to stay on screen
+   while the note about the move is being read. Portrait only -- a phone on its
+   side has no height to spare for a pinned anything. */
 @media (max-width:900px) and (min-height:560px){
   .study__board{
     position:sticky;top:var(--appbar-h);z-index:var(--z-sticky);

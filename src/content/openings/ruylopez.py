@@ -2,7 +2,7 @@ OPENING = {
     "id": "ruylopez",
     "name": "Ruy Lopez (Spanish Game)",
     "eco": "C60–C99",
-    "section": "white-e4",
+    "section": "open",
     "orientation": "white",
     "tagline": "The most respected opening in chess. Slow pressure that never goes away.",
     "level": "Intermediate → World Championship",

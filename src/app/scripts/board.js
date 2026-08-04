@@ -62,12 +62,13 @@ function boardColumnHTML(opts){
       </div>
 
       <div class="board-tools">
-        <button class="btn btn--grow${state.autoplay?" on":""}" id="b-play" ${opts.canPlay?"":"disabled"}>
+        <button class="btn${state.autoplay?" on":""}" id="b-play" ${opts.canPlay?"":"disabled"}>
           <span class="glyph" aria-hidden="true">${state.autoplay?"■":"▶"}</span>${state.autoplay?"Stop":"Play"}</button>
-        <button class="btn btn--grow" id="b-flip"
-          aria-label="Flip the board to put ${state.flipped?"White":"Black"} at the bottom">
-          <span class="glyph" aria-hidden="true">⇅</span>${state.flipped?"White":"Black"} at the bottom</button>
-        <button class="btn btn--grow${state.arrows&&opts.arrows?" on":""}" id="b-arrows"
+        <button class="btn" id="b-flip"
+          aria-label="Flip the board to put ${state.flipped?"White":"Black"} at the bottom"
+          title="Flip the board to put ${state.flipped?"White":"Black"} at the bottom">
+          <span class="glyph" aria-hidden="true">⇅</span>Flip</button>
+        <button class="btn${state.arrows&&opts.arrows?" on":""}" id="b-arrows"
           aria-pressed="${!!(state.arrows&&opts.arrows)}"
           ${opts.arrows&&!drillHidesArrows()?"":"disabled"}
           title="${opts.arrows?"What the move attacks, defends and controls, drawn on the board"

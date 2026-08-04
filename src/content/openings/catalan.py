@@ -2,7 +2,7 @@ OPENING = {
     "id": "catalan",
     "name": "Catalan Opening",
     "eco": "E00–E09",
-    "section": "white-d4",
+    "section": "indian",
     "orientation": "white",
     "tagline": "d4 and c4 plus a fianchettoed bishop. Positional pressure that lasts into the endgame.",
     "level": "Advanced → World Championship",

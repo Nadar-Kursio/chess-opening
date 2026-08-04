@@ -2,7 +2,7 @@ OPENING = {
     "id": "italian",
     "name": "Italian Game",
     "eco": "C50–C59",
-    "section": "white-e4",
+    "section": "open",
     "orientation": "white",
     "tagline": "Bishop to c4, eyes on f7. The oldest opening still played at the top level.",
     "level": "Beginner → Master",

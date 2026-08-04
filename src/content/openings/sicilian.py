@@ -2,7 +2,7 @@ OPENING = {
     "id": "sicilian",
     "name": "Sicilian Defence",
     "eco": "B20–B99",
-    "section": "black-e4",
+    "section": "semi-open",
     "orientation": "black",
     "tagline": "The most popular and most successful answer to 1.e4. Black plays to win, not to equalise.",
     "level": "Intermediate → World Championship",

@@ -37,9 +37,10 @@
 .hero__lede{max-width:62ch;color:var(--text-soft);margin:0;font-size:var(--text-lg)}
 
 /* ---------- in-page anchors ---------- */
+/* Three or four of these, so they wrap rather than scroll -- an anchor off the
+   right edge is an anchor nobody follows. */
 .sections{
-  display:flex;gap:var(--space-2);margin:0 0 var(--space-5);
-  overflow-x:auto;padding-bottom:2px;
+  display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5);
 }
 .sections a{
   font-size:var(--text-ui);color:var(--text-faint);text-decoration:none;
@@ -76,16 +77,8 @@
 .card--warn li::before{background:var(--danger)}
 .card li:last-child{margin-bottom:0}
 
-/* A count of what the current Depth is holding back. Always says how to see it. */
-.hidden-note{
-  font-size:var(--text-ui);color:var(--text-faint);
-  border-left:2px solid var(--border-strong);
-  padding:2px 0 2px var(--space-3);margin:var(--space-4) 0 0;
-}
-.hidden-note b{color:var(--text-soft)}
-
 @media (max-width:900px){
   .page-head{margin-bottom:var(--space-4)}
   .hero{margin-bottom:var(--space-5)}
-  .sections{margin-bottom:var(--space-4);margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+  .sections{margin-bottom:var(--space-4)}
 }

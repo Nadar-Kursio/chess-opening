@@ -2,7 +2,7 @@ OPENING = {
     "id": "scotch",
     "name": "Scotch Game",
     "eco": "C44–C45",
-    "section": "white-e4",
+    "section": "open",
     "orientation": "white",
     "tagline": "Open the centre on move three. Far less theory than the Ruy, and it fights for an advantage immediately.",
     "level": "Beginner → Master",

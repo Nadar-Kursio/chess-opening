@@ -11,8 +11,7 @@
 function structureHTML(st){
   if(!st) return primerHTML();
   return pageHeadHTML(
-      ["Pawn structures", st.taxonomy ? "In the literature" : "Structure",
-       st.tier ? `<span class="mono">${st.tier}</span>` : ""],
+      ["Pawn structures", st.taxonomy ? "In the literature" : "Structure"],
       st.name, st.taxonomy || "") + `
 
   <div class="structure">
@@ -76,7 +75,7 @@ function gameHTML(g){
   }).join("");
 
   return pageHeadHTML(
-      ["Model game", op ? op.name : "", g.tier ? `<span class="mono">${g.tier}</span>` : ""],
+      ["Model game", op ? op.name : ""],
       g.name, "") + `
 
   <section class="study">

@@ -1,15 +1,19 @@
 /* Reset, document defaults, and the text primitives every view reuses. */
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+/* The drawer sits off-canvas to the left. clip, not hidden: hidden makes this a
+   scroll container, and a sticky board inside one has nothing to stick to --
+   which is the whole mobile layout. On both elements and not on body alone,
+   because body's overflow only reaches the viewport by propagation and that
+   propagation is not something every engine does for clip. */
+html,body{margin:0;padding:0;overflow-x:clip}
 html{-webkit-text-size-adjust:100%}
 body{
   background:var(--bg); color:var(--text); font-family:var(--font-body);
   font-size:var(--text-body); line-height:1.6; -webkit-font-smoothing:antialiased;
-  /* The drawer sits off-canvas to the left. clip, not hidden: hidden makes the
-     body a scroll container, and a sticky board inside one has nothing to stick
-     to -- which is the whole mobile layout. */
-  overflow-x:clip;
+  /* A long unbroken token -- a URL, a chain of SAN with no spaces -- must wrap
+     rather than set the width of the page it is in. */
+  overflow-wrap:break-word;
 }
 a{color:inherit}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
