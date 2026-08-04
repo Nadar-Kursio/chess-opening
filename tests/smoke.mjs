@@ -76,6 +76,9 @@ step("shell", () => {
   want("openings are grouped by family", $("#nav .nav__moves"));
   want("live region", $("#announce"));
   want("theme toggle", $("#themetoggle"));
+  // A phone hides .pill__word, so whatever is left has to still say something.
+  want("the progress chip survives losing its word", $("#progresschip .glyph"));
+  want("the theme toggle survives losing its word", $("#themetoggle .glyph"));
   want("hero on the front page", $(".hero__title"));
   checkLeaks("primer");
 });
