@@ -2,7 +2,7 @@ OPENING = {
     "id": "french",
     "name": "French Defence",
     "eco": "C00–C19",
-    "section": "black-e4",
+    "section": "semi-open",
     "orientation": "black",
     "tagline": "A pawn chain, a bad bishop, and a devastating counterattack. Black chooses structure over freedom.",
     "level": "Beginner → Grandmaster",

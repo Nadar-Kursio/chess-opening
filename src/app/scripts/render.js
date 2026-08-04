@@ -36,7 +36,8 @@ function openingHTML(){
   const line = op.lines[state.line];
   const sec = SECTIONS.find(s=>s.id===op.section);
   return pageHeadHTML(
-      [sec.group, sec.label, `<span class="mono">${op.eco}</span>`, `<span class="mono">${op.level}</span>`],
+      [sec.group, `<span class="mono">${sec.label}</span>`, `<span class="mono">${op.eco}</span>`,
+       `You play ${op.orientation === "black" ? "Black" : "White"}`],
       op.name, op.tagline)
     + sectionNavHTML(op)
     + studyHTML(op, line, currentPly())
@@ -123,7 +124,7 @@ function studyHTML(op, line, p){
       canPlay:state.mode!=="drill" && !inDeviation,
       readout: inDeviation
         ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
-        : `Move <b>${state.ply}</b> of ${line.plies.length-1}`,
+        : `Move <b>${state.ply}</b> of ${line.plies.length-1} &middot; ${state.flipped?"Black":"White"} up`,
       hint: state.mode==="drill"
         ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
         : "Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step."
@@ -178,14 +179,15 @@ function strategyHTML(op){
 
 function pathHTML(op){
   const pr = op.progression;
-  const shown = pr.stages.filter(st=>tierVisible(st.tier));
-  const hidden = pr.stages.length - shown.length;
   return `
   <section class="path" id="path-${op.id}">
-    <p class="label label--accent">Your learning path &mdash; ${op.name}</p>
+    <div class="path__head">
+      <p class="label label--accent">Your learning path &mdash; ${op.name}</p>
+      <span class="pill">${op.level}</span>
+    </div>
     <p class="path__arc">${pr.arc}</p>
     <ol class="stages">
-      ${shown.map(st=>`
+      ${pr.stages.map(st=>`
         <li>
           <div class="stage__top"><span class="stage__name">${st.tier}</span>
             <span class="label">${st.when}</span></div>
@@ -196,8 +198,6 @@ function pathHTML(op){
           <div class="stage__fact stage__fact--ok"><span class="label">Move on when</span><span>${st.ready}</span></div>
         </li>`).join("")}
     </ol>
-    ${hidden?`<p class="hidden-note">${hidden} later stage${hidden===1?"":"s"} hidden &mdash;
-      raise <b>How deep to go</b> above ${state.tier} to see ${hidden===1?"it":"them"}.</p>`:""}
     <div class="path__foot">
       <div class="card"><p class="card__head label label--accent">Whose games to study</p><p>${pr.study}</p></div>
       <div class="card"><p class="card__head label label--accent">What to learn after this</p><p>${pr.next}</p></div>
@@ -229,10 +229,7 @@ function bindView(el){
 /* Keep the current move visible inside the scoresheet, and nowhere else.
    scrollIntoView cannot do this: it scrolls every scrollable ancestor up to and
    including the document, which on a phone -- where the scoresheet sits under a
-   pinned board -- drags the board off the screen on every move.
-
-   Both axes, because the sheet wraps into rows on a wide screen and scrolls
-   sideways as one ribbon on a narrow one. */
+   pinned board -- drags the board off the screen on every move. */
 function scrollScoresheetToCurrent(){
   const sheet = document.getElementById("tape");
   const current = sheet && sheet.querySelector(".move.current");
@@ -240,9 +237,6 @@ function scrollScoresheetToCurrent(){
   const box = sheet.getBoundingClientRect(), move = current.getBoundingClientRect();
   if(move.top < box.top)            sheet.scrollTop -= (box.top - move.top);
   else if(move.bottom > box.bottom) sheet.scrollTop += (move.bottom - box.bottom);
-  if(sheet.scrollWidth > sheet.clientWidth){
-    sheet.scrollLeft += (move.left + move.width/2) - (box.left + box.width/2);
-  }
 }
 
 function afterRender(){

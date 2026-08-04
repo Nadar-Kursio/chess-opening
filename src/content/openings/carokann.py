@@ -2,7 +2,7 @@ OPENING = {
     "id": "carokann",
     "name": "Caro-Kann Defence",
     "eco": "B10–B19",
-    "section": "black-e4",
+    "section": "semi-open",
     "orientation": "black",
     "tagline": "Everything the French does, but without the bad bishop. The most structurally sound reply to 1.e4.",
     "level": "Beginner → World Championship",

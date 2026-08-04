@@ -1,10 +1,10 @@
 /* The scoresheet: the line written out, and clickable.
 
    Laid out the way a scoresheet is -- move number in a lighter gutter, the pair
-   of plies beside it -- because that is the notation a player already reads. On
-   a phone it becomes one horizontally scrolling ribbon rather than a six-row
-   block: the moves are a place marker, and the board is what deserves the
-   height. */
+   of plies beside it -- because that is the notation a player already reads. It
+   wraps and scrolls down, never sideways: the moves are a place marker and the
+   board deserves the height, but a ribbon running off the right edge hides the
+   moves that ran off it and reads as the page itself coming loose. */
 
 .scoresheet{
   display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start;
@@ -39,11 +39,9 @@
   padding:var(--space-3) 0 0;max-height:none;overflow:visible;
 }
 
+/* Shorter on a phone, where the height belongs to the board. Three rows or so,
+   and the current move is kept in view by scrollScoresheetToCurrent. */
 @media (max-width:900px){
-  .scoresheet{
-    flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;
-    scroll-snap-type:x proximity;
-  }
-  .move,.move--masked{scroll-snap-align:center}
-  .scoresheet--inline{flex-wrap:wrap;overflow:visible}
+  .scoresheet{max-height:112px}
+  .scoresheet--inline{max-height:none}
 }

@@ -2,11 +2,11 @@
    opening. */
 
 .structure{display:grid;gap:var(--space-5)}
-.structure__diagram{max-width:340px}
+.structure__diagram{max-width:min(340px,100%)}
 .structure__caption{font-size:var(--text-sm);color:var(--text-faint);margin:var(--space-2) 0 0}
 .structure__cards{
   display:grid;gap:var(--space-3);
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:start;
+  grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));align-items:start;
 }
 .structure__cards .card--wide{grid-column:1/-1}
 .structure__sources{border-top:1px solid var(--border);padding-top:var(--space-4)}

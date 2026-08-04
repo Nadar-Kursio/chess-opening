@@ -2,7 +2,7 @@ OPENING = {
     "id": "nimzo",
     "name": "Nimzo-Indian Defence",
     "eco": "E20–E59",
-    "section": "black-d4",
+    "section": "indian",
     "orientation": "black",
     "tagline": "Pin the knight, trade it off, and play against the doubled pawns. The most respected defence to 1.d4.",
     "level": "Intermediate → World Championship",

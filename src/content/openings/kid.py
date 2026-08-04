@@ -2,7 +2,7 @@ OPENING = {
     "id": "kid",
     "name": "King's Indian Defence",
     "eco": "E60–E99",
-    "section": "black-d4",
+    "section": "indian",
     "orientation": "black",
     "tagline": "Give White the whole centre, then blow up the kingside. The most aggressive answer to 1.d4.",
     "level": "Intermediate → World Championship",

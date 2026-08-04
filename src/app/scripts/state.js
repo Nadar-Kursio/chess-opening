@@ -8,17 +8,12 @@ const GAMES = __GAMES__;
 const PIECE_GLYPH = {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
 const FILES = "abcdefgh";
 
-/* The same four words the learning path already uses, in the order they build on
-   each other. Content carries one; the picker shows everything up to it. */
-const TIERS = ["Foundation", "Structure", "Plans", "Mastery"];
-
 const state = {
   view:"primer",   // "primer" | "op" | "progress" | "structure" | "game"
   opId:null, line:0, ply:0,
   flipped:false,
   autoplay:null,   // setInterval handle while a line is playing itself
   arrows:true,
-  tier:"Mastery",
 
   mode:"read",     // "read" | "drill"
   selected:null,   // square the learner has picked up, e.g. "f1"

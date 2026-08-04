@@ -2,7 +2,7 @@ OPENING = {
     "id": "fourknights",
     "name": "Four Knights Game",
     "eco": "C46–C49",
-    "section": "white-e4",
+    "section": "open",
     "orientation": "white",
     "tagline": "Both knights out before anything else. The most natural, most symmetrical open game there is.",
     "level": "Beginner → Grandmaster",

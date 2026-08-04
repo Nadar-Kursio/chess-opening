@@ -37,8 +37,7 @@ function devAt(ply){
   const here = line && line.plies[ply];
   if(!here || here.bx === undefined) return [];
   const next = line.plies[ply + 1];
-  return op.branchsets[here.bx].filter(b=>
-    (!next || b.san !== next.san) && tierVisible(b.tier));
+  return op.branchsets[here.bx].filter(b=>!next || b.san !== next.san);
 }
 
 function devPlies(){

@@ -2,7 +2,7 @@ OPENING = {
     "id": "slav",
     "name": "Slav Defence",
     "eco": "D10–D19",
-    "section": "black-d4",
+    "section": "closed",
     "orientation": "black",
     "tagline": "Support d5 with the c-pawn and keep the good bishop. The Caro-Kann of 1.d4.",
     "level": "Beginner → World Championship",

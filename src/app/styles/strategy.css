@@ -1,6 +1,8 @@
 /* The ideas behind the opening, and the plan card that ends a line. */
 
-.strategy{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4)}
+/* min() on the track minimum, not a bare 280px: a bare one stays 280px wide on
+   a 300px screen and takes the page sideways with it. */
+.strategy{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:var(--space-4)}
 .strategy__who{
   grid-column:1/-1;
   background:linear-gradient(90deg,var(--accent-wash),transparent 70%);

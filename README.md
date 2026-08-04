@@ -54,7 +54,7 @@ src/
     intel.py                     per-move arrows + "what it does" text
   content/
     common.py                    shared annotations, keyed by "ply:SAN"
-    sections.py                  the sidebar's sections and their order
+    sections.py                  the four opening families, and their order
     structures.py                pawn structures, shared between openings
     openings/
       __init__.py                ORDER: which openings exist, and in what order
@@ -197,8 +197,12 @@ from the `src/` in that commit — there is no way to push a stale page. Locally
    example — and edit it. One module holds everything about one opening: its
    `lines`, its `deep` dive, and its `progression`.
 2. Add its name to `ORDER` in `src/content/openings/__init__.py`. That list is
-   the catalogue *and* the sidebar order; it is editorial, not alphabetical.
-3. Run `python3 src/build.py`.
+   the catalogue *and* the nav order; it is editorial, not alphabetical, and it
+   runs family by family in the order `sections.py` lists them.
+3. Set its `"section"` to one of the four family ids in `src/content/sections.py`
+   — `open`, `semi-open`, `closed`, `indian`. That is the grouping the nav and
+   every page head use, and it is the one the literature and the ECO volumes use.
+4. Run `python3 src/build.py`.
 
 Nothing else needs to change — the build has no per-opening knowledge. To add a
 variation to an existing opening, add an entry to its `lines` list: `name`,
@@ -218,7 +222,7 @@ because it is what let the course grow one opening at a time without a flag day.
 
 | Key | Where | What it does |
 | --- | --- | --- |
-| `tier` | line, branch, structure, game | Hides it below that setting in the **Show** bar. Absent = always visible. |
+| `tier` | line, branch, structure, game | A difficulty band. Authored throughout and validated by the build, but nothing in the UI reads it — the picker that filtered on it was removed for being unexplainable. Kept because re-deriving the bands by hand would be the expensive half of bringing a difficulty feature back. |
 | `drill` | line | Ships a legal-move list per position, so the drill can tell *illegal* from merely *not this line*. |
 | `plan` | line | The end-of-line card: `point`, optional `structure` id, `next`, `endgame`. |
 | `record` | line | The win bar: `at` (the ply the games were counted from), `games`, and `white` / `draw` / `black` percentages that must add up to 100. Counted with the research skill's `explorer.py`; the build rejects a record whose shares do not total 100 or whose `at` is past the end of the line. |
