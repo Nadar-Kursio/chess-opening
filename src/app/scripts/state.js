@@ -13,7 +13,9 @@ const state = {
   opId:null, line:0, ply:0,
   flipped:false,
   autoplay:null,   // setInterval handle while a line is playing itself
-  arrows:true,
+  arrows:true,     // the engine's arrows for the move just played
+  mine:true,       // the marks written beside your own notes -- a separate
+                   // switch, so you can look at your idea without the other five
 
   mode:"read",     // "read" | "drill"
   selected:null,   // square the learner has picked up, e.g. "f1"

@@ -110,6 +110,30 @@ function coachNoteHTML(p){
       </article>`;
 }
 
+/* Your own note on this position, under whatever the course had to say about
+   it. Its own card, deliberately: the coach card is engine-checked and this is
+   what you remembered, and six months from now the difference is the only thing
+   that tells you which of the two to trust.
+
+   One switch covers the card and the marks it describes, because they are one
+   note: turning it off leaves the course exactly as it was before you wrote
+   anything. In drill they come back together, once the answer is out. */
+function myNoteHTML(p){
+  const mine = p && p.mine;
+  if(!mine || !state.mine || drillHidesArrows()) return "";
+  // The glyphs mirror what is drawn: a line to a square, or a ring round one.
+  const marks = (mine.arrows||[]).map(a=>`${a.f}&rarr;${a.t}`)
+    .concat((mine.spots||[]).map(s=>`&#9675;${s}`));
+  return `
+      <article class="mynote">
+        <header class="mynote__head">
+          <span class="label">My note</span>
+          ${marks.length?`<span class="mynote__marks">${marks.join(" ")}</span>`:""}
+        </header>
+        ${mine.text?`<p class="mynote__body">${squaresHTML(mine.text)}</p>`:""}
+      </article>`;
+}
+
 function studyHTML(op, line, p){
   const inDeviation = !!state.deviation;
   const plies = currentPlies(), idx = currentIndex();
@@ -121,6 +145,7 @@ function studyHTML(op, line, p){
 
     ${boardColumnHTML({
       ply:p, index:idx, total:plies.length-1, locked, arrows:true,
+      notes:plies.some(q=>q.mine),
       canPlay:state.mode!=="drill" && !inDeviation,
       readout: inDeviation
         ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
@@ -144,6 +169,7 @@ function studyHTML(op, line, p){
         : `${state.drill.verdict && state.drill.verdictPly === state.ply
               ? `<p class="verdict verdict--framed" data-tone="${state.drill.tone||"flat"}">${state.drill.verdict}</p>` : ""}
            ${coachNoteHTML(p)}`}
+      ${myNoteHTML(p)}
       ${planHTML(op, line)}
     </div>
   </section>`;
@@ -214,6 +240,7 @@ function bindView(el){
   document.getElementById("b-last").onclick  = ()=>{stopAutoplay();jump(currentPlies().length-1)};
   document.getElementById("b-flip").onclick  = ()=>{state.flipped=!state.flipped;render()};
   document.getElementById("b-arrows").onclick = ()=>{state.arrows=!state.arrows;render()};
+  document.getElementById("b-mine").onclick  = ()=>{state.mine=!state.mine;render()};
   document.getElementById("b-play").onclick  = toggleAutoplay;
   el.querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>{
     stopAutoplay(); state.deviation=null; state.picking=false;

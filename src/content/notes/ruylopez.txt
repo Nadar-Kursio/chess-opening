@@ -1,0 +1,42 @@
+# My notes on the Ruy Lopez.
+#
+# A block opens with a title line ending in ':'. A note goes in (round brackets)
+# and board marks in [square brackets]; both attach to the move they follow.
+# Marks are e2-e4 for an arrow and !e4 for a circled square.
+#
+# Notes attach by POSITION, not by move number, so the move order here only has
+# to reach the same positions the course does. The build says so on every
+# rebuild when one lands nowhere.
+
+Open Spanish — the Dilworth:
+   1. e4 e5
+   2. Nf3 Nc6
+   3. Bb5 a6
+   4. Ba4 Nf6
+   5. O-O Nxe4 (The Open Spanish. Black just takes the pawn, and the knight
+                that lands on e4 is the piece this whole variation argues
+                about.) [!e4]
+   6. d4 (Attacks the centre.) [d4-e5, d4-c5]
+      b5 (Kicks the bishop.) [b5-a4]
+   7. Bb3 d5 (Fights for the centre — and it is the move that props the knight
+              on e4 up with a pawn instead of a piece.) [d5-e4]
+   8. dxe5 (We cannot be stopped from taking: two attackers on e5, the d4-pawn
+            and the knight on f3, against one defender on c6.) [!e5, f3-e5]
+      Be6
+   9. c3 Bc5
+  10. Nbd2 (Now we attack the knight in the centre. Not yet a threat — the pawn
+            on d5 is holding it — but everything we own is pointing at it now.)
+            [d2-e4]
+      O-O
+  11. Bc2 Nxf2 (The Dilworth. Black hands over the knight to drag our rook onto
+                f2, and it is the most-played move here rather than a trap.)
+                [f1-f2]
+  12. Rxf2 f6 (Hitting the wedge on e5 before we get to settle.) [f6-e5]
+  13. exf6 Bxf2+
+  14. Kxf2 (Here is the trade in full: we give up the rook and the f2-pawn and
+            get the knight and the bishop. Dead level on points, and we keep
+            the bishop pair — what we are really paying is that the king is
+            standing on f2 with the board open.) [!f2]
+      Qxf6
+  15. Nf1 (The move to know before allowing any of this: the knight comes back
+           to defend and the king walks to g1 behind it.) [f1-g3, !g1]

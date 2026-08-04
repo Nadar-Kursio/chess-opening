@@ -35,6 +35,10 @@ is installed — `npm install jsdom` once, and `node_modules/` is gitignored.
 - Every claim about a position comes from the engine, never from memory —
   severities from `.engine/stockfish`, game scores and win bars (`record`) from
   pgnmentor. The `opening-research` skill has the procedure.
+- `src/content/notes/` is the one exception, and it is deliberate: those are the
+  author's own notes, unverified by design, which is why they render in their own
+  card in their own colour. Do not fold them into the coached commentary, and do
+  not present them as checked.
 - Browser-layer tests use jsdom, not Playwright.
 - Changes under `.github/workflows/` can read repository secrets. Review them as
   security changes, not as config.

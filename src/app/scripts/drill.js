@@ -492,16 +492,9 @@ function drillClearVerdict(){
 function drillDrawRejected(ctx, square){
   const rejected = state.drill.rejected;
   if(!rejected || !drillOn()) return;
-  const a = squareGrid(rejected.from, state.flipped), b = squareGrid(rejected.to, state.flipped);
   const colour = rejected.kind === "illegal"
     ? "rgba(204,106,98,0.85)" : "rgba(221,169,74,0.85)";
-  const dcol = Math.abs(a.col-b.col), drow = Math.abs(a.row-b.row);
-  if((dcol===1 && drow===2) || (dcol===2 && drow===1)){
-    drawBentArrow(ctx, a, b, colour, square*0.11, square);
-  } else {
-    const p1 = gridCenter(a, square), p2 = gridCenter(b, square);
-    drawArrow(ctx, p1.x, p1.y, p2.x, p2.y, colour, square*0.11, square);
-  }
+  drawArrowBetween(ctx, rejected.from, rejected.to, colour, square*0.11, square);
 }
 
 /* Whose move it is in the position on screen -- which in drill is always the

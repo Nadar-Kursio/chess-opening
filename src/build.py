@@ -42,9 +42,11 @@ from content.sections import SECTIONS
 from content.structures import STRUCTURES
 from engine.board import board_array
 from engine.intel import move_data
+from engine.notes import parse_notes
 
 SRC = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(SRC, "app")
+NOTES = os.path.join(SRC, "content", "notes")
 DOCS = os.path.join(os.path.dirname(SRC), "docs")
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
@@ -53,7 +55,7 @@ DOCS = os.path.join(os.path.dirname(SRC), "docs")
 # theme.js has to set the theme before the first paint, not after it.
 HEAD_SCRIPTS = ["shim", "theme"]
 STYLES = ["tokens", "base", "controls", "shell", "page", "board", "notation",
-          "record", "coach", "deviation", "study", "strategy", "path",
+          "record", "coach", "notes", "deviation", "study", "strategy", "path",
           "structures", "primer", "progress", "responsive"]
 SCRIPTS = ["state", "store", "appbar", "nav", "board", "arrows", "move",
            "drill", "deviation", "plan", "structure", "render", "primer",
@@ -135,8 +137,9 @@ class BranchIndex:
     lines pass through still ships its deviations one time.
     """
 
-    def __init__(self, op, errors):
+    def __init__(self, op, errors, notes):
         self.errors = errors
+        self.notes = notes
         self.sets = []          # what gets emitted
         self.authored = {}      # epd -> raw entries
         self.built = {}         # epd -> index into self.sets
@@ -164,7 +167,8 @@ class BranchIndex:
         if epd not in self.built:
             self.built[epd] = len(self.sets)
             self.sets.append(build_branches(f"{where} / ply {ply}", board,
-                                            self.authored[epd], ply, self.errors))
+                                            self.authored[epd], ply, self.errors,
+                                            self.notes))
         return self.built[epd]
 
     def unused(self, op_id):
@@ -190,7 +194,7 @@ class BranchIndex:
         return out
 
 
-def build_branches(where, board, entries, ply, errors):
+def build_branches(where, board, entries, ply, errors, notes):
     """Validate and build the deviations attached to one position.
 
     `board` is the position the branches answer, so every branch is parsed
@@ -243,6 +247,7 @@ def build_branches(where, board, entries, ply, errors):
                 "turn": mover, "check": work.is_check(),
                 "arrows": arrows, "tactics": tactics,
             })
+            notes.attach(work, plies[-1])
             num += 1
 
         record = {"san": san, "sev": br["severity"], "why": br["why"], "plies": plies}
@@ -251,6 +256,87 @@ def build_branches(where, board, entries, ply, errors):
                 record[key] = br[key]
         out.append(record)
     return out
+
+
+class NoteIndex:
+    """One opening's personal notes, resolved from moves to positions.
+
+    Same trick as BranchIndex and for the same reason: a note is authored after
+    the move it is about, and stored against the position that move reaches. So
+    a note written once in whatever move order the author happens to use shows
+    up in every line, deep dive and deviation of that opening that arrives
+    there -- and the transposition that would break a ply-keyed note is simply
+    not a case this has to handle.
+
+    The price is that a note can attach to nothing at all, when the author's
+    move order reaches a position no line does. That is a warning rather than an
+    error: the notes file is prose, and stopping the whole build over one
+    sentence with nowhere to go would hide the twenty that landed.
+
+    Prose here is escaped, unlike the authored content in content/ -- this file
+    is typed casually and a stray '<' should not be the author's problem.
+    """
+
+    def __init__(self, op_id, errors):
+        self.notes = {}         # epd -> what the ply record carries
+        self.origin = {}        # epd -> where it was written, for the report
+        self.used = set()
+        try:
+            with open(os.path.join(NOTES, f"{op_id}.txt"), encoding="utf-8") as f:
+                text = f.read()
+        except FileNotFoundError:
+            return              # an opening nobody has taken notes on yet
+
+        where = f"notes/{op_id}.txt"
+        blocks, problems = parse_notes(text, where)
+        errors.extend(problems)
+
+        for block in blocks:
+            board = chess.Board()
+            for item in block["items"]:
+                at = f"{where} line {item['at']} '{item['san']}'"
+                try:
+                    move = board.parse_san(item["san"])
+                except Exception as e:
+                    # Every note after this one would be a move out of step, so
+                    # the block stops here rather than reporting all of them.
+                    errors.append(f"{at}: {e}")
+                    break
+                claim = san_overclaim(board, move, item["san"])
+                if claim:
+                    errors.append(f"{at}: {claim}")
+                board.push(move)
+                note = self.record(item)
+                if note is None:
+                    continue
+                epd = board.epd()
+                if epd in self.notes:
+                    errors.append(f"{at}: a note is already attached to this position")
+                    continue
+                self.notes[epd] = note
+                self.origin[epd] = f"'{block['title']}' / {item['san']} (line {item['at']})"
+
+    @staticmethod
+    def record(item):
+        note = {}
+        if item.get("text"):
+            note["text"] = escape(item["text"])
+        for key in ("arrows", "spots"):
+            if item.get(key):
+                note[key] = item[key]
+        return note or None
+
+    def attach(self, board, ply):
+        """Hang the note for this position, if there is one, off the ply record."""
+        note = self.notes.get(board.epd())
+        if note is not None:
+            self.used.add(board.epd())
+            ply["mine"] = note
+
+    def unplaced(self, op_id):
+        return [f"{op_id}: note on {self.origin[epd]} attaches to no position "
+                f"this opening reaches"
+                for epd in self.notes if epd not in self.used]
 
 
 def with_deep_line(op):
@@ -299,7 +385,7 @@ def packed_legal(board):
     return "".join(seen)
 
 
-def build_line(op_id, index, line, errors, side=None, branches=None):
+def build_line(op_id, index, line, errors, side=None, branches=None, notes=None):
     """Replay one line, returning its ply-by-ply record.
 
     When the line opts in with "drill": True, every position carries `legal` --
@@ -354,6 +440,8 @@ def build_line(op_id, index, line, errors, side=None, branches=None):
             "check": board.is_check(),
             "arrows": arrows, "tactics": tactics,
         })
+        if notes is not None:
+            notes.attach(board, plies[-1])
 
     if line.get("record"):
         errors.extend(record_errors(f"{op_id} / line {index} '{line['name']}'",
@@ -372,17 +460,24 @@ def build_openings(games):
     errors = []
     warnings = []
     out = []
+    written = placed = 0
     for op in load():
         side = chess.WHITE if op["orientation"] == "white" else chess.BLACK
-        branches = BranchIndex(op, errors)
+        notes = NoteIndex(op["id"], errors)
+        branches = BranchIndex(op, errors, notes)
         lines = with_deep_line(op)
         record = {k: v for k, v in op.items() if k not in ("deep", "branches", "games")}
-        record["lines"] = [build_line(op["id"], i, line, errors, side, branches)
+        record["lines"] = [build_line(op["id"], i, line, errors, side, branches, notes)
                            for i, line in enumerate(lines)]
         if branches.sets:
             record["branchsets"] = branches.sets
         errors.extend(branches.unused(op["id"]))
         warnings.extend(branches.dead(op["id"]))
+        # After the lines, because a deviation's positions are only built when a
+        # line reaches the position the set hangs off.
+        warnings.extend(notes.unplaced(op["id"]))
+        written += len(notes.notes)
+        placed += len(notes.used)
         games.extend(build_game(op["id"], i, g, errors)
                      for i, g in enumerate(op.get("games") or []))
         out.append(record)
@@ -409,6 +504,8 @@ def build_openings(games):
                     missing += 1
                     print("  no note:", op["id"], "|", line["name"], "|", p["num"])
     print(f"{total} moves, {missing} without commentary")
+    if written:
+        print(f"{placed} of {written} personal notes attached to a position")
     return out
 
 
