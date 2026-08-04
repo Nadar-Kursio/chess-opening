@@ -4,14 +4,17 @@ const ARROW_COLORS = {
   def:  "rgba(78,138,214,0.80)",
   move: "rgba(124,163,90,0.72)",
   chk:  "rgba(234,59,51,0.92)",
-  ctrl: "rgba(224,180,74,0.85)"
+  ctrl: "rgba(224,180,74,0.85)",
+  mine: "rgba(168,116,208,0.88)"     // --mine in tokens.css; change both
 };
 const ARROW_ON = { move:true, atk:true, chk:true, def:true, ctrl:true };
 
-// Bold the square coordinates inside the auto-generated tactics sentence.
+// Bold the square coordinates in a sentence about the board.
+function squaresHTML(t){
+  return String(t).replace(/\b([a-h][1-8])\b/g, "<b>$1</b>");
+}
 function tacticsHTML(t){
-  t = t.charAt(0).toUpperCase() + t.slice(1);
-  return t.replace(/\b([a-h][1-8])\b/g, "<b>$1</b>");
+  return squaresHTML(t.charAt(0).toUpperCase() + t.slice(1));
 }
 
 function squareCenter(name, size, flipped){
@@ -39,28 +42,26 @@ function drawArrows(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,size,size);
 
-  // Ahead of both gates below: a refused attempt has to stay visible in the
-  // phase where the book arrows are suppressed, and whether the learner has the
-  // arrow overlay switched on is a separate question from whether they can see
-  // the move they just tried.
+  // Ahead of every gate below: a refused attempt has to stay visible in the
+  // phase where the book arrows are suppressed, and which overlays the learner
+  // has switched on is a separate question from whether they can see the move
+  // they just tried.
   drillDrawRejected(ctx, size/8);
 
-  if(!state.arrows || drillHidesArrows()) return;
+  if(drillHidesArrows()) return;
+  if(state.arrows) drawMoveArrows(ctx, size/8);
+  // Last, so your own mark is never the thing buried under five engine arrows.
+  if(state.mine) drawMyMarks(ctx, size/8);
+}
 
+/* What the move that was just played attacks, defends and controls. */
+function drawMoveArrows(ctx, square){
   const ply = currentPly();
   const arrows = (ply && ply.arrows) || [];
-  const square = size/8;
 
   // draw control rings first (under the lines)
   arrows.filter(a=>a.k==="ctrl" && ARROW_ON.ctrl).forEach(a=>{
-    const c = squareCenter(a.t, square, state.flipped);
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, square*0.34, 0, Math.PI*2);
-    ctx.lineWidth = Math.max(2, square*0.05);
-    ctx.strokeStyle = ARROW_COLORS.ctrl;
-    ctx.setLineDash([square*0.14, square*0.10]);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    drawRing(ctx, a.t, ARROW_COLORS.ctrl, square, [square*0.14, square*0.10]);
   });
 
   // then the arrows, move first (so attack/check sit on top)
@@ -68,18 +69,45 @@ function drawArrows(){
   arrows.filter(a=>a.k!=="ctrl" && ARROW_ON[a.k])
         .sort((a,b)=>(order[a.k]||0)-(order[b.k]||0))
         .forEach(a=>{
-    const color = ARROW_COLORS[a.k]||"#999";
     const width = a.k==="chk" ? square*0.16 : (a.k==="move" ? square*0.10 : square*0.13);
-    const A = squareGrid(a.f, state.flipped), B = squareGrid(a.t, state.flipped);
-    const dcol = Math.abs(A.col-B.col), drow = Math.abs(A.row-B.row);
-    const isKnight = (dcol===1 && drow===2) || (dcol===2 && drow===1);
-    if(isKnight){
-      drawBentArrow(ctx, A, B, color, width, square);   // L-shaped, chess.com style
-    } else {
-      const p1 = gridCenter(A, square), p2 = gridCenter(B, square);
-      drawArrow(ctx, p1.x, p1.y, p2.x, p2.y, color, width, square);
-    }
+    drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS[a.k]||"#999", width, square);
   });
+}
+
+/* What YOU said about the position: the arrows and circled squares written
+   beside a note in src/content/notes/. Nothing engine-derived reaches here --
+   these are drawn exactly as they were authored, which is the point of them. */
+function drawMyMarks(ctx, square){
+  const mine = (currentPly() || {}).mine;
+  if(!mine) return;
+  (mine.spots || []).forEach(sq=>drawRing(ctx, sq, ARROW_COLORS.mine, square));
+  (mine.arrows || []).forEach(a=>{
+    drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square*0.12, square);
+  });
+}
+
+/* One arrow between two named squares, bent into an L when it is shaped like a
+   knight's move. Every arrow the page draws comes through here. */
+function drawArrowBetween(ctx, from, to, color, width, square){
+  const A = squareGrid(from, state.flipped), B = squareGrid(to, state.flipped);
+  const dcol = Math.abs(A.col-B.col), drow = Math.abs(A.row-B.row);
+  if((dcol===1 && drow===2) || (dcol===2 && drow===1)){
+    drawBentArrow(ctx, A, B, color, width, square);   // L-shaped, chess.com style
+  } else {
+    const p1 = gridCenter(A, square), p2 = gridCenter(B, square);
+    drawArrow(ctx, p1.x, p1.y, p2.x, p2.y, color, width, square);
+  }
+}
+
+function drawRing(ctx, sq, color, square, dash){
+  const c = squareCenter(sq, square, state.flipped);
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, square*0.34, 0, Math.PI*2);
+  ctx.lineWidth = Math.max(2, square*0.05);
+  ctx.strokeStyle = color;
+  ctx.setLineDash(dash || []);
+  ctx.stroke();
+  ctx.setLineDash([]);
 }
 
 function arrowHead(ctx, tipx, tipy, ux, uy, head){

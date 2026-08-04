@@ -49,11 +49,13 @@
 
 /* ---------- board tools ---------- */
 /* Secondary: how the board is presented, not where you are in the line. */
-/* Grid, not flex: minmax(0,1fr) is what stops three nowrap labels from summing
+/* Grid, not flex: minmax(0,1fr) is what stops four nowrap labels from summing
    to more than the screen and taking the whole page sideways with them. A flex
-   item's automatic minimum is its content, and content here is text. */
+   item's automatic minimum is its content, and content here is text.
+   auto-fit rather than a fixed four, so the narrowest phones drop a tool onto a
+   second row instead of squeezing every label past legibility. */
 .board-tools{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));
   gap:var(--space-2);margin-top:var(--space-2);
 }
 .board-tools .btn{min-width:0}
@@ -77,3 +79,4 @@
 .legend i.check{border-color:#EA3B33}
 .legend i.defend{border-color:#4E8AD6}
 .legend i.control{width:11px;height:11px;border:2px solid #E0B44A;border-radius:50%}
+.legend i.mine{border-color:#A874D0}

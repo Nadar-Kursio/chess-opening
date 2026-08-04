@@ -1,0 +1,32 @@
+/* Your own note on a position.
+
+   It sits under the coach card and looks nothing like it, on purpose. The coach
+   card carries text that was checked against an engine before it shipped; this
+   carries what you remembered when you wrote it down. Styling them alike would
+   quietly merge the two, and the whole value of writing notes is lost the day
+   you can no longer tell your own guess from a verified claim.
+
+   Hence: no card fill, a rule down the left in a colour nothing else on the page
+   uses, and a label that says whose it is. It reads as an annotation on the
+   course rather than as more of the course. */
+
+.mynote{
+  border-left:3px solid var(--mine);
+  padding:var(--space-2) 0 var(--space-2) var(--space-4);
+}
+
+.mynote__head{
+  display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap;
+  margin-bottom:var(--space-2);
+}
+.mynote__head .label{color:var(--mine-text)}
+
+/* The marks, spelled out. The arrows are on the board, but they are also the
+   half of the note that cannot be read when the overlay is switched off. */
+.mynote__marks{
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-faint);
+  display:flex;gap:var(--space-3);flex-wrap:wrap;
+}
+
+.mynote__body{margin:0;font-size:var(--text-body);line-height:1.65;color:var(--text)}
+.mynote__body b{color:var(--mine-text);font-weight:600;font-family:var(--font-mono)}

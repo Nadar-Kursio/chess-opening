@@ -238,6 +238,37 @@ step("deviations", () => {
   want("Escape returns to the line", !app("state.deviation"));
 });
 
+step("your own notes", () => {
+  // Not every opening has a notes file, so find one that does rather than assume.
+  const found = app(`(function(){
+    for(const o of DATA) for(let i=0;i<o.lines.length;i++){
+      const at = o.lines[i].plies.findIndex(p=>p.mine);
+      if(at > 0) return {op:o.id, line:i, ply:at};
+    }
+    return null;
+  })()`);
+  report.noteAt = found;
+  want("some opening ships personal notes", found);
+  if (!found) return;
+  app("go")(found.op);
+  app("state").line = found.line;
+  app("state").ply = found.ply;
+  app("render")();
+  want("the note card renders", $(".mynote__body"));
+  want("and says whose it is", /my note/i.test($(".mynote .label")?.textContent || ""));
+  want("the legend names your marks", $(".legend i.mine"));
+  // The marks are on a canvas, so the card spelling them out is the only way
+  // they are readable at all without one.
+  want("marks are spelled out, not only drawn",
+       !app("currentPly().mine.arrows") || $(".mynote__marks"));
+  click($("#b-mine"));
+  want("one switch hides the note and its marks",
+       !app("state.mine") && !$(".mynote") && !$(".legend i.mine"));
+  click($("#b-mine"));
+  want("and brings both back", app("state.mine") && $(".mynote"));
+  checkLeaks("my note");
+});
+
 step("structures, games, progress", () => {
   if (app("STRUCTURES.length")) {
     app("go")("structure:" + app("STRUCTURES[0].id"));

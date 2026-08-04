@@ -14,7 +14,9 @@ refutations that were never there. Every line ends with a plan card naming the p
 structure it reached, and structures are shared across openings, so learning the
 isolani once pays out in four of them. A variation can also carry a **win bar** —
 the chess.com-style white/draw/black split of the master games that reached its key
-position, counted from real PGN rather than quoted from anywhere.
+position, counted from real PGN rather than quoted from anywhere. And you can write
+**your own notes** over the top of any of it — text and arrows you drew yourself,
+kept in their own card so they never pass for the engine-checked kind.
 
 ## Quick start
 
@@ -52,6 +54,7 @@ src/
   engine/
     board.py                     board -> 64-char position string
     intel.py                     per-move arrows + "what it does" text
+    notes.py                     the personal-notes format, parsed
   content/
     common.py                    shared annotations, keyed by "ply:SAN"
     sections.py                  the four opening families, and their order
@@ -59,11 +62,13 @@ src/
     openings/
       __init__.py                ORDER: which openings exist, and in what order
       italian.py, ruylopez.py…   one module per opening — 13 of them
+    notes/
+      ruylopez.txt…              your own notes, one file per opening
   app/
     page.html                    document skeleton with the build's placeholders
     primer.html                  the "how openings work" primer, as plain HTML
     index.html                   the redirect stub copied to docs/
-    styles/                      17 stylesheets, concatenated in build.py's order
+    styles/                      18 stylesheets, concatenated in build.py's order
       tokens.css                   the design system: palette, type scale, spacing
       base.css                     reset and the text primitives
       controls.css                 .btn / .pill / .seg -- every control on the page
@@ -242,6 +247,50 @@ another. The line being rendered drops it.
 Structures live in `src/content/structures.py` and belong to no single opening. A
 line points at one from its `plan`; the reverse list — which openings reach a
 structure — is derived by the build and must never be written by hand.
+
+## Your own notes
+
+Everything above is course content, checked against an engine before it ships.
+Your own notes are a separate channel: one plain-text file per opening in
+`src/content/notes/`, named for the opening id, and rendered in its own card
+under the coach card with the marks you drew alongside.
+
+```
+Open Spanish — the Dilworth:
+   6. d4 (Attacks the centre.) [d4-e5, d4-c5]
+      b5 (Kicks the bishop.)   [b5-a4]
+```
+
+A block opens with a title line ending in `:`. After that it is ordinary
+notation: a note in `(round brackets)` and board marks in `[square brackets]`,
+each attaching to the move it follows. `e2-e4` draws an arrow, `!e4` circles a
+square, and a line starting with `#` is a comment — only at the start of a line,
+because mid-line a `#` is checkmate. Layout is free: a move to a line or a whole
+variation on one reads the same, move numbers are ignored wherever they fall,
+and a note may wrap across lines.
+
+**Notes attach by position, not by ply.** The file is replayed on a board and
+each note is stored against the position its move reaches, so one sentence shows
+up in every line, deep dive and deviation of that opening that arrives there —
+and your move order only has to reach the same positions, not match. Writing
+`10.Bc2 O-O 11.Nbd2` where the course plays `10.Nbd2 O-O 11.Bc2` lands your note
+on the course's line without touching either.
+
+The cost of that is a note with nowhere to live, when your move order reaches a
+position no line does. The build **warns** rather than stopping — the file is
+prose, and one homeless sentence must not hide the twenty that landed — and
+prints which note and which line of the file, along with `N of M personal notes
+attached to a position` on every rebuild. An *illegal* move is still a hard
+error: every note after it would be a move out of step.
+
+Unlike the content modules, note prose is HTML-escaped by the build, so a stray
+`<` or `&` is not your problem. The **Notes** button beside Flip and Arrows hides
+the card and its marks together, leaving the course exactly as it was.
+
+Nothing here is verified. That is the reason for the separate card and the
+separate colour: six months from now, the difference between what an engine
+confirmed and what you remembered is the only thing telling you which of the two
+to trust.
 
 **Before writing any of it, read `.claude/skills/opening-research/SKILL.md`.** The
 build proves a move legal; nothing here proves a claim *true*, and "this wins a

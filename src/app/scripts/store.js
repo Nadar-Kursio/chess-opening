@@ -25,7 +25,7 @@ const dbOK = (function(){
 function dbDefaults(){
   return {
     v: DB_VERSION,
-    ui: {arrows:true},
+    ui: {arrows:true, mine:true},
     last: {view:"primer", opId:null, line:0, ply:0},
     streak: {cur:0, best:0, day:""},
     lines: {}
@@ -72,6 +72,7 @@ window.addEventListener("pagehide", dbFlush);
 function dbRemember(){
   db.last = {view:state.view, opId:state.opId, line:state.line, ply:state.ply};
   db.ui.arrows = state.arrows;
+  db.ui.mine = state.mine;
   dbSave();
 }
 
@@ -90,6 +91,7 @@ function dbTheme(name){
 function dbRestore(){
   const ui = db.ui || {};
   if(typeof ui.arrows === "boolean") state.arrows = ui.arrows;
+  if(typeof ui.mine === "boolean") state.mine = ui.mine;
   if(typeof ui.bothSides === "boolean") state.drill.bothSides = ui.bothSides;
 
   const last = db.last || {};

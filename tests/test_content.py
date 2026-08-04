@@ -14,10 +14,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import chess
 
-from build import san_overclaim
+from build import BranchIndex, NoteIndex, build_line, san_overclaim, with_deep_line
 from content.openings import ORDER, load
 from content.sections import SECTIONS
 from content.structures import STRUCTURES
+from engine.notes import parse_notes
 
 OPENING_KEYS = {"id", "name", "eco", "section", "orientation", "tagline",
                 "level", "theory", "lines", "deep", "progression"}
@@ -243,6 +244,97 @@ class TestSanClaims(unittest.TestCase):
     def test_disambiguation_is_not_a_claim(self):
         """Only Ng1 can reach e2, and `Nge2` still names it. Two lines ship this."""
         self.assertIsNone(self.claim("e4 e5", "Nge2"))
+
+
+class TestNotesFile(unittest.TestCase):
+    """The personal-notes format.
+
+    Prose typed by hand into a free-form file, so the parser is the only thing
+    between a slip of the keyboard and a note that silently attaches to the
+    wrong move -- or to no move, having swallowed the rest of the block.
+    """
+
+    def parse(self, text):
+        return parse_notes(text, "notes/test.txt")
+
+    def test_a_note_attaches_to_the_move_it_follows(self):
+        blocks, errors = self.parse("Test:\n 1. e4 (opens lines) e5\n")
+        self.assertEqual(errors, [])
+        items = blocks[0]["items"]
+        self.assertEqual([i["san"] for i in items], ["e4", "e5"])
+        self.assertEqual(items[0]["text"], "opens lines")
+        self.assertNotIn("text", items[1])
+
+    def test_layout_does_not_change_the_reading(self):
+        """One move per line, or a whole variation on one, has to parse alike.
+
+        Everything but `at`, which is where the note was typed and exists only
+        so an error message can point at it.
+        """
+        read = lambda text: [{k: v for k, v in item.items() if k != "at"}
+                             for item in self.parse(text)[0][0]["items"]]
+        self.assertEqual(read("Test:\n 1. e4 (a)\n    e5 (b)\n 2. Nf3 (c)\n"),
+                         read("Test:\n 1. e4 (a) e5 (b) 2. Nf3 (c)\n"))
+
+    def test_a_note_may_wrap_across_lines(self):
+        blocks, errors = self.parse("Test:\n 1. e4 (the first\n        half and the second)\n")
+        self.assertEqual(errors, [])
+        self.assertEqual(blocks[0]["items"][0]["text"], "the first half and the second")
+
+    def test_move_numbers_are_ignored_however_they_are_written(self):
+        blocks, _ = self.parse("Test:\n 1.e4 e5 2. Nf3 2...Nc6\n")
+        self.assertEqual([i["san"] for i in blocks[0]["items"]], ["e4", "e5", "Nf3", "Nc6"])
+
+    def test_marks_are_arrows_and_spots(self):
+        blocks, errors = self.parse("Test:\n 1. e4 [e4-d5, e4-f5 !e4]\n")
+        self.assertEqual(errors, [])
+        item = blocks[0]["items"][0]
+        self.assertEqual(item["arrows"], [{"f": "e4", "t": "d5"}, {"f": "e4", "t": "f5"}])
+        self.assertEqual(item["spots"], ["e4"])
+
+    def test_a_mark_that_is_not_a_square_is_reported(self):
+        _, errors = self.parse("Test:\n 1. e4 [e4-z9]\n")
+        self.assertTrue(any("is not an arrow" in e for e in errors), errors)
+
+    def test_an_arrow_to_its_own_square_is_reported(self):
+        _, errors = self.parse("Test:\n 1. e4 [e4-e4]\n")
+        self.assertTrue(any("at itself" in e for e in errors), errors)
+
+    def test_an_unclosed_bracket_is_reported_rather_than_swallowing_the_block(self):
+        blocks, errors = self.parse("Test:\n 1. e4 (opens lines\n    e5\n 2. Nf3\n")
+        self.assertTrue(any("unbalanced" in e for e in errors), errors)
+        self.assertEqual(blocks[0]["items"], [])
+
+    def test_a_hash_is_a_comment_only_at_the_start_of_a_line(self):
+        """Mid-line it is checkmate, and a notes file is where someone writes one."""
+        blocks, errors = self.parse("Test:\n # skipped\n 1. e4 (Qh7# is the threat)\n")
+        self.assertEqual(errors, [])
+        self.assertEqual(blocks[0]["items"][0]["text"], "Qh7# is the threat")
+
+    def test_moves_before_a_title_are_reported(self):
+        _, errors = self.parse("1. e4 e5\n")
+        self.assertTrue(any("before any title" in e for e in errors), errors)
+
+    def test_two_notes_on_one_move_are_reported(self):
+        _, errors = self.parse("Test:\n 1. e4 (one) (two)\n")
+        self.assertTrue(any("a second note" in e for e in errors), errors)
+
+    def test_the_shipped_notes_all_attach(self):
+        """A note whose move order reaches a position no line does renders nowhere.
+
+        The build only warns -- one homeless sentence must not stop a rebuild --
+        so this is what keeps the files in the repo actually landing on the page.
+        """
+        errors = []
+        for op in load():
+            index = NoteIndex(op["id"], errors)
+            if not index.notes:
+                continue
+            branches = BranchIndex(op, errors, index)
+            for i, line in enumerate(with_deep_line(op)):
+                build_line(op["id"], i, line, errors, branches=branches, notes=index)
+            self.assertEqual(errors, [], op["id"])
+            self.assertEqual(index.unplaced(op["id"]), [])
 
 
 class TestSections(unittest.TestCase):

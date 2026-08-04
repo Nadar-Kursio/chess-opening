@@ -42,6 +42,7 @@ function boardColumnHTML(opts){
   const atStart = opts.index === 0;
   const atEnd = opts.index >= opts.total;
   const showArrows = state.arrows && opts.arrows && !drillHidesArrows();
+  const showMine = state.mine && opts.notes && !drillHidesArrows();
   return `
     <div class="study__board">
       <div class="board-frame">
@@ -74,14 +75,21 @@ function boardColumnHTML(opts){
           title="${opts.arrows?"What the move attacks, defends and controls, drawn on the board"
                               :"This view draws no arrows"}">
           <span class="glyph" aria-hidden="true">↗</span>Arrows</button>
+        <button class="btn${showMine?" on":""}" id="b-mine"
+          aria-pressed="${!!showMine}"
+          ${opts.notes&&!drillHidesArrows()?"":"disabled"}
+          title="${opts.notes?"Your own notes on this line, and the marks that go with them"
+                             :"You have written no notes on this line"}">
+          <span class="glyph" aria-hidden="true">✎</span>Notes</button>
       </div>
 
-      ${showArrows?`<div class="legend">
-        <span><i class="move"></i>the move</span>
+      ${showArrows||showMine?`<div class="legend">
+        ${showArrows?`<span><i class="move"></i>the move</span>
         <span><i class="attack"></i>attacks</span>
         <span><i class="check"></i>check</span>
         <span><i class="defend"></i>defends</span>
-        <span><i class="control"></i>controls a key square</span>
+        <span><i class="control"></i>controls a key square</span>`:""}
+        ${showMine?`<span><i class="mine"></i>your note</span>`:""}
       </div>`:""}
 
       ${opts.hint?`<p class="board-hint">${opts.hint}</p>`:""}
