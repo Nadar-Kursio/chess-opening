@@ -15,6 +15,7 @@ ORDER = [
     "sicilian", "french", "carokann",
     "queensgambit", "slav", "london",
     "catalan", "nimzo", "kid",
+    "scholarsmate", "friedliver",
 ]
 
 

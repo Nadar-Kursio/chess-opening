@@ -30,7 +30,7 @@ STAGE_KEYS = {"tier", "when", "goal", "learn", "drill", "mistake", "ready"}
 
 OPENING_EXTRA = {"branches", "games"}
 LINE_KEYS = {"name", "note", "moves", "notes"}
-LINE_EXTRA = {"tier", "drill", "plan", "record"}
+LINE_EXTRA = {"tier", "drill", "plan", "record", "side"}
 RECORD_KEYS = {"at", "games", "white", "draw", "black"}
 BRANCH_KEYS = {"san", "severity", "why"}
 BRANCH_EXTRA = {"tier", "name", "line", "see"}
@@ -137,6 +137,13 @@ class TestCatalogue(unittest.TestCase):
             for line in op["lines"] + [op["deep"]]:
                 if "tier" in line:
                     self.assertIn(line["tier"], TIERS, f"{op['id']} / {line['name']}")
+
+    def test_line_side_is_a_colour(self):
+        for op in self.openings:
+            for line in op["lines"] + [op["deep"]]:
+                if "side" in line:
+                    self.assertIn(line["side"], ("white", "black"),
+                                  f"{op['id']} / {line['name']}")
 
     def test_drill_is_a_flag(self):
         for op in self.openings:

@@ -48,7 +48,7 @@ function drillOn(){ return state.view === "op" && state.mode === "drill"; }
 function drillAsking(){ return drillOn() && state.drill.phase === "ask"; }
 function drillHidesArrows(){ return drillAsking(); }
 
-function drillSide(){ const op = currentOpening(); return op && op.orientation === "black" ? "b" : "w"; }
+function drillSide(){ return currentSide() === "black" ? "b" : "w"; }
 
 /* The move the learner is being asked for: the one after the position on screen. */
 function drillAnswer(){ return currentPlies()[state.ply + 1] || null; }

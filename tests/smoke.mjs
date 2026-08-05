@@ -161,6 +161,37 @@ step("read: variations", () => {
   checkLeaks("variations");
 });
 
+/* A trap is drilled from both chairs, so a line may override the side you play.
+   What matters is the chain: choosing the line turns the board, the page head
+   changes its answer, and the drill asks for the other colour's moves. */
+step("a line played from the other side", () => {
+  const found = app(`(function(){
+    for(const o of DATA) for(let i=0;i<o.lines.length;i++)
+      if(o.lines[i].side && o.lines[i].side !== o.orientation)
+        return {op:o.id, line:i, side:o.lines[i].side};
+    return null;
+  })()`);
+  report.sideAt = found;
+  want("some line is played from the other chair", found);
+  if (!found) return;
+  const b = found.side === "black";
+  app("go")(found.op);
+  const rows = $$(".variation");
+  want("the row names the chair", rows[found.line].querySelector(".variation__side"));
+  click(rows[found.line]);
+  want("choosing it turns the board", app("state").flipped === b);
+  want("the page head says which side you play",
+       ($("#content").textContent || "").includes(`You play ${b ? "Black" : "White"}`));
+  click($('[data-act="mode"][data-v="drill"]'));
+  want("the drill asks for that colour", app("drillSide")() === (b ? "b" : "w"));
+  want("and the move it awaits belongs to it", app("drillAnswer")().turn === (b ? "b" : "w"));
+  click($('[data-act="mode"][data-v="read"]'));
+  click($$(".variation")[0]);
+  want("the opening's own line turns the board back",
+       app("state").flipped === (app("currentOpening")().orientation === "black"));
+  checkLeaks("line side");
+});
+
 step("read: the win bar", () => {
   // Not every line carries a record, so find one that does rather than assume.
   const found = app(`DATA.flatMap(o=>o.lines.map((l,i)=>({op:o.id,line:i,rec:!!l.record})))

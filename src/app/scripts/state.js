@@ -74,6 +74,11 @@ function currentPly(){ const plies = currentPlies(); return plies[currentIndex()
 function currentOpening(){ return DATA.find(o=>o.id===state.opId) || null; }
 function currentLine(){ const op = currentOpening(); return op ? op.lines[state.line] : null; }
 
+/* The colour the learner plays. Per opening, except that a trap is studied from
+   both chairs, so a line may carry its own `side` and override it. */
+function lineSide(op, line){ return (line && line.side) || op.orientation; }
+function currentSide(){ const op = currentOpening(); return op ? lineSide(op, currentLine()) : "white"; }
+
 /* Interpolating content into a template string is how every view here is built,
    so the one place a stray < could break the page gets a helper rather than a
    rule nobody remembers. */

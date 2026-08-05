@@ -199,5 +199,5 @@ ACTIONS.devat   = t=>{ state.deviation.at = +t.dataset.i; render(); };
 ACTIONS.see     = t=>{
   const line = +t.dataset.line;
   go(t.dataset.go);              // clears the deviation and resets to ply 0 for us
-  if(line >= 0){ state.line = line; render(); }
+  if(line >= 0){ state.line = line; state.flipped = currentSide()==="black"; render(); }
 };

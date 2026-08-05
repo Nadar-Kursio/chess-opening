@@ -38,7 +38,7 @@ function openingHTML(){
   const sec = SECTIONS.find(s=>s.id===op.section);
   return pageHeadHTML(
       [sec.group, `<span class="mono">${sec.label}</span>`, `<span class="mono">${op.eco}</span>`,
-       `You play ${op.orientation === "black" ? "Black" : "White"}`],
+       `You play ${currentSide() === "black" ? "Black" : "White"}`],
       op.name, op.tagline)
     + sectionNavHTML(op)
     + studyHTML(op, line, currentPly())
@@ -113,6 +113,8 @@ function variationRowHTML(op, l, i){
   ].filter(Boolean);
   return `<button class="variation" data-line="${i}" aria-pressed="${on}" title="${esc(l.note)}">
           <span class="variation__name">${l.name}
+            ${l.side && l.side !== op.orientation
+              ? `<span class="variation__side">as ${l.side === "black" ? "Black" : "White"}</span>`:""}
             ${l.tier?`<span class="variation__tier">${l.tier}</span>`:""}</span>
           ${on?`<span class="variation__note">${l.note}</span>`:""}
           <span class="variation__meta">${meta.join('<span class="sep">&middot;</span>')}</span>
@@ -279,6 +281,9 @@ function bindView(el){
   el.querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>{
     stopAutoplay(); state.deviation=null; state.picking=false; state.varsOpen=false;
     state.line=+b.dataset.line; state.ply=0;
+    // Before drillStart(), which reads it: a line played from the other chair
+    // turns the board around and re-arms the drill for that colour.
+    state.flipped = currentSide()==="black";
     if(state.mode==="drill") drillStart(); else render();
   });
   el.querySelectorAll("[data-ply]").forEach(b=>b.onclick=()=>{
