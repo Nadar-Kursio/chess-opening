@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Branch, Line, Opening, Ply, Turn } from "@/lib/content/types";
 import { announce } from "@/lib/announce";
 import { isLegalMove, isOwnPiece, moveName, normaliseMove, FILES } from "@/lib/chess/read";
-import { db, dbLineKey, dbSave } from "@/lib/db";
+import { db, dbFlush, dbLineKey, dbSave, type NoteRecord } from "@/lib/db";
 import { drillAskedCount, moverSide, movePrinciple, feedbackLevel } from "./drill";
+import { noteKey, noteShown, noteText, noteIsLocal } from "./notes";
 
 /* The study island's state machine, ported from state.js + drill.js +
    deviation.js + the read-mode half of render.js. One hook per mounted page;
@@ -17,6 +18,23 @@ import { drillAskedCount, moverSide, movePrinciple, feedbackLevel } from "./dril
 
 export interface Deviation { fromPly: number; idx: number; at: number; origin: "read" | "drill" }
 export interface Rejected { from: string; to: string; kind: "wrong" | "illegal" }
+
+/* The open note editor: a working copy of the note for the position it was
+   opened on, so Cancel costs nothing. `key` is fixed at open — otherwise
+   stepping forward mid-sentence would file the text against a position the
+   writer never looked at. */
+export interface NoteEditor {
+  key: string;
+  text: string;
+  arrows: { f: string; t: string }[];
+  spots: string[];
+  tool: "arrow" | "spot" | null;
+  from: string | null;
+  focus: boolean;
+}
+
+/* A mark being dragged out — the rubber band on the canvas. */
+export interface Drawing { from: string; to: string; id: number }
 
 export interface DrillState {
   phase: "ask" | "right" | "reveal" | "wrong" | "done";
@@ -44,6 +62,8 @@ export interface StudyState {
   autoplay: boolean;
   deviation: Deviation | null;
   drill: DrillState;
+  note: NoteEditor | null;
+  drawing: Drawing | null;
 }
 
 function freshDrill(flipped: boolean): DrillState {
@@ -71,6 +91,8 @@ export function useStudy(opening: Opening, lineIndex: number) {
     autoplay: false,
     deviation: null,
     drill: freshDrill(side === "b"),
+    note: null,
+    drawing: null,
   }));
 
   const ref = useRef(state);
@@ -87,7 +109,35 @@ export function useStudy(opening: Opening, lineIndex: number) {
 
   /* ---- transitions; each builds the next state and commits once ---- */
 
+  /* The write, with no commit in it, so mid-transition callers can use it.
+     An empty note is not a note: saving one is how you delete it. */
+  const noteStore = (n: NoteEditor): boolean => {
+    const text = n.text.trim();
+    const keep = !!(text || n.arrows.length || n.spots.length);
+    if (keep) {
+      const rec: NoteRecord = {};
+      if (text) rec.text = text;
+      if (n.arrows.length) rec.arrows = n.arrows;
+      if (n.spots.length) rec.spots = n.spots;
+      db.notes[n.key] = rec;
+    } else {
+      delete db.notes[n.key];
+    }
+    dbSave();
+    dbFlush();
+    return keep;
+  };
+
   const commit = (next: StudyState) => {
+    /* The editor belongs to the position it was opened on, and every way of
+       leaving a position comes through here — an arrow key, the move list,
+       a deviation, the Notes layer switched off. What was typed is kept, not
+       dropped: navigating away is not a decision to throw work out. */
+    if (next.note && (!next.mine
+        || next.note.key !== noteKey(pliesIn(opening, line, next)[indexIn(next)]))) {
+      noteStore(next.note);
+      next = { ...next, note: null, drawing: null };
+    }
     ref.current = next;
     setState(next);
   };
@@ -452,6 +502,100 @@ export function useStudy(opening: Opening, lineIndex: number) {
         announce(name + ". Not this line's move.");
       },
 
+      /* ---- your own note on this position ---- */
+      noteEdit() {
+        const s = ref.current;
+        if (s.note) return;
+        commit({ ...s, note: noteBeginFrom(opening, line, s, true) });
+      },
+      noteCancel() {
+        commit({ ...ref.current, note: null, drawing: null });
+      },
+      noteSave() {
+        const s = ref.current;
+        if (!s.note) return;
+        const keep = noteStore(s.note);
+        commit({ ...s, note: null, drawing: null });
+        announce(keep ? "Note saved." : "Note removed.");
+      },
+      /* Nothing in a browser can edit a file, so Delete only drops the copy
+         saved here — the shipped note, if there was one, comes straight back. */
+      noteDelete() {
+        const s = ref.current;
+        if (!s.note) return;
+        delete db.notes[s.note.key];
+        dbSave();
+        dbFlush();
+        commit({ ...s, note: null, drawing: null });
+        announce("Note removed.");
+      },
+      noteSetText(text: string) {
+        const s = ref.current;
+        if (s.note) commit({ ...s, note: { ...s.note, text } });
+      },
+      noteSetTool(tool: "arrow" | "spot") {
+        const s = ref.current;
+        if (!s.note) return;
+        commit({ ...s, note: { ...s.note, tool: s.note.tool === tool ? null : tool, from: null } });
+      },
+      noteRemoveMark(i: number) {
+        const s = ref.current;
+        if (!s.note) return;
+        const arrows = [...s.note.arrows];
+        const spots = [...s.note.spots];
+        if (i < arrows.length) arrows.splice(i, 1);
+        else spots.splice(i - arrows.length, 1);
+        commit({ ...s, note: { ...s.note, arrows, spots } });
+      },
+      /* The two-tap tools: the same marks without a drag, for a finger and for
+         anyone who would rather press a button than know a gesture. */
+      noteTapSquare(sq: string) {
+        const s = ref.current;
+        const n = s.note;
+        if (!n) return;
+        if (n.tool === "spot") {
+          commit({ ...s, note: { ...n, spots: toggleSpot(n.spots, sq), tool: null } });
+          return;
+        }
+        if (!n.from) {
+          commit({ ...s, note: { ...n, from: sq } });
+          return;
+        }
+        const from = n.from;
+        commit({ ...s, note: { ...n, from: null, tool: null, arrows: toggleArrow(n.arrows, from, sq) } });
+      },
+      /* ---- drawing: right-drag on a mouse, hold-to-draw on touch ---- */
+      noteStartDraw(sq: string, id: number) {
+        const s = ref.current;
+        const note = s.note || noteBeginFrom(opening, line, s, false);
+        commit({ ...s, note, drawing: { from: sq, to: sq, id }, selected: null });
+      },
+      noteDrawTo(sq: string, id: number) {
+        const s = ref.current;
+        if (s.drawing && s.drawing.id === id && s.drawing.to !== sq) {
+          commit({ ...s, drawing: { ...s.drawing, to: sq } });
+        }
+      },
+      /* A press that never left its square is a circle; one that travelled is
+         an arrow. */
+      noteEndDraw(sq: string | null, id: number) {
+        const s = ref.current;
+        const d = s.drawing;
+        if (!d || d.id !== id || !s.note) return;
+        const to = sq || d.from;
+        const n = s.note;
+        const note = to === d.from
+          ? { ...n, spots: toggleSpot(n.spots, d.from) }
+          : { ...n, arrows: toggleArrow(n.arrows, d.from, to) };
+        commit({ ...s, drawing: null, note });
+      },
+      /* A drag the browser takes away — a phone call, a gesture the OS claims —
+         must not leave a rubber band with nothing holding it. */
+      noteAbortDraw(id: number) {
+        const s = ref.current;
+        if (s.drawing && s.drawing.id === id) commit({ ...s, drawing: null });
+      },
+
       moveCursor(dcol: number, drow: number): boolean {
         const s = ref.current;
         const cur = s.drill.cursor;
@@ -519,4 +663,32 @@ function steppedIn(opening: Opening, line: Line, s: StudyState, d: number): Stud
   return s.deviation
     ? { ...s, deviation: { ...s.deviation, at: n } }
     : { ...s, ply: n };
+}
+
+/* Drawing the same mark twice takes it away — the only undo a drag gesture
+   can have that does not need a button. */
+function toggleArrow(arrows: { f: string; t: string }[], f: string, t: string) {
+  if (f === t) return arrows;
+  const at = arrows.findIndex((a) => a.f === f && a.t === t);
+  return at >= 0 ? arrows.filter((_, i) => i !== at) : [...arrows, { f, t }];
+}
+
+function toggleSpot(spots: string[], sq: string) {
+  return spots.includes(sq) ? spots.filter((s) => s !== sq) : [...spots, sq];
+}
+
+/* A working copy seeded from whatever note the position shows — the shipped
+   file note included, so editing it starts from its text and marks. */
+function noteBeginFrom(opening: Opening, line: Line, s: StudyState, focus: boolean): NoteEditor {
+  const p = pliesIn(opening, line, s)[indexIn(s)];
+  const from = noteShown(p);
+  return {
+    key: noteKey(p),
+    text: from ? noteText(from, noteIsLocal(p)) : "",
+    arrows: (from?.arrows || []).map((a) => ({ f: a.f, t: a.t })),
+    spots: (from?.spots || []).slice(),
+    tool: null,
+    from: null,
+    focus,
+  };
 }

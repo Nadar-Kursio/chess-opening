@@ -35,6 +35,10 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   const sref = useRef(state);
   sref.current = state;
   const dragRef = useRef<{ from: string; id: number } | null>(null);
+  /* A finger holding still on a square is what it has instead of a right
+     button: long enough that neither a tap nor a piece-drag arms it by
+     accident, cancelled by travel, superseded by any new press. */
+  const holdRef = useRef<{ id: number; from: string; x: number; y: number; timer: number } | null>(null);
   /* Board lookups stay inside this island — a second board elsewhere on a
      future page must never catch this panel's queries. */
   const rootRef = useRef<HTMLElement>(null);
@@ -49,12 +53,18 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   const hidesOverlays = drillOn && state.drill.phase === "ask";
 
   /* The board takes moves in three situations, and they want different
-     answers — boardLive() from drill.js, minus the views this port skips. */
+     answers — boardLive() from drill.js. A two-tap mark tool owns the taps
+     while it is armed; an open editor otherwise leaves the board alone. */
   const live =
     !inDeviation &&
+    !state.note?.tool &&
     (state.picking ||
       !drillOn ||
       ["ask", "wrong", "right", "reveal"].includes(state.drill.phase));
+
+  /* Nothing draws while the Notes layer is off — a gesture that made a mark
+     you could not see would be a page that changed its mind about a press. */
+  const canDraw = state.mine && !hidesOverlays;
 
   useEffect(() => {
     setMounted(true);
@@ -62,6 +72,15 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     actions.restorePrefs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* Once a mark is being dragged out the page must not scroll under it, and
+     only a non-passive touchmove can still say no mid-gesture. */
+  useEffect(() => {
+    if (!state.drawing) return;
+    const stop = (e: TouchEvent) => e.preventDefault();
+    document.addEventListener("touchmove", stop, { passive: false });
+    return () => document.removeEventListener("touchmove", stop);
+  }, [state.drawing]);
 
   /* A deliberate test seam: the artifact smoke drives the island through this
      handle, the way the old harness reached the globals. */
@@ -87,6 +106,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
       if (!(e.metaKey || e.ctrlKey || e.altKey)) {
         // Escape unwinds one layer at a time, innermost first.
         if (k === "Escape") {
+          if (s.note) { actions.noteCancel(); e.preventDefault(); return; }
           if (s.selected) { actions.pick(s.selected); e.preventDefault(); return; }
           if (s.picking) { actions.cancelPicker(); e.preventDefault(); return; }
           if (s.deviation) { actions.devExit(); e.preventDefault(); return; }
@@ -146,13 +166,63 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [actions]);
 
-  /* ---- pointer input, delegated exactly as drill.js delegated it ---- */
+  /* ---- pointer input, delegated exactly as drill.js + notepad.js did ---- */
+  const squareAt = (e: React.PointerEvent): string | null => {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = under && under.closest ? under.closest<HTMLElement>("[data-sq]") : null;
+    return cell ? cell.dataset.sq! : null;
+  };
+
+  const holdCancel = () => {
+    if (holdRef.current) {
+      clearTimeout(holdRef.current.timer);
+      holdRef.current = null;
+    }
+  };
+
   const onPointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    if (!live) return;
     const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-sq]");
     if (!cell) return;
     const sq = cell.dataset.sq!;
+    // Any new press supersedes a hold still counting down — a timer that
+    // fires later would start drawing from a square nobody is touching.
+    holdCancel();
+
+    /* Drawing is the right button, and only the right button: a left-drag
+       means "play this move". The exception is an armed two-tap tool, which
+       is what buys a plain tap its new meaning. */
+    const drawGesture = canDraw && (e.button === 2 || (e.button === 0 && !!sref.current.note?.tool));
+    if (drawGesture) {
+      e.preventDefault();
+      if (sref.current.note?.tool) { actions.noteTapSquare(sq); return; }
+      dragRef.current = null;
+      actions.noteStartDraw(sq, e.pointerId);
+      try { cell.setPointerCapture(e.pointerId); } catch {}
+      return;
+    }
+
+    /* Not on a mouse: there the right button is right there, and a slow left
+       press should stay a slow left press. */
+    if (e.button === 0 && e.pointerType !== "mouse" && canDraw) {
+      holdRef.current = {
+        id: e.pointerId, from: sq, x: e.clientX, y: e.clientY,
+        timer: window.setTimeout(() => {
+          const hold = holdRef.current;
+          holdRef.current = null;
+          if (!hold) return;
+          // The hold has won the pointer: a piece picked up on the way is dropped.
+          dragRef.current = null;
+          actions.noteStartDraw(hold.from, hold.id);
+          try {
+            boardEl()?.querySelector<HTMLElement>(`[data-sq="${hold.from}"]`)
+              ?.setPointerCapture(hold.id);
+          } catch {}
+        }, 420),
+      };
+    }
+
+    if (e.button !== 0) return;
+    if (!live) return;
     const s = sref.current;
     const here = opening.lines[lineIndex].plies[s.ply];
     e.preventDefault();
@@ -163,14 +233,36 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     actions.pick(sq);
   };
 
+  const onPointerMove = (e: React.PointerEvent) => {
+    const hold = holdRef.current;
+    if (hold && hold.id === e.pointerId
+        && (Math.abs(e.clientX - hold.x) > 10 || Math.abs(e.clientY - hold.y) > 10)) {
+      holdCancel(); // travel means a piece-drag, not a hold
+    }
+    if (sref.current.drawing?.id === e.pointerId) {
+      const sq = squareAt(e);
+      if (sq) actions.noteDrawTo(sq, e.pointerId);
+    }
+  };
+
   const onPointerUp = (e: React.PointerEvent) => {
+    holdCancel();
+    if (sref.current.drawing?.id === e.pointerId) {
+      actions.noteEndDraw(squareAt(e), e.pointerId);
+      return;
+    }
     const drag = dragRef.current;
     if (!drag || drag.id !== e.pointerId) return;
     dragRef.current = null;
-    const under = document.elementFromPoint(e.clientX, e.clientY);
-    const drop = under && under.closest ? under.closest<HTMLElement>("[data-sq]") : null;
-    if (!drop || drop.dataset.sq === drag.from) return; // a click, not a drag
-    actions.boardMove(drag.from, drop.dataset.sq!);
+    const drop = squareAt(e);
+    if (!drop || drop === drag.from) return; // a click, not a drag
+    actions.boardMove(drag.from, drop);
+  };
+
+  const onPointerCancel = (e: React.PointerEvent) => {
+    holdCancel();
+    dragRef.current = null;
+    actions.noteAbortDraw(e.pointerId);
   };
 
   const here = line.plies[state.ply];
@@ -183,6 +275,11 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
      render is deterministic. */
   const note = mounted ? noteShown(current) : current.mine || null;
   const noteLocal = mounted ? noteIsLocal(current) : false;
+  /* While the editor is open it is the WORKING COPY that draws, so a mark
+     appears under the pointer and disappears again on Cancel. */
+  const marksShown = state.note
+    ? { arrows: state.note.arrows, spots: state.note.spots }
+    : note;
 
   const readout = inDeviation ? (
     <>Deviation &mdash; <b>{index + 1}</b> of {plies.length}</>
@@ -198,7 +295,12 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
 
   return (
     <section className="study" id={`moves-${opening.id}`} ref={rootRef}
-      onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
+      onPointerDown={onPointerDown} onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}
+      onContextMenu={(e) => {
+        // The right button draws here; the browser menu would eat the gesture.
+        if ((e.target as HTMLElement).closest("[data-sq]")) e.preventDefault();
+      }}>
       <ModeBar
         line={line}
         mode={state.mode}
@@ -228,7 +330,9 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
         cursor={state.drill.cursor}
         targets={targets}
         rejected={drillOn || state.drill.verdictPly === state.ply ? state.drill.rejected : null}
-        mine={note}
+        mine={marksShown}
+        drawing={state.drawing}
+        tail={state.note?.from ?? null}
         depth={catalog.engine.depth}
         readout={readout}
         hint={hint}
@@ -300,7 +404,19 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
             <CoachNote ply={current} index={index} prev={index > 0 ? plies[index - 1] : null} />
           </>
         )}
-        <NoteCard note={note} local={noteLocal} show={state.mine && !hidesOverlays && !drillOn} />
+        <NoteCard
+          note={note}
+          local={noteLocal}
+          show={state.mine && !hidesOverlays}
+          editor={state.note}
+          onEdit={actions.noteEdit}
+          onSave={actions.noteSave}
+          onCancel={actions.noteCancel}
+          onDelete={actions.noteDelete}
+          onText={actions.noteSetText}
+          onTool={actions.noteSetTool}
+          onRemoveMark={actions.noteRemoveMark}
+        />
         {!inDeviation && !drillOn && index >= plies.length - 1 ? (
           <PlanFor op={opening} line={line} structures={catalog.structures} />
         ) : null}

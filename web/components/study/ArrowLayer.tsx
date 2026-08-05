@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { Arrow } from "@/lib/content/types";
 import type { NoteRecord } from "@/lib/db";
-import type { Rejected } from "@/lib/study/useStudy";
+import type { Drawing, Rejected } from "@/lib/study/useStudy";
 import { FILES, pieceAt } from "@/lib/chess/read";
 
 /* Canvas arrow overlay, ported from arrows.js — Canvas 2D, not SVG, including
@@ -17,6 +17,7 @@ const ARROW_COLORS: Record<string, string> = {
   chk: "rgba(234,59,51,0.92)",
   ctrl: "rgba(224,180,74,0.85)",
   mine: "rgba(168,116,208,0.88)", // --mine in tokens.css; change both
+  live: "rgba(168,116,208,0.45)", // the same mark, still being dragged out
 };
 const REJECTED_COLORS = {
   illegal: "rgba(204,106,98,0.85)",
@@ -28,13 +29,17 @@ interface Props {
   fen: string;
   arrows: Arrow[];
   mine: NoteRecord | null;
+  drawing: Drawing | null;
+  tail: string | null;
   rejected: Rejected | null;
   showArrows: boolean;
   showMine: boolean;
   flipped: boolean;
 }
 
-export default function ArrowLayer({ boardRef, fen, arrows, mine, rejected, showArrows, showMine, flipped }: Props) {
+export default function ArrowLayer({
+  boardRef, fen, arrows, mine, drawing, tail, rejected, showArrows, showMine, flipped,
+}: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   /* An arrow bends into an L only for a knight's move BY a knight. The played
@@ -89,12 +94,23 @@ export default function ArrowLayer({ boardRef, fen, arrows, mine, rejected, show
       }
 
       /* Last, so your own mark is never buried under five engine arrows. */
-      if (showMine && mine) {
-        (mine.spots || []).forEach((sq) => drawRing(ctx, sq, ARROW_COLORS.mine, square, flipped));
-        (mine.arrows || []).forEach((a) => {
-          drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square * 0.12, square, flipped,
-            knightAt(a.f));
-        });
+      if (showMine) {
+        if (mine) {
+          (mine.spots || []).forEach((sq) => drawRing(ctx, sq, ARROW_COLORS.mine, square, flipped));
+          (mine.arrows || []).forEach((a) => {
+            drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square * 0.12, square, flipped,
+              knightAt(a.f));
+          });
+        }
+        /* The mark being made: a rubber band under the finger, and the tail of
+           a two-tap arrow waiting for its second square. */
+        if (drawing && drawing.to !== drawing.from) {
+          drawArrowBetween(ctx, drawing.from, drawing.to, ARROW_COLORS.live,
+            square * 0.12, square, flipped, knightAt(drawing.from));
+        } else if (drawing) {
+          drawRing(ctx, drawing.from, ARROW_COLORS.live, square, flipped);
+        }
+        if (tail) drawRing(ctx, tail, ARROW_COLORS.live, square, flipped);
       }
     };
     draw();

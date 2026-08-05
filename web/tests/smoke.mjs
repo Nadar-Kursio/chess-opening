@@ -366,6 +366,154 @@ step("notes: the shipped note card renders where a note exists", async () => {
   throw new Error("expected a shipped author note somewhere in the Ruy Lopez");
 });
 
+/* ---------------- writing notes ---------------- */
+
+function setTextarea(window, box, value) {
+  const proto = Object.getPrototypeOf(box);
+  Object.getOwnPropertyDescriptor(proto, "value").set.call(box, value);
+  fire(window, box, "input");
+}
+const btnByText = (document, re) =>
+  [...document.querySelectorAll("button")].find((b) => re.test(b.textContent || ""));
+
+step("notes: written here, saved to this browser's storage", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  const add = document.querySelector(".mynote-add");
+  ok(add, "the invitation to write a note");
+  add.click();
+  await tick(window, 40);
+  const box = document.getElementById("notetext");
+  ok(box, "the editor");
+  setTextarea(window, box, "my own idea about this position");
+  await tick(window, 40);
+  btnByText(document, /^Save$/).click();
+  await tick(window, 40);
+  ok(/my own idea/.test(document.querySelector(".mynote__body")?.textContent || ""),
+    "the note rendered back");
+  ok(/saved in this browser/.test(document.querySelector(".mynote__where")?.textContent || ""),
+    "the card naming its source");
+  const saved = JSON.parse(window.localStorage.getItem("chesslab"));
+  const key = lab(window).plies[0].turn + lab(window).plies[0].fen;
+  ok(saved.notes?.[key]?.text === "my own idea about this position", "the note in localStorage");
+  window.close();
+});
+
+step("notes: two-tap tools mark the board, chips take marks back", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  document.querySelector(".mynote-add").click();
+  await tick(window, 40);
+  btnByText(document, /Make arrow/).click();
+  await tick(window, 30);
+  ok(/Tap the square the arrow starts from/.test(document.querySelector(".mynote__hint").textContent),
+    "the tool's first instruction");
+  fire(window, document.querySelector('[data-sq="e2"]'), "pointerdown", { button: 0 });
+  await tick(window, 30);
+  ok(/Now tap the square it points at/.test(document.querySelector(".mynote__hint").textContent),
+    "the tool waiting for its second square");
+  fire(window, document.querySelector('[data-sq="e4"]'), "pointerdown", { button: 0 });
+  await tick(window, 30);
+  ok([...document.querySelectorAll(".mynote__mark")].some((m) => /e2→e4/.test(m.textContent)),
+    "the arrow's chip");
+  btnByText(document, /Circle square/).click();
+  await tick(window, 30);
+  fire(window, document.querySelector('[data-sq="d5"]'), "pointerdown", { button: 0 });
+  await tick(window, 30);
+  ok([...document.querySelectorAll(".mynote__mark")].some((m) => /○d5/.test(m.textContent)),
+    "the spot's chip");
+  document.querySelector(".mynote__mark").click(); // the arrow chip — per-mark undo
+  await tick(window, 30);
+  ok(![...document.querySelectorAll(".mynote__mark")].some((m) => /e2→e4/.test(m.textContent)),
+    "the arrow taken back");
+  ok(lab(window).state.note.spots.includes("d5"), "the spot still in the working copy");
+  window.close();
+});
+
+step("notes: a right-drag draws an arrow, opening the editor on the way", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  ok(!lab(window).state.note, "no editor open yet");
+  const from = document.querySelector('[data-sq="b1"]');
+  const to = document.querySelector('[data-sq="c3"]');
+  fire(window, from, "pointerdown", { button: 2 });
+  await tick(window, 30);
+  ok(lab(window).state.drawing?.from === "b1", "the rubber band armed");
+  window.document.elementFromPoint = () => to;
+  fire(window, from, "pointermove", { clientX: 40, clientY: 40 });
+  await tick(window, 30);
+  ok(lab(window).state.drawing?.to === "c3", "the band following the pointer");
+  fire(window, from, "pointerup", {});
+  await tick(window, 30);
+  ok(lab(window).state.note, "the editor opened by the gesture");
+  ok(lab(window).state.note.arrows.some((a) => a.f === "b1" && a.t === "c3"), "the arrow kept");
+  window.close();
+});
+
+step("notes: a finger holds a square to draw; travel cancels the hold", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  const cell = document.querySelector('[data-sq="d4"]');
+  window.document.elementFromPoint = () => cell;
+  fire(window, cell, "pointerdown", { button: 0 }); // no pointerType — not a mouse
+  await tick(window, 500);                          // the 420ms hold fires
+  ok(lab(window).state.drawing?.from === "d4", "the hold armed drawing");
+  fire(window, cell, "pointerup", {});
+  await tick(window, 30);
+  ok(lab(window).state.note?.spots.includes("d4"),
+    "a press that never left its square is a circle");
+
+  // Travel before the hold fires means a drag, not a hold.
+  const e4 = document.querySelector('[data-sq="e4"]');
+  fire(window, e4, "pointerdown", { button: 0 });
+  fire(window, e4, "pointermove", { clientX: 60, clientY: 0 });
+  await tick(window, 500);
+  ok(!lab(window).state.drawing, "the slop cancelled it");
+  window.close();
+});
+
+step("notes: a browser note shadows the file note; Delete brings it back", async () => {
+  const pages = ["openings/ruylopez", "openings/ruylopez/exchange", "openings/ruylopez/berlin",
+    "openings/ruylopez/anderssen", "openings/ruylopez/open-spanish", "openings/ruylopez/marshall",
+    "openings/ruylopez/chigorin-deep"];
+  for (const route of pages) {
+    const { window, document } = await loadPage(route, { expectIsland: true });
+    const at = lab(window).plies.findIndex((p) => p.mine);
+    if (at < 0) { window.close(); continue; }
+    await act(window, (a) => a.jump(at));
+    const fileText = document.querySelector(".mynote__body")?.textContent || "";
+    btnByText(document, /^Edit$/).click();
+    await tick(window, 40);
+    setTextarea(window, document.getElementById("notetext"), "my correction");
+    await tick(window, 30);
+    btnByText(document, /^Save$/).click();
+    await tick(window, 40);
+    ok(/saved in this browser/.test(document.querySelector(".mynote__where").textContent),
+      "the local copy shadowing the file's");
+    btnByText(document, /^Edit$/).click();
+    await tick(window, 40);
+    btnByText(document, /^Delete$/).click();
+    await tick(window, 40);
+    ok(/from the notes file/.test(document.querySelector(".mynote__where").textContent),
+      "the file's note back after Delete");
+    ok((document.querySelector(".mynote__body")?.textContent || "") === fileText,
+      "with its own text intact");
+    window.close();
+    return;
+  }
+  throw new Error("expected a file note somewhere in the Ruy Lopez");
+});
+
+step("notes: leaving the position keeps what was typed", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  document.querySelector(".mynote-add").click();
+  await tick(window, 40);
+  setTextarea(window, document.getElementById("notetext"), "half a thought");
+  await tick(window, 30);
+  const key = lab(window).plies[0].turn + lab(window).plies[0].fen;
+  await act(window, (a) => a.step(1)); // navigate away mid-sentence
+  ok(!lab(window).state.note, "the editor closed by leaving");
+  const saved = JSON.parse(window.localStorage.getItem("chesslab"));
+  ok(saved.notes?.[key]?.text === "half a thought", "the words filed where they were written");
+  window.close();
+});
+
 /* ---------------- run ---------------- */
 
 let failed = 0;

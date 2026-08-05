@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import type { Ply, Turn } from "@/lib/content/types";
 import type { NoteRecord } from "@/lib/db";
-import type { Rejected } from "@/lib/study/useStudy";
+import type { Drawing, Rejected } from "@/lib/study/useStudy";
 import { pieceAt } from "@/lib/chess/read";
 import Board from "./Board";
 import ArrowLayer from "./ArrowLayer";
@@ -31,6 +31,8 @@ interface Props {
   targets: string[];
   rejected: Rejected | null;
   mine: NoteRecord | null;
+  drawing: Drawing | null;
+  tail: string | null;
   depth: number | null;
   readout: React.ReactNode;
   hint: React.ReactNode;
@@ -77,6 +79,8 @@ export default function BoardColumn(p: Props) {
             fen={p.ply.fen}
             arrows={p.ply.arrows || []}
             mine={showMine ? p.mine : null}
+            drawing={showMine ? p.drawing : null}
+            tail={showMine ? p.tail : null}
             rejected={p.rejected}
             showArrows={showArrows}
             showMine={showMine}
