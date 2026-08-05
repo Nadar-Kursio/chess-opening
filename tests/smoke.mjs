@@ -145,9 +145,20 @@ step("read: stepping and the transport", () => {
 step("read: variations", () => {
   const tabs = $$(".variation");
   want("more than one variation", tabs.length > 1);
+  want("the line you are on says what it is", $(`.variation[aria-pressed="true"] .variation__note`));
+  want("and every row says how long it runs", /\d+ moves/.test($(".variation__meta")?.textContent || ""));
   click(tabs[1]);
   want("the chosen variation is marked", $(`.variation[aria-pressed="true"]`));
+
+  // The list collapses to the chosen line on a phone. jsdom has no media
+  // queries, so what is checked here is the state the CSS hangs off.
+  click($("#varstoggle"));
+  want("the toggle opens the list", $(".variations--open"));
+  want("and says so", $("#varstoggle").getAttribute("aria-expanded") === "true");
+  click($("#varstoggle"));
+  want("and closes it again", !$(".variations--open"));
   click(tabs[0]);
+  checkLeaks("variations");
 });
 
 step("read: the win bar", () => {
