@@ -144,22 +144,79 @@ function noteDrawGesture(e){
   return e.button === 0 && !!(state.note && state.note.tool);
 }
 
+/* Holding still on a square is what a finger has instead of a right button.
+   Cancelled by travel, which means a piece is being dragged to a square, and by
+   letting go early, which means a tap. Long enough that neither happens by
+   accident; short enough to be a gesture rather than a wait. */
+const NOTE_HOLD_MS = 420;
+const NOTE_HOLD_SLOP = 10;      // px of travel that says "this is a drag, not a hold"
+let noteHold = null;
+
+function noteCanDraw(){ return state.view === "op" && !drillHidesArrows(); }
+
 document.getElementById("content").addEventListener("pointerdown", e=>{
-  if(!noteDrawGesture(e)) return;
   const cell = e.target.closest("[data-sq]");
   if(!cell) return;
-  e.preventDefault();
-  if(!state.note) noteBegin();
   const sq = cell.dataset.sq;
-  if(state.note.tool){ noteTool(sq); return; }   // a two-tap tool never drags
-  state.drawing = {from:sq, to:sq, id:e.pointerId};
-  try{ cell.setPointerCapture(e.pointerId); }catch(err){}
-  drawArrows();
+  // Any new press supersedes a hold still counting down. Otherwise a press whose
+  // release never arrives leaves a timer that fires later and starts drawing
+  // from a square nobody is touching, with a pointer id no release will match.
+  noteHoldCancel();
+
+  if(noteDrawGesture(e)){
+    e.preventDefault();
+    if(!state.note) noteBegin();
+    if(state.note.tool){ noteTool(sq); return; }   // a two-tap tool never drags
+    state.drawing = {from:sq, to:sq, id:e.pointerId};
+    try{ cell.setPointerCapture(e.pointerId); }catch(err){}
+    drawArrows();
+    return;
+  }
+
+  // Not on a mouse: there the right button is right there, and a slow left
+  // press should stay a slow left press.
+  if(e.button === 0 && e.pointerType !== "mouse" && noteCanDraw()){
+    noteHold = {id:e.pointerId, from:sq, x:e.clientX, y:e.clientY,
+                timer:setTimeout(noteHoldFire, NOTE_HOLD_MS)};
+  }
 });
+
+function noteHoldCancel(){
+  if(noteHold){ clearTimeout(noteHold.timer); noteHold = null; }
+}
+
+/* The hold has won the pointer, so whatever the board had started doing with it
+   -- a piece picked up, a drag begun -- is dropped. Without a render(): the
+   finger is on a square, and replacing #content would take it away mid-gesture
+   and end the drag before it drew anything. */
+function noteHoldFire(){
+  const hold = noteHold;
+  noteHold = null;
+  if(!hold) return;
+  state.drag = null;
+  state.selected = null;
+  if(!state.note) noteBegin();
+  state.drawing = {from:hold.from, to:hold.from, id:hold.id};
+  drillPaint();
+  drawArrows();
+}
+
+/* Once a mark is being dragged out the page must not scroll under it. The board
+   already carries touch-action:none while it is live, but the hold can also fire
+   on a board that is not -- and only a non-passive touchmove can still say no
+   once a gesture has begun. */
+document.addEventListener("touchmove", e=>{
+  if(state.drawing) e.preventDefault();
+}, {passive:false});
 
 /* Canvas only while the drag is live. render() would take the board out from
    under the pointer, and the rubber band is the whole reason to track a move. */
 document.addEventListener("pointermove", e=>{
+  if(noteHold && noteHold.id === e.pointerId
+     && (Math.abs(e.clientX - noteHold.x) > NOTE_HOLD_SLOP
+      || Math.abs(e.clientY - noteHold.y) > NOTE_HOLD_SLOP)){
+    noteHoldCancel();
+  }
   const d = state.drawing;
   if(!d || d.id !== e.pointerId) return;
   const sq = noteSquareAt(e);
@@ -167,6 +224,7 @@ document.addEventListener("pointermove", e=>{
 });
 
 document.addEventListener("pointerup", e=>{
+  noteHoldCancel();
   const d = state.drawing;
   if(!d || d.id !== e.pointerId) return;
   state.drawing = null;
@@ -179,6 +237,7 @@ document.addEventListener("pointerup", e=>{
 /* A drag the browser takes away -- a phone call, a gesture the OS claims -- must
    not leave a rubber band on the board with nothing holding it. */
 document.addEventListener("pointercancel", e=>{
+  noteHoldCancel();
   if(state.drawing && state.drawing.id === e.pointerId){
     state.drawing = null;
     drawArrows();
@@ -265,7 +324,7 @@ function noteHint(n){
   if(n.from) return "Now tap the square it points at.";
   if(n.tool === "arrow") return "Tap the square the arrow starts from.";
   if(n.tool === "spot") return "Tap a square to circle it.";
-  return "Right-drag on the board to draw an arrow, right-click a square to circle it — or use the buttons.";
+  return "Hold a square to circle it, or hold and drag for an arrow. Right-drag with a mouse.";
 }
 
 /* ---- moving a note into the repo ---- */

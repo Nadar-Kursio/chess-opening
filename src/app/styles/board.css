@@ -9,9 +9,15 @@
 .board-square{position:relative;width:100%;padding-top:100%;border-radius:4px;overflow:hidden}
 /* absolute inset:0 gives the grid a definite height, so 1fr rows == 1fr columns == equal squares. */
 .arrows{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:var(--z-arrows)}
+/* Holding a square is a drawing gesture, so the platform must not answer it
+   first with a text selection, an iOS callout menu or a tap flash -- the
+   coordinate labels are real text and were being selected by exactly the press
+   that is supposed to start an arrow. */
 .board{
   position:absolute;top:0;left:0;right:0;bottom:0;
   display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
+  user-select:none;-webkit-user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
 }
 .sq{position:relative;display:flex;align-items:center;justify-content:center;line-height:1}
 .sq.light{background:var(--square-light)}

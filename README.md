@@ -298,22 +298,29 @@ The same note can be written while you are reading, without a rebuild. Under
 every move there is **Write a note on this position**; it opens a text box and
 turns the board into a drawing surface.
 
-| To draw | Do this |
-| --- | --- |
-| An arrow | **Right-drag** on the board |
-| A circled square | **Right-click** it |
-| Either, without a right button | **Make arrow** or **Circle square**, then tap the squares |
-| Undo one mark | Click it in the list under the text box |
-| Undo an arrow you just drew | Draw it again — the second time removes it |
+| To draw | With a mouse | With a finger |
+| --- | --- | --- |
+| An arrow | **Right-drag** across the board | **Hold** a square, then drag to the target |
+| A circled square | **Right-click** it | **Hold** it and let go without moving |
+| Either, spelled out | — | **Make arrow** / **Circle square**, then tap the squares |
+| Undo one mark | Click it in the list under the text box | Same |
+| Undo an arrow you just drew | Draw it again — the second time removes it | Same |
 
-**Drawing is the right button, and only the right button.** A left-drag on this
-board means *play this move*, and read mode answers whatever you play with the
-deviation library — so an open text box changes nothing about what the board
-does. Right-drag works whether the editor is open or not, and opens it on the way.
+**A left-drag never draws.** On this board it means *play this move*, and read
+mode answers whatever you play with the deviation library — so an open text box
+changes nothing about what the board does. Right-drag works whether the editor is
+open or not, and opens it on the way.
 
-The one exception is the two-tap tools, which exist because a finger has no right
-button: pressing **Make arrow** or **Circle square** buys a plain tap its new
-meaning, and buys it for exactly two taps.
+A finger has no right button, so a **long press** replaces it: hold a square for
+about 400ms and the mark starts under your finger. Moving more than ten pixels
+before that cancels it, because that is a piece being dragged to a square, and so
+does letting go early, because that is a tap. Holding is also switched off while
+drill is asking you for a move — the one time an accidental arrow would land in
+the middle of the gesture you actually meant.
+
+The two-tap tools are the same two marks without any gesture at all: pressing
+**Make arrow** or **Circle square** buys a plain tap its new meaning, and buys it
+for exactly two taps.
 
 Notes are stored in `localStorage` under `chessopening` — the same single JSON
 payload as your drill progress and theme, under a `notes` key — and are **keyed

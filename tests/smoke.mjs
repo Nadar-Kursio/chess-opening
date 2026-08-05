@@ -275,15 +275,18 @@ step("your own notes", () => {
    real finger lands where it looks like it does. */
 let dropTarget = null;
 const square = name => $(`[data-sq="${name}"]`);
-const pointer = (type, button, id) => {
-  const e = new window.MouseEvent(type, { bubbles: true, button, cancelable: true });
+const pointer = (type, button, id, kind, x = 0, y = 0) => {
+  const e = new window.MouseEvent(type, { bubbles: true, button, cancelable: true, clientX: x, clientY: y });
   Object.defineProperty(e, "pointerId", { value: id });
+  Object.defineProperty(e, "pointerType", { value: kind });
   return e;
 };
-const press = (name, button = 0, id = 1) => square(name).dispatchEvent(pointer("pointerdown", button, id));
+const press = (name, button = 0, id = 1, kind = "mouse") =>
+  square(name).dispatchEvent(pointer("pointerdown", button, id, kind));
+const move = (id, x, y) => doc.dispatchEvent(pointer("pointermove", 0, id, "touch", x, y));
 const release = (name, id = 1) => {
   dropTarget = square(name);
-  doc.dispatchEvent(pointer("pointerup", 0, id));
+  doc.dispatchEvent(pointer("pointerup", 0, id, "touch"));
 };
 
 step("writing a note here", () => {
@@ -364,6 +367,43 @@ step("a note here shadows the file, and never destroys it", () => {
   key("Escape", $("#notetext"));
   want("Escape leaves the editor", !app("state.note"));
   checkLeaks("shadowed note");
+});
+
+/* A finger has no right button, so holding still on a square is what replaces
+   it. The timer is not waited on -- the test fires it -- because what is worth
+   proving is that the hold arms, that travel disarms it, and that firing it
+   takes the pointer away from the board rather than leaving both in charge. */
+step("holding a square draws, on a device with no right button", () => {
+  doc.elementFromPoint = () => dropTarget;
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 2; app("render")();
+  app("state").note = null;
+
+  press("f1", 0, 3, "touch");
+  want("a touch press arms a hold", app("!!noteHold"));
+  want("a mouse press does not", (() => { press("f1", 0, 4, "mouse"); return !app("noteHold"); })());
+
+  press("f1", 0, 5, "touch");
+  move(5, 40, 40);
+  want("travelling disarms it — that is a piece being dragged", !app("noteHold"));
+
+  press("f1", 0, 6, "touch");
+  want("the board had the pointer first", app("!!state.selected || !!state.drag"));
+  app("noteHoldFire")();
+  want("the hold takes it", app("state.drawing?.from") === "f1");
+  want("and the board lets go", !app("state.selected") && !app("state.drag"));
+  want("the editor came with it", app("!!state.note"));
+  release("c4", 6);
+  want("dragging to another square makes the arrow",
+       app("state.note.arrows.length") === 1 && app("state.note.arrows[0].t") === "c4");
+
+  // Hold and let go without travelling: the touch equivalent of a right-click.
+  press("d2", 0, 7, "touch");
+  app("noteHoldFire")();
+  release("d2", 7);
+  want("holding in place circles the square", app("state.note.spots[0]") === "d2");
+  click($('[data-act="notecancel"]'));
+  checkLeaks("held to draw");
 });
 
 step("an open note follows its own position, not the cursor", () => {
