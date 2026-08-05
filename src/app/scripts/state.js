@@ -21,6 +21,7 @@ const state = {
   selected:null,   // square the learner has picked up, e.g. "f1"
   drag:null,       // {from, id} while a pointer drag is live
   picking:false,   // the deviation picker is open
+  varsOpen:false,  // the variation list is showing all of them, on a narrow screen
   navOpen:false,   // the drawer, on a narrow screen
   navQuery:"",     // what is typed into the nav's filter
 

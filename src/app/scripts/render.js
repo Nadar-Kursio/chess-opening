@@ -93,6 +93,63 @@ function recordHTML(line){
       </div>`;
 }
 
+/* Which of an opening's lines you are reading, and what the others are.
+   Capsules in a row fit three short names; the Four Knights teaches ten, half of
+   them long enough to wrap inside their own capsule -- and a name is the one
+   thing about a variation that does not help you choose it. So each line gets
+   the row a chapter list gives it: how hard it is, how long it runs, how
+   mainstream it is, and how your last drill of it went.
+
+   The sentence saying what the line is stays with the line you are on, where it
+   already was. Eleven of them stacked would be a page of prose above the coach
+   card, so the others carry theirs as a title, the way the rail does. */
+function variationRowHTML(op, l, i){
+  const on = i === state.line;
+  const score = dbProgress(op.id, i);
+  const meta = [
+    `${Math.ceil((l.plies.length - 1) / 2)} moves`,
+    l.record ? `${l.record.games.toLocaleString()} master games` : "",
+    score && score.asked ? `${score.right}/${score.asked} first try` : "",
+  ].filter(Boolean);
+  return `<button class="variation" data-line="${i}" aria-pressed="${on}" title="${esc(l.note)}">
+          <span class="variation__name">${l.name}
+            ${l.tier?`<span class="variation__tier">${l.tier}</span>`:""}</span>
+          ${on?`<span class="variation__note">${l.note}</span>`:""}
+          <span class="variation__meta">${meta.join('<span class="sep">&middot;</span>')}</span>
+        </button>`;
+}
+
+/* On a phone the list collapses to the line you are on. The board above it is
+   pinned and worth its pixels, and ten rows of chapter list between the two is
+   not reading -- but nothing is hidden behind a setting: the count says how many
+   there are and the button opens them. */
+function variationsHTML(op){
+  const open = state.varsOpen;
+  return `
+      <div class="variations${open?" variations--open":""}" role="group"
+        aria-label="Variations of ${op.name}">
+        <div class="variations__head">
+          <span class="label label--accent">Variations</span>
+          <span class="variations__count">${state.line+1} of ${op.lines.length}</span>
+          <button class="pill variations__toggle" id="varstoggle" data-act="vars"
+            aria-expanded="${open}" aria-controls="varlist">${open?"Fewer":`All ${op.lines.length}`}<span
+            class="glyph" aria-hidden="true">${open?"&#9652;":"&#9662;"}</span></button>
+        </div>
+        <div class="variations__list" id="varlist">
+          ${op.lines.map((l,i)=>variationRowHTML(op, l, i)).join("")}
+        </div>
+      </div>`;
+}
+
+/* Re-rendering drops focus, and a disclosure whose button vanishes from under
+   the keyboard has answered by moving the page out from under it. */
+ACTIONS.vars = ()=>{
+  state.varsOpen = !state.varsOpen;
+  render();
+  const toggle = document.getElementById("varstoggle");
+  if(toggle) toggle.focus();
+};
+
 function tacticsLineHTML(tactics){
   return `<div class="tactics"><span class="label">On the board</span>
     <span>${tacticsHTML(tactics)}.</span></div>`;
@@ -136,11 +193,7 @@ function studyHTML(op, line, p){
     })}
 
     <div class="study__notes">
-      <div class="variations" role="group" aria-label="Variations of ${op.name}">
-        ${op.lines.map((l,i)=>`<button class="variation"
-          aria-pressed="${i===state.line}" data-line="${i}">${l.name}</button>`).join("")}
-      </div>
-      <p class="variation__note">${line.note}</p>
+      ${variationsHTML(op)}
       ${recordHTML(line)}
       <div class="scoresheet scroller${inDeviation?" scoresheet--muted":""}" id="tape">${scoresheetHTML(line)}</div>
       ${state.picking ? devPickerHTML() : ""}
@@ -223,7 +276,7 @@ function bindView(el){
   document.getElementById("b-mine").onclick  = ()=>{state.mine=!state.mine;render()};
   document.getElementById("b-play").onclick  = toggleAutoplay;
   el.querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>{
-    stopAutoplay(); state.deviation=null; state.picking=false;
+    stopAutoplay(); state.deviation=null; state.picking=false; state.varsOpen=false;
     state.line=+b.dataset.line; state.ply=0;
     if(state.mode==="drill") drillStart(); else render();
   });
