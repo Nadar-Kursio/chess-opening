@@ -66,7 +66,7 @@ ACTIONS.openline = t=>{
   const op = currentOpening();
   state.line = Math.min(+t.dataset.line, op.lines.length-1);
   state.ply = 0;
-  state.flipped = op.orientation === "black";
+  state.flipped = currentSide() === "black";
   buildNav(); render(); window.scrollTo({top:0,behavior:"instant"});
 };
 ACTIONS.notesource = ()=>{

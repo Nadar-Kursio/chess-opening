@@ -31,7 +31,7 @@ function planCardHTML(op, line){
    naming them here is the difference between a line that stops and a line that
    hands over. */
 function planEndHTML(op, line){
-  const mine = op.orientation === "black" ? op.theory.black_plans : op.theory.white_plans;
+  const mine = lineSide(op, line) === "black" ? op.theory.black_plans : op.theory.white_plans;
   return `
       <div class="plan plan--generic">
         <p class="label">You're on your own from here</p>

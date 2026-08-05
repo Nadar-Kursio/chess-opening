@@ -181,7 +181,7 @@ function go(id){
   }
   else {
     state.view="op"; state.opId=id; state.line=0; state.ply=0;
-    state.flipped = DATA.find(o=>o.id===id).orientation==="black";
+    state.flipped = currentSide()==="black";
     // State only: this function renders once, at the end, and a drill that
     // rendered here too would draw the view half-built.
     if(state.mode === "drill") drillReset();

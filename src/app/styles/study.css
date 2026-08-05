@@ -76,6 +76,14 @@
   flex:none;font-size:var(--text-label);letter-spacing:var(--track-label);
   text-transform:uppercase;font-weight:600;color:var(--text-faint);
 }
+/* The chair you occupy for this line, shown only when it is not the opening's
+   own -- a trap is studied from both sides, and which one you are drilling is
+   the first thing to know about a row. margin-right:auto keeps it beside the
+   name inside the space-between row rather than floating to the middle. */
+.variation__side{
+  flex:none;margin-right:auto;font-size:var(--text-label);letter-spacing:var(--track-label);
+  text-transform:uppercase;font-weight:600;color:var(--info);
+}
 .variation__note{
   display:block;font-size:var(--text-sm);line-height:1.5;
   color:var(--text-soft);margin-top:var(--space-1);

@@ -105,7 +105,7 @@ function dbRestore(){
   state.opId = op.id;
   state.line = Math.min(Math.max(0, last.line|0), op.lines.length - 1);
   state.ply  = Math.min(Math.max(0, last.ply|0), op.lines[state.line].plies.length - 1);
-  state.flipped = op.orientation === "black";
+  state.flipped = currentSide() === "black";
 }
 
 function dbLineKey(opId, line){ return opId + "/" + line; }

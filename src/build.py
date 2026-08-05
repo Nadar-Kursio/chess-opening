@@ -66,7 +66,7 @@ OPENING_NOTE = ("The starting position. White moves first — and that single te
                 "is the whole reason opening theory exists.")
 
 
-LINE_EXTRAS = ("tier", "drill", "plan", "record")
+LINE_EXTRAS = ("tier", "drill", "plan", "record", "side")
 
 RECORD_KEYS = ("at", "games", "white", "draw", "black")
 
@@ -481,7 +481,7 @@ def packed_legal(board):
     return "".join(seen)
 
 
-def build_line(op_id, index, line, errors, side=None, branches=None, notes=None, evals=None):
+def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None):
     """Replay one line, returning its ply-by-ply record.
 
     When the line opts in with "drill": True, every position carries `legal` --
@@ -547,11 +547,14 @@ def build_line(op_id, index, line, errors, side=None, branches=None, notes=None,
     if line.get("record"):
         errors.extend(record_errors(f"{op_id} / line {index} '{line['name']}'",
                                     line["record"], line["moves"].split()))
+    if line.get("side") and line["side"] not in ("white", "black"):
+        errors.append(f"{op_id} / line {index} '{line['name']}': "
+                      f"side {line['side']!r} is not a colour")
 
     out = {"name": line["name"], "note": line.get("note", ""), "plies": plies}
     # Forward the optional line-level settings. Building the record from a fixed
     # set of keys is what would otherwise drop them without a word.
-    for key in ("tier", "plan", "record"):
+    for key in ("tier", "plan", "record", "side"):
         if line.get(key):
             out[key] = line[key]
     return out
@@ -563,12 +566,11 @@ def build_openings(games, evals):
     out = []
     written = placed = 0
     for op in load():
-        side = chess.WHITE if op["orientation"] == "white" else chess.BLACK
         notes = NoteIndex(op["id"], errors)
         branches = BranchIndex(op, errors, notes, evals)
         lines = with_deep_line(op)
         record = {k: v for k, v in op.items() if k not in ("deep", "branches", "games")}
-        record["lines"] = [build_line(op["id"], i, line, errors, side, branches, notes, evals)
+        record["lines"] = [build_line(op["id"], i, line, errors, branches, notes, evals)
                            for i, line in enumerate(lines)]
         if branches.sets:
             record["branchsets"] = branches.sets
