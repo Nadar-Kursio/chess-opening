@@ -50,10 +50,13 @@
    owns --z-cue. They stay below the piece, so a piece is never obscured by the
    cue pointing at it. */
 .board.live{touch-action:none}
-.board.live .sq{cursor:pointer}
-/* A piece you may pick up says so with the hand every chess site uses. */
+/* Only what responds invites a press: a piece you may pick up wears the hand
+   every chess site uses, a square the picked-up piece may go to is pressable,
+   and an empty square that would ignore the click keeps the plain cursor. */
+.board.live .sq{cursor:default}
 .board.live .sq.grab{cursor:grab}
 .board.live .sq.grab:active{cursor:grabbing}
+.board.live .sq.target{cursor:pointer}
 
 .sq.picked-up::after{
   content:"";position:absolute;inset:0;z-index:var(--z-cue);
