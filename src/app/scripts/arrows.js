@@ -5,7 +5,8 @@ const ARROW_COLORS = {
   move: "rgba(124,163,90,0.72)",
   chk:  "rgba(234,59,51,0.92)",
   ctrl: "rgba(224,180,74,0.85)",
-  mine: "rgba(168,116,208,0.88)"     // --mine in tokens.css; change both
+  mine: "rgba(168,116,208,0.88)",    // --mine in tokens.css; change both
+  live: "rgba(168,116,208,0.45)"     // the same mark, still being dragged out
 };
 const ARROW_ON = { move:true, atk:true, chk:true, def:true, ctrl:true };
 
@@ -74,16 +75,27 @@ function drawMoveArrows(ctx, square){
   });
 }
 
-/* What YOU said about the position: the arrows and circled squares written
-   beside a note in src/content/notes/. Nothing engine-derived reaches here --
-   these are drawn exactly as they were authored, which is the point of them. */
+/* What YOU said about the position: the arrows and circled squares beside a
+   note, whether it came from src/content/notes/ or was drawn here. Nothing
+   engine-derived reaches this function -- these are drawn exactly as they were
+   authored, which is the point of them.
+
+   While the editor is open it is the working copy that draws, so a mark appears
+   under the pointer and disappears again on Cancel. */
 function drawMyMarks(ctx, square){
-  const mine = (currentPly() || {}).mine;
-  if(!mine) return;
-  (mine.spots || []).forEach(sq=>drawRing(ctx, sq, ARROW_COLORS.mine, square));
-  (mine.arrows || []).forEach(a=>{
-    drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square*0.12, square);
-  });
+  const mine = state.note || noteShown(currentPly());
+  if(mine){
+    (mine.spots || []).forEach(sq=>drawRing(ctx, sq, ARROW_COLORS.mine, square));
+    (mine.arrows || []).forEach(a=>{
+      drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square*0.12, square);
+    });
+  }
+  // The mark being made: a rubber band under the finger, and the tail of a
+  // two-tap arrow waiting for its second square.
+  const d = state.drawing;
+  if(d && d.to !== d.from) drawArrowBetween(ctx, d.from, d.to, ARROW_COLORS.live, square*0.12, square);
+  else if(d) drawRing(ctx, d.from, ARROW_COLORS.live, square);
+  if(state.note && state.note.from) drawRing(ctx, state.note.from, ARROW_COLORS.live, square);
 }
 
 /* One arrow between two named squares, bent into an L when it is shaped like a

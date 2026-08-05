@@ -28,7 +28,10 @@ function dbDefaults(){
     ui: {arrows:true, mine:true},
     last: {view:"primer", opId:null, line:0, ply:0},
     streak: {cur:0, best:0, day:""},
-    lines: {}
+    lines: {},
+    // Keyed by position, like the notes files the build reads, so a note follows
+    // a transposition instead of belonging to one line of one opening.
+    notes: {}
   };
 }
 
@@ -40,6 +43,7 @@ function dbMigrate(saved){
     if(saved[k] && typeof saved[k]==="object") Object.assign(out[k], saved[k]);
   });
   if(saved.lines && typeof saved.lines==="object") out.lines = saved.lines;
+  if(saved.notes && typeof saved.notes==="object") out.notes = saved.notes;
   out.v = DB_VERSION;
   return out;
 }

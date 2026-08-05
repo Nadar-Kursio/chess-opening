@@ -510,6 +510,10 @@ function moverSide(){
    forward -- the board is the interface, a button is the fallback. */
 function boardLive(){
   if(state.deviation) return false;
+  // Only while a two-tap mark tool is armed: those taps belong to the mark being
+  // made. An open note editor otherwise leaves the board alone -- drawing is the
+  // right button, so a text box on the page is no reason to stop taking moves.
+  if(state.note && state.note.tool) return false;
   if(state.picking) return true;
   // Reading is not watching. The board is the most obvious thing on the page, so
   // it answers a move at all times rather than only after you have found a mode
@@ -588,6 +592,9 @@ function drillPick(sq){
 }
 
 document.getElementById("content").addEventListener("pointerdown", e=>{
+  // Primary button only. A right-press is the annotation gesture, and picking a
+  // piece up with it would leave a selection nothing ever puts down.
+  if(e.button !== 0) return;
   if(!boardLive()) return;
   const cell = e.target.closest("[data-sq]");
   if(!cell) return;
@@ -625,6 +632,7 @@ function drillKey(e){
 
   // Escape unwinds one layer at a time, innermost first.
   if(k === "Escape"){
+    if(state.note){ noteCancel(); return true; }
     if(state.selected){ state.selected = null; drillPaint(); return true; }
     if(state.picking){ state.picking = false; render(); return true; }
     if(state.deviation){ devExit(); return true; }

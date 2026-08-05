@@ -58,8 +58,8 @@ STYLES = ["tokens", "base", "controls", "shell", "page", "board", "notation",
           "record", "coach", "notes", "deviation", "study", "strategy", "path",
           "structures", "primer", "progress", "responsive"]
 SCRIPTS = ["state", "store", "appbar", "nav", "board", "arrows", "move",
-           "drill", "deviation", "plan", "structure", "render", "primer",
-           "progress", "boot"]
+           "drill", "deviation", "notepad", "plan", "structure", "render",
+           "primer", "progress", "boot"]
 
 OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
                 "is the whole reason opening theory exists.")

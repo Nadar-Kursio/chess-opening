@@ -3,6 +3,7 @@
    enough that diffing would cost more than it saves. The view is split into
    partials only so each piece is addressable -- render() itself stays a router. */
 function render(){
+  noteSyncPosition();   // an open note editor belongs to the position it was opened on
   const el = document.getElementById("content");
   el.innerHTML = viewHTML();
   bindView(el);
@@ -110,30 +111,6 @@ function coachNoteHTML(p){
       </article>`;
 }
 
-/* Your own note on this position, under whatever the course had to say about
-   it. Its own card, deliberately: the coach card is engine-checked and this is
-   what you remembered, and six months from now the difference is the only thing
-   that tells you which of the two to trust.
-
-   One switch covers the card and the marks it describes, because they are one
-   note: turning it off leaves the course exactly as it was before you wrote
-   anything. In drill they come back together, once the answer is out. */
-function myNoteHTML(p){
-  const mine = p && p.mine;
-  if(!mine || !state.mine || drillHidesArrows()) return "";
-  // The glyphs mirror what is drawn: a line to a square, or a ring round one.
-  const marks = (mine.arrows||[]).map(a=>`${a.f}&rarr;${a.t}`)
-    .concat((mine.spots||[]).map(s=>`&#9675;${s}`));
-  return `
-      <article class="mynote">
-        <header class="mynote__head">
-          <span class="label">My note</span>
-          ${marks.length?`<span class="mynote__marks">${marks.join(" ")}</span>`:""}
-        </header>
-        ${mine.text?`<p class="mynote__body">${squaresHTML(mine.text)}</p>`:""}
-      </article>`;
-}
-
 function studyHTML(op, line, p){
   const inDeviation = !!state.deviation;
   const plies = currentPlies(), idx = currentIndex();
@@ -145,14 +122,17 @@ function studyHTML(op, line, p){
 
     ${boardColumnHTML({
       ply:p, index:idx, total:plies.length-1, locked, arrows:true,
-      notes:plies.some(q=>q.mine),
+      notes:true,
       canPlay:state.mode!=="drill" && !inDeviation,
       readout: inDeviation
         ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
         : `Move <b>${state.ply}</b> of ${line.plies.length-1} &middot; ${state.flipped?"Black":"White"} up`,
-      hint: state.mode==="drill"
+      hint: state.note && state.note.tool
+        ? "Tap the squares for the mark you are making. <b>Esc</b> to stop."
+        : state.mode==="drill"
         ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
-        : "Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step."
+        : `Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step.${
+            state.mine ? " Hold or right-drag to draw." : ""}`
     })}
 
     <div class="study__notes">
@@ -169,7 +149,7 @@ function studyHTML(op, line, p){
         : `${state.drill.verdict && state.drill.verdictPly === state.ply
               ? `<p class="verdict verdict--framed" data-tone="${state.drill.tone||"flat"}">${state.drill.verdict}</p>` : ""}
            ${coachNoteHTML(p)}`}
-      ${myNoteHTML(p)}
+      ${noteCardHTML(p)}
       ${planHTML(op, line)}
     </div>
   </section>`;
@@ -270,6 +250,7 @@ function afterRender(){
   sizePieces();
   drawArrows();
   drillArm();
+  noteArm();
   scrollScoresheetToCurrent();
   syncAppbar();
   dbRemember();   // debounced, so stepping a line with the arrow keys costs one write

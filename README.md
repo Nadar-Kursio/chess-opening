@@ -74,7 +74,7 @@ src/
       controls.css                 .btn / .pill / .seg -- every control on the page
       shell.css                    app bar, course nav, the two-column frame
       …then one file per component, and responsive.css last
-    scripts/                     15 scripts, concatenated in build.py's order
+    scripts/                     16 scripts, concatenated in build.py's order
 
 scripts/serve.sh               <- build and preview locally; sets up .venv if needed
 tests/test_content.py          <- shape checks over the opening catalogue
@@ -291,6 +291,60 @@ Nothing here is verified. That is the reason for the separate card and the
 separate colour: six months from now, the difference between what an engine
 confirmed and what you remembered is the only thing telling you which of the two
 to trust.
+
+### Writing one in the browser
+
+The same note can be written while you are reading, without a rebuild. Under
+every move there is **Write a note on this position**; it opens a text box and
+turns the board into a drawing surface.
+
+All of it is behind the **Notes** button beside Flip and Arrows. With that
+switched off there is no way in, and neither drawing gesture below does anything
+— both are presses the board would otherwise have used for something else, and a
+gesture that made a mark you could not see would be the page quietly changing its
+mind about what a press means. Switching the layer off while you are mid-note
+saves what you typed and closes the editor, the same as walking away from it.
+
+| To draw | With a mouse | With a finger |
+| --- | --- | --- |
+| An arrow | **Right-drag** across the board | **Hold** a square, then drag to the target |
+| A circled square | **Right-click** it | **Hold** it and let go without moving |
+| Either, spelled out | — | **Make arrow** / **Circle square**, then tap the squares |
+| Undo one mark | Click it in the list under the text box | Same |
+| Undo an arrow you just drew | Draw it again — the second time removes it | Same |
+
+**A left-drag never draws.** On this board it means *play this move*, and read
+mode answers whatever you play with the deviation library — so an open text box
+changes nothing about what the board does. Right-drag works whether the editor is
+open or not, and opens it on the way.
+
+A finger has no right button, so a **long press** replaces it: hold a square for
+about 400ms and the mark starts under your finger. Moving more than ten pixels
+before that cancels it, because that is a piece being dragged to a square, and so
+does letting go early, because that is a tap. Holding is also switched off while
+drill is asking you for a move — the one time an accidental arrow would land in
+the middle of the gesture you actually meant.
+
+The two-tap tools are the same two marks without any gesture at all: pressing
+**Make arrow** or **Circle square** buys a plain tap its new meaning, and buys it
+for exactly two taps.
+
+Notes are stored in `localStorage` under `chessopening` — the same single JSON
+payload as your drill progress and theme, under a `notes` key — and are **keyed
+by position** exactly like the files, so a note follows a transposition into a
+different opening and survives a line being renamed or reordered. A note written
+here shadows the file's note for the same position; nothing in a browser can edit
+a file, so **Delete** always brings the shipped text back.
+
+The editor belongs to the position it was opened on. Stepping away mid-sentence
+saves what you typed against that position rather than dropping it or filing it
+against the move you stepped onto.
+
+**Your progress → Copy as a notes file** writes everything you have annotated in
+the format above, grouped into the file each block belongs in. Within one
+opening a shared position is written once — the build rejects two notes on one
+position — and across openings it is repeated, because a notes file is read per
+opening and the Italian's copy is not one the Ruy Lopez can see.
 
 **Before writing any of it, read `.claude/skills/opening-research/SKILL.md`.** The
 build proves a move legal; nothing here proves a claim *true*, and "this wins a

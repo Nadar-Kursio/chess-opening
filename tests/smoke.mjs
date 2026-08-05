@@ -269,6 +269,216 @@ step("your own notes", () => {
   checkLeaks("my note");
 });
 
+/* Drawing is pointer work, and jsdom has neither layout nor a PointerEvent, so
+   the drop square is read through elementFromPoint -- stubbed here with the
+   square the test nominates. What that proves is the state machine, not that a
+   real finger lands where it looks like it does. */
+let dropTarget = null;
+const square = name => $(`[data-sq="${name}"]`);
+const pointer = (type, button, id, kind, x = 0, y = 0) => {
+  const e = new window.MouseEvent(type, { bubbles: true, button, cancelable: true, clientX: x, clientY: y });
+  Object.defineProperty(e, "pointerId", { value: id });
+  Object.defineProperty(e, "pointerType", { value: kind });
+  return e;
+};
+const press = (name, button = 0, id = 1, kind = "mouse") =>
+  square(name).dispatchEvent(pointer("pointerdown", button, id, kind));
+const move = (id, x, y) => doc.dispatchEvent(pointer("pointermove", 0, id, "touch", x, y));
+const release = (name, id = 1) => {
+  dropTarget = square(name);
+  doc.dispatchEvent(pointer("pointerup", 0, id, "touch"));
+};
+
+step("writing a note here", () => {
+  doc.elementFromPoint = () => dropTarget;
+  // A position with no note of its own, so the entry point has to be offered.
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 4; app("render")();
+  want("an empty position offers a way in", $(".mynote-add"));
+  click($(".mynote-add"));
+  want("the editor opens", $(".mynote--editing") && $("#notetext"));
+  // Drawing is the right button only. An open text box is no reason for the
+  // board to stop answering the moves you play on it.
+  want("the board still takes moves", app("boardLive")());
+  want("a left press is not a drawing gesture", !app("noteDrawGesture({button:0})"));
+  want("a right press is", app("noteDrawGesture({button:2})"));
+
+  const box = $("#notetext");
+  box.value = "The bishop eyes f7.";
+  box.dispatchEvent(new window.Event("input", { bubbles: true }));
+  want("typing reaches the working copy", app("state.note.text") === "The bishop eyes f7.");
+
+  // Two-tap: the button anyone can find, and the only one a phone has.
+  // The exception, and the only one a phone has: arming a tool buys a plain tap
+  // its new meaning, and the board stops taking moves for exactly those taps.
+  click($('[data-act="notetool"][data-v="arrow"]'));
+  want("the tool arms", app("state.note.tool") === "arrow");
+  want("an armed tool makes a left press a drawing gesture", app("noteDrawGesture({button:0})"));
+  want("and the board stands down while it is armed", !app("boardLive")());
+  press("c4");
+  want("the first tap is the tail", app("state.note.from") === "c4");
+  press("f7");
+  want("the second tap makes the arrow", app("state.note.arrows.length") === 1);
+  click($('[data-act="notetool"][data-v="spot"]'));
+  press("f7");
+  want("circle square marks it", app("state.note.spots[0]") === "f7");
+
+  // Right-drag: the gesture, which must not disturb the move the board plays.
+  press("d1", 2, 7); release("h5", 7);
+  want("a right-drag draws an arrow", app("state.note.arrows.length") === 2);
+  want("every mark is listed as its own undo", $$(".mynote__mark").length === 3);
+  click($$(".mynote__mark")[0]);
+  want("clicking a mark removes it", $$(".mynote__mark").length === 2);
+
+  click($('[data-act="notesave"]'));
+  want("saving closes the editor", !app("state.note") && !$(".mynote--editing"));
+  want("and the note is kept", $(".mynote__body"));
+  want("which says it is local", /this browser/.test($(".mynote__where")?.textContent || ""));
+  checkLeaks("wrote a note");
+
+  // Keyed by position: leaving and coming back is the only test that matters.
+  const key = app("noteKey(currentPly())");
+  app("state").ply = 0; app("render")();
+  want("the note does not follow you to another position", !$(".mynote"));
+  app("state").ply = 4; app("render")();
+  want("and is there on the way back", $(".mynote__body"));
+  want("it is stored against the position", app(`!!db.notes[${JSON.stringify(key)}]`));
+});
+
+step("a note here shadows the file, and never destroys it", () => {
+  const found = report.noteAt;
+  if (!found) return;
+  app("go")(found.op);
+  app("state").line = found.line; app("state").ply = found.ply; app("render")();
+  const shipped = $(".mynote__body").textContent;
+  want("the file's note is what shows first", /notes file/.test($(".mynote__where").textContent));
+  click($(".mynote__edit"));
+  want("editing seeds from what was on screen", app("state.note.text").length > 0);
+  $("#notetext").value = "Mine now.";
+  $("#notetext").dispatchEvent(new window.Event("input", { bubbles: true }));
+  click($('[data-act="notesave"]'));
+  want("yours wins", $(".mynote__body").textContent === "Mine now.");
+  click($(".mynote__edit"));
+  click($('[data-act="notedelete"]'));
+  want("deleting yours brings the file's back", $(".mynote__body").textContent === shipped);
+  want("and says so", /notes file/.test($(".mynote__where").textContent));
+
+  click($(".mynote__edit"));
+  key("Escape", $("#notetext"));
+  want("Escape leaves the editor", !app("state.note"));
+  checkLeaks("shadowed note");
+});
+
+/* A finger has no right button, so holding still on a square is what replaces
+   it. The timer is not waited on -- the test fires it -- because what is worth
+   proving is that the hold arms, that travel disarms it, and that firing it
+   takes the pointer away from the board rather than leaving both in charge. */
+step("holding a square draws, on a device with no right button", () => {
+  doc.elementFromPoint = () => dropTarget;
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 2; app("render")();
+  app("state").note = null;
+
+  press("f1", 0, 3, "touch");
+  want("a touch press arms a hold", app("!!noteHold"));
+  want("a mouse press does not", (() => { press("f1", 0, 4, "mouse"); return !app("noteHold"); })());
+
+  press("f1", 0, 5, "touch");
+  move(5, 40, 40);
+  want("travelling disarms it — that is a piece being dragged", !app("noteHold"));
+
+  press("f1", 0, 6, "touch");
+  want("the board had the pointer first", app("!!state.selected || !!state.drag"));
+  app("noteHoldFire")();
+  want("the hold takes it", app("state.drawing?.from") === "f1");
+  want("and the board lets go", !app("state.selected") && !app("state.drag"));
+  want("the editor came with it", app("!!state.note"));
+  release("c4", 6);
+  want("dragging to another square makes the arrow",
+       app("state.note.arrows.length") === 1 && app("state.note.arrows[0].t") === "c4");
+
+  // Hold and let go without travelling: the touch equivalent of a right-click.
+  press("d2", 0, 7, "touch");
+  app("noteHoldFire")();
+  release("d2", 7);
+  want("holding in place circles the square", app("state.note.spots[0]") === "d2");
+  click($('[data-act="notecancel"]'));
+  checkLeaks("held to draw");
+});
+
+step("with Notes switched off, neither gesture draws", () => {
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 2; app("state").note = null;
+  app("state").mine = true; app("render")();
+  want("the way in is offered while the layer is on", $(".mynote-add"));
+
+  click($("#b-mine"));
+  want("the layer is off", !app("state.mine"));
+  want("and there is no way in", !$(".mynote-add") && !$(".mynote"));
+  want("a right press draws nothing", !app("noteDrawGesture({button:2})"));
+  press("f1", 0, 9, "touch");
+  want("a hold does not even arm", !app("noteHold"));
+  press("f1", 2, 10);
+  want("and a right-drag starts nothing", !app("state.drawing"));
+
+  click($("#b-mine"));
+  want("switching it back on restores both", app("state.mine") && $(".mynote-add")
+       && app("noteDrawGesture({button:2})"));
+  checkLeaks("notes off");
+});
+
+step("switching the layer off closes an open editor without losing it", () => {
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 3; app("state").mine = true; app("render")();
+  click($(".mynote-add") || $(".mynote__edit"));
+  const here = app("noteKey(currentPly())");
+  $("#notetext").value = "Typed, then hidden.";
+  $("#notetext").dispatchEvent(new window.Event("input", { bubbles: true }));
+  click($("#b-mine"));
+  want("the editor does not outlive the layer", !app("state.note"));
+  want("but what was typed is kept",
+       app(`db.notes[${JSON.stringify(here)}]?.text`) === "Typed, then hidden.");
+  click($("#b-mine"));
+  want("and comes back with the layer", $(".mynote__body")?.textContent === "Typed, then hidden.");
+  checkLeaks("layer off with editor open");
+});
+
+step("an open note follows its own position, not the cursor", () => {
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 6; app("render")();
+  const here = app("noteKey(currentPly())");
+  click($(".mynote-add") || $(".mynote__edit"));
+  $("#notetext").value = "Filed against move six.";
+  $("#notetext").dispatchEvent(new window.Event("input", { bubbles: true }));
+  // Stepping away mid-sentence must not file what was typed on the next move,
+  // and must not throw it away either.
+  app("step")(1);
+  want("stepping closes the editor", !app("state.note"));
+  want("what was typed is kept, on the position it was written for",
+       app(`db.notes[${JSON.stringify(here)}]?.text`) === "Filed against move six.");
+  want("and the position stepped onto is untouched", app("!db.notes[noteKey(currentPly())]"));
+  app("state").ply = 6; app("render")();
+  want("it reads back", $(".mynote__body")?.textContent === "Filed against move six.");
+  checkLeaks("note kept across a step");
+});
+
+step("notes come back out in the format the build reads", () => {
+  app("go")("progress");
+  click($('[data-act="notesource"]'));
+  const text = $("#transferbox").value;
+  want("there is something to promote", text.length > 20);
+  want("it names the file each block belongs in", /# src\/content\/notes\/\w+\.txt/.test(text));
+  want("blocks are titled the way the parser needs", /^\S.*:$/m.test(text));
+  // The build refuses two notes on one position, so a duplicated block would be
+  // rejected outright by the file it was written for.
+  const perFile = text.split(/^# src\/content\/notes\//m).slice(1);
+  for (const file of perFile) {
+    const notes = file.match(/\([^)]*\)/g) || [];
+    want("no note is written twice in one file", notes.length === new Set(notes).size);
+  }
+  checkLeaks("notes as source");
+});
+
 step("structures, games, progress", () => {
   if (app("STRUCTURES.length")) {
     app("go")("structure:" + app("STRUCTURES[0].id"));

@@ -38,7 +38,8 @@ is installed — `npm install jsdom` once, and `node_modules/` is gitignored.
 - `src/content/notes/` is the one exception, and it is deliberate: those are the
   author's own notes, unverified by design, which is why they render in their own
   card in their own colour. Do not fold them into the coached commentary, and do
-  not present them as checked.
+  not present them as checked. The same applies to notes written in the browser
+  (`src/app/scripts/notepad.js`), which are stored by position in `db.notes`.
 - Browser-layer tests use jsdom, not Playwright.
 - Changes under `.github/workflows/` can read repository secrets. Review them as
   security changes, not as config.
