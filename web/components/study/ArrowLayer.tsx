@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import type { Arrow } from "@/lib/content/types";
 import type { NoteRecord } from "@/lib/db";
 import type { Rejected } from "@/lib/study/useStudy";
-import { FILES } from "@/lib/chess/read";
+import { FILES, pieceAt } from "@/lib/chess/read";
 
 /* Canvas arrow overlay, ported from arrows.js — Canvas 2D, not SVG, including
    the L-shaped knight arrows. Redraws whole on every relevant change; the
@@ -25,6 +25,7 @@ const REJECTED_COLORS = {
 
 interface Props {
   boardRef: React.RefObject<HTMLElement | null>;
+  fen: string;
   arrows: Arrow[];
   mine: NoteRecord | null;
   rejected: Rejected | null;
@@ -33,8 +34,14 @@ interface Props {
   flipped: boolean;
 }
 
-export default function ArrowLayer({ boardRef, arrows, mine, rejected, showArrows, showMine, flipped }: Props) {
+export default function ArrowLayer({ boardRef, fen, arrows, mine, rejected, showArrows, showMine, flipped }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+
+  /* An arrow bends into an L only for a knight's move BY a knight. The played
+     move's arrow checks the destination — its knight has already arrived —
+     while every other arrow leaves from a square its piece still stands on.
+     An arrow out of an empty square is somebody's idea, not a path: straight. */
+  const knightAt = (sq: string) => pieceAt(fen, sq).toLowerCase() === "n";
 
   useEffect(() => {
     const draw = () => {
@@ -58,7 +65,8 @@ export default function ArrowLayer({ boardRef, arrows, mine, rejected, showArrow
          phase where the book arrows are suppressed. */
       if (rejected) {
         drawArrowBetween(ctx, rejected.from, rejected.to,
-          REJECTED_COLORS[rejected.kind], square * 0.11, square, flipped);
+          REJECTED_COLORS[rejected.kind], square * 0.11, square, flipped,
+          knightAt(rejected.from));
       }
 
       if (showArrows) {
@@ -73,7 +81,10 @@ export default function ArrowLayer({ boardRef, arrows, mine, rejected, showArrow
           .sort((a, b) => (order[a.k] || 0) - (order[b.k] || 0))
           .forEach((a) => {
             const width = a.k === "chk" ? square * 0.16 : a.k === "move" ? square * 0.1 : square * 0.13;
-            if (a.f) drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS[a.k] || "#999", width, square, flipped);
+            if (a.f) {
+              drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS[a.k] || "#999", width, square, flipped,
+                a.k === "move" ? knightAt(a.t) : knightAt(a.f));
+            }
           });
       }
 
@@ -81,7 +92,8 @@ export default function ArrowLayer({ boardRef, arrows, mine, rejected, showArrow
       if (showMine && mine) {
         (mine.spots || []).forEach((sq) => drawRing(ctx, sq, ARROW_COLORS.mine, square, flipped));
         (mine.arrows || []).forEach((a) => {
-          drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square * 0.12, square, flipped);
+          drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square * 0.12, square, flipped,
+            knightAt(a.f));
         });
       }
     };
@@ -154,15 +166,16 @@ function drawStraight(
   arrowHead(ctx, tipx, tipy, ux, uy, head);
 }
 
-/* One arrow between two named squares, bent into an L when it is shaped like a
-   knight's move. */
+/* One arrow between two named squares, bent into an L when it is a knight's
+   move a knight is actually making — `mayBend` is the caller's verdict on the
+   piece, this function's is the geometry. */
 function drawArrowBetween(
   ctx: CanvasRenderingContext2D, from: string, to: string, color: string,
-  width: number, square: number, flipped: boolean
+  width: number, square: number, flipped: boolean, mayBend: boolean
 ) {
   const A = squareGrid(from, flipped), B = squareGrid(to, flipped);
   const dcol = Math.abs(A.col - B.col), drow = Math.abs(A.row - B.row);
-  if ((dcol === 1 && drow === 2) || (dcol === 2 && drow === 1)) {
+  if (mayBend && ((dcol === 1 && drow === 2) || (dcol === 2 && drow === 1))) {
     // L-shaped knight arrow: long leg (2 squares) first, then the short leg.
     const bend = dcol === 2 ? { col: B.col, row: A.row } : { col: A.col, row: B.row };
     const pA = gridCenter(A, square), pM = gridCenter(bend, square), pB = gridCenter(B, square);

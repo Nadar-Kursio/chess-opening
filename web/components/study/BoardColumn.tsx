@@ -74,6 +74,7 @@ export default function BoardColumn(p: Props) {
           />
           <ArrowLayer
             boardRef={squareRef}
+            fen={p.ply.fen}
             arrows={p.ply.arrows || []}
             mine={showMine ? p.mine : null}
             rejected={p.rejected}
