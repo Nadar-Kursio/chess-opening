@@ -127,8 +127,8 @@ function studyHTML(op, line, p){
       readout: inDeviation
         ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
         : `Move <b>${state.ply}</b> of ${line.plies.length-1} &middot; ${state.flipped?"Black":"White"} up`,
-      hint: state.note
-        ? "Drag on the board to draw an arrow, or tap a square to circle it. <b>Esc</b> to stop."
+      hint: state.note && state.note.tool
+        ? "Tap the squares for the mark you are making. <b>Esc</b> to stop."
         : state.mode==="drill"
         ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
         : "Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step. Right-drag to draw."

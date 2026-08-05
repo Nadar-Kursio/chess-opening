@@ -294,7 +294,11 @@ step("writing a note here", () => {
   want("an empty position offers a way in", $(".mynote-add"));
   click($(".mynote-add"));
   want("the editor opens", $(".mynote--editing") && $("#notetext"));
-  want("and the board stops taking moves", !app("boardLive")());
+  // Drawing is the right button only. An open text box is no reason for the
+  // board to stop answering the moves you play on it.
+  want("the board still takes moves", app("boardLive")());
+  want("a left press is not a drawing gesture", !app("noteDrawGesture({button:0})"));
+  want("a right press is", app("noteDrawGesture({button:2})"));
 
   const box = $("#notetext");
   box.value = "The bishop eyes f7.";
@@ -302,8 +306,12 @@ step("writing a note here", () => {
   want("typing reaches the working copy", app("state.note.text") === "The bishop eyes f7.");
 
   // Two-tap: the button anyone can find, and the only one a phone has.
+  // The exception, and the only one a phone has: arming a tool buys a plain tap
+  // its new meaning, and the board stops taking moves for exactly those taps.
   click($('[data-act="notetool"][data-v="arrow"]'));
   want("the tool arms", app("state.note.tool") === "arrow");
+  want("an armed tool makes a left press a drawing gesture", app("noteDrawGesture({button:0})"));
+  want("and the board stands down while it is armed", !app("boardLive")());
   press("c4");
   want("the first tap is the tail", app("state.note.from") === "c4");
   press("f7");

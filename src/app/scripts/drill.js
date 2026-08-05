@@ -510,9 +510,10 @@ function moverSide(){
    forward -- the board is the interface, a button is the fallback. */
 function boardLive(){
   if(state.deviation) return false;
-  // With the note editor open the board is a drawing surface, so a left-drag
-  // pulls out an arrow instead of playing the move it lands on.
-  if(state.note) return false;
+  // Only while a two-tap mark tool is armed: those taps belong to the mark being
+  // made. An open note editor otherwise leaves the board alone -- drawing is the
+  // right button, so a text box on the page is no reason to stop taking moves.
+  if(state.note && state.note.tool) return false;
   if(state.picking) return true;
   // Reading is not watching. The board is the most obvious thing on the page, so
   // it answers a move at all times rather than only after you have found a mode

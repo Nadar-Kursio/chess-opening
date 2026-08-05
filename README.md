@@ -300,21 +300,27 @@ turns the board into a drawing surface.
 
 | To draw | Do this |
 | --- | --- |
-| An arrow | Right-drag on the board, at any time. Or open the editor and drag. |
-| An arrow, without a gesture | **Make arrow**, then tap the two squares |
-| A circled square | Right-click it, or tap it while the editor is open, or **Circle square** |
+| An arrow | **Right-drag** on the board |
+| A circled square | **Right-click** it |
+| Either, without a right button | **Make arrow** or **Circle square**, then tap the squares |
 | Undo one mark | Click it in the list under the text box |
 | Undo an arrow you just drew | Draw it again — the second time removes it |
 
-Left-drag draws **only** while the editor is open, because on this board a
-left-drag already means *play this move* and that has to keep working. Right-drag
-is the always-on gesture and opens the editor on its way.
+**Drawing is the right button, and only the right button.** A left-drag on this
+board means *play this move*, and read mode answers whatever you play with the
+deviation library — so an open text box changes nothing about what the board
+does. Right-drag works whether the editor is open or not, and opens it on the way.
 
-These are stored in `localStorage` under the same key as your drill progress,
-**keyed by position** exactly like the files — so a note follows a transposition
-into a different opening, and survives a line being renamed or reordered. A note
-written here shadows the file's note for the same position; nothing in a browser
-can edit a file, so **Delete** always brings the shipped text back.
+The one exception is the two-tap tools, which exist because a finger has no right
+button: pressing **Make arrow** or **Circle square** buys a plain tap its new
+meaning, and buys it for exactly two taps.
+
+Notes are stored in `localStorage` under `chessopening` — the same single JSON
+payload as your drill progress and theme, under a `notes` key — and are **keyed
+by position** exactly like the files, so a note follows a transposition into a
+different opening and survives a line being renamed or reordered. A note written
+here shadows the file's note for the same position; nothing in a browser can edit
+a file, so **Delete** always brings the shipped text back.
 
 The editor belongs to the position it was opened on. Stepping away mid-sentence
 saves what you typed against that position rather than dropping it or filing it

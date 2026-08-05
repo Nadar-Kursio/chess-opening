@@ -129,14 +129,19 @@ function noteTool(sq){
 
 /* ---- board input ---- */
 
-/* Left-drag draws only while the editor is open, because on this board a
-   left-drag already means "play this move" and that has to keep working.
-   Right-drag draws at any time and opens the editor on its way -- the gesture
-   anyone who has used a chess site already has in their fingers. */
+/* Drawing is the right button, and only the right button: on this board a
+   left-drag means "play this move", and a board that stopped answering moves
+   whenever a text box was open would be worse than one that never drew.
+   Right-drag also opens the editor on its way -- the gesture anyone who has used
+   a chess site already has in their fingers.
+
+   The exception is a two-tap tool, which exists precisely because a finger has
+   no right button. Pressing Make arrow or Circle square is what buys a plain tap
+   its new meaning, and it buys it for exactly two taps. */
 function noteDrawGesture(e){
   if(state.view !== "op" || drillHidesArrows()) return false;
   if(e.button === 2) return true;
-  return !!state.note && e.button === 0;
+  return e.button === 0 && !!(state.note && state.note.tool);
 }
 
 document.getElementById("content").addEventListener("pointerdown", e=>{
@@ -260,7 +265,7 @@ function noteHint(n){
   if(n.from) return "Now tap the square it points at.";
   if(n.tool === "arrow") return "Tap the square the arrow starts from.";
   if(n.tool === "spot") return "Tap a square to circle it.";
-  return "Drag on the board to draw an arrow, or tap a square to circle it.";
+  return "Right-drag on the board to draw an arrow, right-click a square to circle it — or use the buttons.";
 }
 
 /* ---- moving a note into the repo ---- */
