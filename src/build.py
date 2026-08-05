@@ -57,7 +57,7 @@ WEB_CONTENT = os.path.join(os.path.dirname(SRC), "web", "content")
 # The openings the app under web/ ships. --emit writes only these; validation
 # still covers the whole catalogue, so an opening joins the new site by giving
 # its lines slugs and adding its id here — nothing else changes.
-PORTED = ["ruylopez"]
+PORTED = ["ruylopez", "scholarsmate", "friedliver"]
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
 # both are order-dependent: responsive.css must land last, boot.js must run last.
@@ -869,8 +869,9 @@ def emit_files():
     def line_summary(line):
         out = {"slug": line["slug"], "name": line["name"], "note": line["note"],
                "moveCount": len(line["plies"]) - 1}
-        if line.get("tier"):
-            out["tier"] = line["tier"]
+        for key in ("tier", "side"):
+            if line.get(key):
+                out[key] = line[key]
         return out
 
     def brief(record, keys):

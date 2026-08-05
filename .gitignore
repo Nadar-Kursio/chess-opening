@@ -10,3 +10,6 @@ node_modules/
 .wrangler/
 
 .engine/
+web/out/
+web/.next/
+web/next-env.d.ts

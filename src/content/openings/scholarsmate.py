@@ -32,6 +32,7 @@ OPENING = {
     "lines": [
         {
             "name": "The attack, met correctly",
+            "slug": "met-correctly",
             "note": "The honest main line: both threats made, both answered, and White retreating into a quiet game a tempo down. This is what the trap costs against a prepared opponent.",
             "moves": "e4 e5 Qh5 Nc6 Bc4 g6 Qf3 Nf6 Ne2 Bg7 Nbc3 d6 d3 O-O O-O",
             "tier": "Foundation",
@@ -64,6 +65,7 @@ OPENING = {
         },
         {
             "name": "The four-move mate",
+            "slug": "four-move-mate",
             "note": "The trap landing in full: Black develops the wrong knight first, and the game ends on move four.",
             "moves": "e4 e5 Qh5 Nc6 Bc4 Nf6 Qxf7#",
             "tier": "Foundation",
@@ -86,6 +88,7 @@ OPENING = {
         },
         {
             "name": "Defusing it as Black",
+            "slug": "defusing",
             "note": "The defence from Black's chair: three correct answers, then the counterattack that makes the queen sortie cost the game's initiative.",
             "moves": "e4 e5 Qh5 Nc6 Bc4 g6 Qf3 Nf6 Ne2 Bg7 Nbc3 Nd4",
             "tier": "Foundation",
@@ -116,6 +119,7 @@ OPENING = {
         },
         {
             "name": "Punishing the wayward queen",
+            "slug": "wayward-queen",
             "note": "What happens when White doubles down: 5.Qb3 renews the threats a third time, and the fork on d4 wins material by force.",
             "moves": "e4 e5 Qh5 Nc6 Bc4 g6 Qf3 Nf6 Qb3 Nd4 Bxf7+ Ke7 Qc4 b5 Qd3 Kxf7",
             "tier": "Structure",
@@ -151,6 +155,7 @@ OPENING = {
     ],
     "deep": {
         "name": "Deep dive — how the tempo gets spent",
+        "slug": "tempo-deep",
         "note": "The main line six plies further, from White's chair: Black cashes in with the fork too early, and every exchange buys White's lost time back. Play it out to see why simplification is the trailing side's friend.",
         "moves": "e4 e5 Qh5 Nc6 Bc4 g6 Qf3 Nf6 Ne2 Bg7 Nbc3 d6 d3 O-O O-O Nd4 Nxd4 exd4 Nd5 Nxd5 Bxd5",
         "notes": {

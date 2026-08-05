@@ -23,7 +23,7 @@ from content.sections import SECTIONS
 SUMMARY_KEYS = {"id", "name", "eco", "section", "orientation", "tagline",
                 "level", "feedback", "deviations", "lines"}
 LINE_SUMMARY_KEYS = {"slug", "name", "note", "moveCount"}
-LINE_SUMMARY_EXTRA = {"tier"}
+LINE_SUMMARY_EXTRA = {"tier", "side"}
 
 
 def built():

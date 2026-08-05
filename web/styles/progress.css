@@ -1,0 +1,26 @@
+/* What you have drilled, and how it went. */
+
+.progress{display:grid;gap:var(--space-4);max-width:74ch}
+.notice{
+  font-size:var(--text-ui);color:var(--warn);
+  border:1px solid var(--border);border-left:3px solid var(--warn);
+  border-radius:var(--radius-sm);background:var(--layer-1);
+  padding:var(--space-3) var(--space-4);margin:0;
+}
+.drilled{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}
+.drilled li{
+  display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;
+  border-top:1px solid var(--border);padding-top:var(--space-2);
+}
+.drilled li:first-child{border-top:none;padding-top:0}
+.drilled__name{flex:1 1 220px}
+.drilled__name em{color:var(--text-faint);font-style:normal;display:block;font-size:var(--text-ui)}
+.drilled__score{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-soft)}
+
+.transfer{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-3) 0 var(--space-2)}
+.transfer__box{
+  width:100%;min-height:110px;font-family:var(--font-mono);font-size:var(--text-xs);line-height:1.5;
+  color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:var(--space-3);resize:vertical;
+}
+.transfer__msg{font-size:var(--text-ui);color:var(--accent);margin:var(--space-2) 0 0;min-height:1.2em}

@@ -29,6 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
       # The build concatenates the app's JavaScript without parsing it, so
       # tests/test_smoke.py loads the built page in a DOM and drives it. jsdom is
@@ -40,12 +42,40 @@ jobs:
 
       - run: python3 src/build.py
 
+      # The Next.js rewrite under web/, fed by the same validated build via
+      # --emit. It ships to its own Pages project (chesslab-next) until it
+      # reaches parity; chesslab.dev stays on the single-file site above.
+      - run: python3 src/build.py --emit
+
+      - run: npm ci --prefix web
+
+      - run: npm run build --prefix web
+
+      # The artifact smoke drives the exported pages in jsdom -- a red run
+      # blocks both deploys, same as the tests above.
+      - run: npm test --prefix web
+
       - uses: cloudflare/wrangler-action@v3
         id: deploy
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy docs --project-name=chesslab --branch=${{ github.head_ref || github.ref_name }}
+
+      # First run only: creating a project that exists fails, and that is fine.
+      - uses: cloudflare/wrangler-action@v3
+        continue-on-error: true
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages project create chesslab-next --production-branch=main
+
+      - uses: cloudflare/wrangler-action@v3
+        id: deploy-next
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web/out --project-name=chesslab-next --branch=${{ github.head_ref || github.ref_name }}
 
       - name: Comment the preview link
         if: github.event_name == 'pull_request'
@@ -57,7 +87,8 @@ jobs:
           # Pages derives a branch alias by lowercasing and hyphenating; it is the
           # stable URL, whereas deployment-url changes with every commit.
           alias=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
-          body="📖 Preview: https://${alias}.chesslab.pages.dev
+          body="📖 Current site: https://${alias}.chesslab.pages.dev
+          ✨ New app (WIP): https://${alias}.chesslab-next.pages.dev
 
           This commit: ${DEPLOY_URL:-_not reported_}"
           gh pr comment "${{ github.event.number }}" --body "$body" --edit-last \

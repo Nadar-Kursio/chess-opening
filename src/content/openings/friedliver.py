@@ -32,6 +32,7 @@ OPENING = {
     "lines": [
         {
             "name": "The Fried Liver, executed",
+            "slug": "executed",
             "note": "The trap sprung in full: the knight sacrifice on f7, the king dragged to e6, and every white piece arriving at the pinned knight on d5.",
             "moves": "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Nce7 d4 c6 dxe5",
             "tier": "Foundation",
@@ -66,6 +67,7 @@ OPENING = {
         },
         {
             "name": "Polerio Defence — 5...Na5!",
+            "slug": "polerio",
             "note": "Black's cure, drilled from Black's chair: give the pawn back, chase the bishop, and let the lead in development do the arguing.",
             "moves": "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6",
             "tier": "Structure",
@@ -102,6 +104,7 @@ OPENING = {
         },
         {
             "name": "Surviving it as Black",
+            "slug": "surviving",
             "note": "You recaptured with the knight and the sacrifice came. The defence exists — this is it, move by engine-checked move.",
             "moves": "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Nb4 O-O c6 d4 Qf6 Qd1 Ke7",
             "tier": "Mastery",
@@ -139,6 +142,7 @@ OPENING = {
         },
         {
             "name": "Traxler Counterattack",
+            "slug": "traxler",
             "note": "Black's counter-trap: ignore f7, offer the bishop, and hunt the white king instead. Objectively risky — practically lethal against the greedy.",
             "moves": "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Kg1 Qh4 g3 Nxg3 hxg3 Qxg3+ Kf1 Rf8",
             "tier": "Mastery",
@@ -176,6 +180,7 @@ OPENING = {
     ],
     "deep": {
         "name": "Deep dive — the attack cashes in",
+        "slug": "attack-deep",
         "note": "The main attack, four plies further along the engine's own line: Black's queen runs for g6, and White simply finishes developing into the open files.",
         "moves": "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Nce7 d4 c6 dxe5 Qe8 Be3 b5 Bb3",
         "notes": {
