@@ -6,6 +6,8 @@ a clear message instead of a KeyError or a missing sidebar entry.
 
 Run from the repo root:  python3 -m unittest discover tests
 """
+import contextlib
+import io
 import os
 import sys
 import unittest
@@ -14,7 +16,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import chess
 
-from build import BranchIndex, NoteIndex, build_line, san_overclaim, with_deep_line
+from build import (BranchIndex, EvalIndex, NoteIndex, build_line, build_openings,
+                   san_overclaim, with_deep_line)
 from content.openings import ORDER, load
 from content.sections import SECTIONS
 from content.structures import STRUCTURES
@@ -330,11 +333,67 @@ class TestNotesFile(unittest.TestCase):
             index = NoteIndex(op["id"], errors)
             if not index.notes:
                 continue
-            branches = BranchIndex(op, errors, index)
+            branches = BranchIndex(op, errors, index, EvalIndex(errors))
             for i, line in enumerate(with_deep_line(op)):
                 build_line(op["id"], i, line, errors, branches=branches, notes=index)
             self.assertEqual(errors, [], op["id"])
             self.assertEqual(index.unplaced(op["id"]), [])
+
+
+class TestEngineScores(unittest.TestCase):
+    """The generated position scores, checked as data.
+
+    Nothing here can tell a true eval from an invented one -- that is what
+    generating the file rather than writing it is for. What these cover is the
+    two ways the bar could mislead: a score attached to the wrong position, and
+    a score missing from a position the reader will still be shown.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.errors = []
+        cls.evals = EvalIndex(cls.errors)
+
+    def test_the_files_are_well_formed(self):
+        self.assertEqual(self.errors, [])
+
+    def test_every_key_is_a_position(self):
+        for epd in self.evals.scores:
+            chess.Board(epd)            # raises on anything that is not one
+
+    def test_every_position_the_course_shows_has_a_score(self):
+        """The gap the build only warns about, closed here.
+
+        The files are generated FROM the content, so any edit to a line, a
+        deviation or a game outruns them -- and the failure is silent on the
+        page: a bar that is simply absent for four plies in the middle of a
+        variation. Stopping a rebuild over it would mean a typo could not be
+        fixed without an hour of engine time first, so the build warns and this
+        is what refuses to ship it.
+        """
+        if not self.evals.scores:
+            self.skipTest("no opening has generated scores yet")
+        errors, games = [], []
+        evals = EvalIndex(errors)
+        with contextlib.redirect_stdout(io.StringIO()):
+            build_openings(games, evals)
+        self.assertEqual(errors, [])
+        self.assertEqual(evals.missing[:5], [],
+                         f"{len(evals.missing)} positions have no score — "
+                         f"re-run position-evals.py")
+        self.assertFalse(evals.scores.keys() - evals.used,
+                         "scored positions nothing reaches any more")
+
+    def test_one_depth_for_every_number(self):
+        """Two positions searched to different depths cannot be compared.
+
+        Which is the whole point of the bar being on screen for both of them, so
+        the build refuses the mixture rather than rendering it.
+        """
+        if not self.evals.scores:
+            self.skipTest("no opening has generated scores yet")
+        self.assertIsInstance(self.evals.depth, int)
+        self.assertGreaterEqual(self.evals.depth, 12)
 
 
 class TestSections(unittest.TestCase):

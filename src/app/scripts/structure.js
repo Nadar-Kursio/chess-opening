@@ -92,6 +92,7 @@ function gameHTML(g){
           <span class="label">${state.ply===0?"":(p.turn==="w"?"White to have moved":"Black to have moved")}</span>
         </header>
         <p class="coach__body">${p.note || "&mdash;"}</p>
+        ${state.ply>0 ? evalMoveHTML(plies[state.ply-1], p) : ""}
       </article>
     </div>
   </section>`;

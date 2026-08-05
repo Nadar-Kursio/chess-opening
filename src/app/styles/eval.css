@@ -1,0 +1,49 @@
+/* The engine's score, under the board on every position that has one.
+
+   Loaded after record.css and coach.css because it borrows from both: the bar is
+   the win bar's two colours, and the move's swing renders in the row the
+   generated "On the board" line already owns. */
+
+:root{
+  /* The eval bar means the same thing the win bar does -- how much of this
+     position belongs to White -- so it is the same two colours, fixed in both
+     themes for the same reason: White's share has to read as white. */
+  --eval-white:var(--record-white);
+  --eval-black:var(--record-black);
+}
+
+/* One row, deliberately: it sits between the board and the transport on every
+   view, and a phone has no vertical space to give a second line. The words that
+   go with the number live in the coach card, where explanation belongs. */
+.evalbar{
+  display:flex;align-items:center;gap:var(--space-3);
+  margin-top:var(--space-3);
+}
+.evalbar__label{flex:none}
+.evalbar__track{
+  flex:1;min-width:0;height:12px;border-radius:var(--radius-pill);overflow:hidden;
+  background:var(--eval-black);border:1px solid var(--border);
+}
+.evalbar__white{
+  display:block;height:100%;background:var(--eval-white);
+  border-radius:var(--radius-pill) 0 0 var(--radius-pill);
+  transition:width var(--speed-slow) var(--ease);
+}
+.evalbar__score{
+  flex:none;min-width:5ch;text-align:right;
+  font-family:var(--font-mono);font-size:var(--text-lg);font-weight:700;color:var(--text);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .evalbar__white{transition:none}
+}
+
+/* What the move did to the score. The tone rule is the same vocabulary the
+   deviation marks use, on the same centipawn bands -- and never colour alone:
+   the sentence states the number it is colouring. */
+.evalmove{border-left-width:3px}
+.evalmove--gain{border-left-color:var(--accent)}
+.evalmove--playable{border-left-color:var(--sev-playable)}
+.evalmove--inaccuracy{border-left-color:var(--sev-inaccuracy)}
+.evalmove--blunder{border-left-color:var(--sev-blunder)}
+.evalmove b{font-family:var(--font-mono)}

@@ -4,6 +4,9 @@ const DATA = __DATA__;
 const SECTIONS = __SECTIONS__;
 const STRUCTURES = __STRUCTURES__;
 const GAMES = __GAMES__;
+/* Which engine scored the positions, and how deep. One set of numbers for the
+   whole page -- the build refuses two eval files that disagree on depth. */
+const ENGINE = __ENGINE__;
 
 const PIECE_GLYPH = {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
 const FILES = "abcdefgh";

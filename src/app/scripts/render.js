@@ -165,6 +165,7 @@ function coachNoteHTML(p){
         </header>
         <p class="coach__body">${p.note}</p>
         ${state.ply>0 && p.tactics?tacticsLineHTML(p.tactics):""}
+        ${state.ply>0 ? evalMoveHTML(currentPlies()[state.ply-1], p) : ""}
       </article>`;
 }
 
