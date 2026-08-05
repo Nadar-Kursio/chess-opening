@@ -32,6 +32,7 @@ OPENING = {
     "lines": [
         {
             "name": "Closed Spanish — Chigorin",
+            "slug": "chigorin",
             "note": "The classical main line, played in thousands of grandmaster games. Both sides develop fully before the fight begins.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7",
             "tier": "Foundation",
@@ -71,6 +72,7 @@ OPENING = {
         },
         {
             "name": "Morphy Exchange Variation (4.Bxc6)",
+            "slug": "exchange",
             "note": "White voluntarily gives up the bishop pair to ruin Black's structure. A pure, teachable endgame plan you can play at any level.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Bxc6 dxc6 O-O f6 d4 exd4 Nxd4 c5 Nb3 Qxd1 Rxd1 Bd6",
             "tier": "Structure",
@@ -105,6 +107,7 @@ OPENING = {
         },
         {
             "name": "Berlin Defence — The Berlin Wall",
+            "slug": "berlin",
             "note": "The world-championship drawing weapon. Black gives up castling rights and the queens come off by move eight.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Nxe4 d4 Nd6 Bxc6 dxc6 dxe5 Nf5 Qxd8+ Kxd8 Nc3 Ke8 h3 Be7",
             "tier": "Plans",
@@ -141,6 +144,7 @@ OPENING = {
         },
         {
             "name": "Morphy Defence, Anderssen Variation (5.d3)",
+            "slug": "anderssen",
             "note": "The small centre, and the fashionable answer at the top today: no d4, no Marshall, no Open Spanish — the Spanish squeeze with two hundred pages of theory left out.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 d3 b5 Bb3 Be7 O-O d6 c3 O-O Re1 Na5 Bc2 c5 Nbd2",
             "tier": "Plans",
@@ -178,6 +182,7 @@ OPENING = {
         },
         {
             "name": "Open Spanish (5...Nxe4)",
+            "slug": "open-spanish",
             "note": "Black takes the pawn and changes the game. The centre opens on move six, and the knight on e4 becomes the most argued-about piece in the whole opening.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Nxe4 d4 b5 Bb3 d5 dxe5 Be6 c3 Bc5 Nbd2 O-O Bc2 f5 Nb3",
             "tier": "Mastery",
@@ -216,6 +221,7 @@ OPENING = {
         },
         {
             "name": "Marshall Attack",
+            "slug": "marshall",
             "note": "The most famous pawn sacrifice in opening theory: a clean pawn on move eight for an attack that has held up for a century. This is how you take it and survive.",
             "moves": ("e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 O-O c3 d5 exd5 Nxd5 Nxe5 Nxe5 Rxe5 c6 "
                       "d4 Bd6 Re1 Qh4 g3 Qh3 Be3 Bg4 Qd3 Rae8 Nd2 Re6 a4"),
@@ -268,6 +274,7 @@ OPENING = {
     ],
     "deep": {
         "name": "Deep dive — the Chigorin middlegame",
+        "slug": "chigorin-deep",
         "note": "From the tabiya into the real fight: the centre resolves, the knight comes home, and both sides commit to a wing.",
         "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7 Nbd2 cxd4 cxd4 Nc6 Nb3 a5 Be3 a4 Nbd2 Bd7 Rc1 Qb7 Bb1",
         "tier": "Plans",

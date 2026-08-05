@@ -16,8 +16,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import chess
 
-from build import (BranchIndex, EvalIndex, NoteIndex, build_line, build_openings,
-                   san_overclaim, with_deep_line)
+from build import (PORTED, BranchIndex, EvalIndex, NoteIndex, build_line,
+                   build_openings, san_overclaim, slug_errors, with_deep_line)
 from content.openings import ORDER, load
 from content.sections import SECTIONS
 from content.structures import STRUCTURES
@@ -30,7 +30,7 @@ STAGE_KEYS = {"tier", "when", "goal", "learn", "drill", "mistake", "ready"}
 
 OPENING_EXTRA = {"branches", "games"}
 LINE_KEYS = {"name", "note", "moves", "notes"}
-LINE_EXTRA = {"tier", "drill", "plan", "record", "side"}
+LINE_EXTRA = {"slug", "tier", "drill", "plan", "record", "side"}
 RECORD_KEYS = {"at", "games", "white", "draw", "black"}
 BRANCH_KEYS = {"san", "severity", "why"}
 BRANCH_EXTRA = {"tier", "name", "line", "see"}
@@ -131,6 +131,16 @@ class TestCatalogue(unittest.TestCase):
                                     f"{where}: note {ply} but the game is {count} moves")
                 if game.get("tier"):
                     self.assertIn(game["tier"], TIERS, where)
+
+    def test_ported_openings_slug_their_lines(self):
+        """The web app's allowlist is only as good as the slugs behind it.
+
+        slug_errors is the build's own gate; running it here too means a bad
+        slug fails the fast suite by name instead of surfacing mid-build.
+        """
+        for op in self.openings:
+            if op["id"] in PORTED:
+                self.assertEqual(slug_errors(op["id"], with_deep_line(op)), [])
 
     def test_line_tiers_are_known(self):
         for op in self.openings:

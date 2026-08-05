@@ -5,6 +5,7 @@ Run from the repo root:
     python3 src/build.py            write docs/
     python3 src/build.py --check    fail if docs/ is stale, write nothing
     python3 src/build.py --serve    preview on localhost, write nothing
+    python3 src/build.py --emit     write web/content/ for the app under web/
 
 Every move in every line is replayed on a real board. An illegal move fails the
 build loudly, naming the opening, line and ply.
@@ -14,6 +15,8 @@ import http.server
 import io
 import json
 import os
+import re
+import shutil
 import sys
 import time
 from html import escape
@@ -49,6 +52,12 @@ APP = os.path.join(SRC, "app")
 NOTES = os.path.join(SRC, "content", "notes")
 EVALS = os.path.join(SRC, "content", "evals")
 DOCS = os.path.join(os.path.dirname(SRC), "docs")
+WEB_CONTENT = os.path.join(os.path.dirname(SRC), "web", "content")
+
+# The openings the app under web/ ships. --emit writes only these; validation
+# still covers the whole catalogue, so an opening joins the new site by giving
+# its lines slugs and adding its id here — nothing else changes.
+PORTED = ["ruylopez"]
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
 # both are order-dependent: responsive.css must land last, boot.js must run last.
@@ -72,6 +81,30 @@ RECORD_KEYS = ("at", "games", "white", "draw", "black")
 
 TIERS = ("Foundation", "Structure", "Plans", "Mastery")
 SEVERITIES = ("blunder", "inaccuracy", "playable")
+
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def slug_errors(op_id, lines):
+    """What the lines' slugs get wrong, for an opening the web app ships.
+
+    Slugs are authored, not derived: line names carry '—', '×' and '!?', which
+    no derivation rule would turn into a URL anyone should have to read. A slug
+    is the line's stable identity — its URL and its progress key — so it must
+    exist, read like a path segment, and never collide within the opening.
+    """
+    out = []
+    seen = {}
+    for i, line in enumerate(lines):
+        where = f"{op_id} / line {i} '{line.get('name')}'"
+        slug = line.get("slug")
+        if not slug or not SLUG_RE.match(slug):
+            out.append(f"{where}: needs a slug — lowercase letters, digits and hyphens")
+            continue
+        if slug in seen:
+            out.append(f"{where}: slug '{slug}' already belongs to line {seen[slug]}")
+        seen[slug] = i
+    return out
 
 
 def san_overclaim(board, move, san):
@@ -456,6 +489,10 @@ def with_deep_line(op):
         "moves": deep["moves"],
         "notes": notes,
     }
+    # The slug is deliberately NOT inherited: it is the line's identity, and two
+    # lines sharing one would collide in the URL and the progress key alike.
+    if deep.get("slug"):
+        line["slug"] = deep["slug"]
     for key in LINE_EXTRAS:
         value = deep.get(key, main.get(key))
         if value is not None:
@@ -554,7 +591,7 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
     out = {"name": line["name"], "note": line.get("note", ""), "plies": plies}
     # Forward the optional line-level settings. Building the record from a fixed
     # set of keys is what would otherwise drop them without a word.
-    for key in ("tier", "plan", "record", "side"):
+    for key in ("slug", "tier", "plan", "record", "side"):
         if line.get(key):
             out[key] = line[key]
     return out
@@ -569,6 +606,8 @@ def build_openings(games, evals):
         notes = NoteIndex(op["id"], errors)
         branches = BranchIndex(op, errors, notes, evals)
         lines = with_deep_line(op)
+        if op["id"] in PORTED:
+            errors.extend(slug_errors(op["id"], lines))
         record = {k: v for k, v in op.items() if k not in ("deep", "branches", "games")}
         record["lines"] = [build_line(op["id"], i, line, errors, branches, notes, evals)
                            for i, line in enumerate(lines)]
@@ -786,6 +825,104 @@ def check():
     print("docs/ is up to date.")
 
 
+def feedback_level(line):
+    """How sharp the drill's feedback can be for this built line, 0..2.
+
+    The same vocabulary drill.js uses: 2 when deviations are written (`bx`),
+    1 when the legal-move list shipped, 0 otherwise. Computed here because the
+    web app's nav renders the badge from the catalog, without ever loading the
+    opening's own payload.
+    """
+    if any("bx" in p for p in line["plies"]):
+        return 2
+    if any("legal" in p for p in line["plies"]):
+        return 1
+    return 0
+
+
+def emit_files():
+    """Everything --emit produces, as {relative path: text}.
+
+    The JSON the app under web/ reads at build time. Every record is exactly the
+    object the single-file page inlines — one build, a second doorway — filtered
+    to PORTED, so the new site ships an opening only once its lines have slugs.
+
+    catalog.json exists so the nav, home page and sitemap never load a full
+    opening: it carries the summaries, the section list and the engine meta, and
+    an opening is only as Coached as its weakest line, so the badge level is the
+    minimum over them.
+    """
+    games = []
+    errors = []
+    evals = EvalIndex(errors)
+    openings = build_openings(games, evals)
+    structures = build_structures(openings, errors)
+    if errors:
+        print("=== CONTENT ERRORS ===")
+        for e in errors:
+            print(" ", e)
+        raise SystemExit(f"{len(errors)} content error(s) — nothing written")
+
+    ported = [op for op in openings if op["id"] in PORTED]
+    ported_games = [g for g in games if g["op"] in PORTED]
+
+    def line_summary(line):
+        out = {"slug": line["slug"], "name": line["name"], "note": line["note"],
+               "moveCount": len(line["plies"]) - 1}
+        if line.get("tier"):
+            out["tier"] = line["tier"]
+        return out
+
+    def brief(record, keys):
+        return {k: record[k] for k in keys if record.get(k)}
+
+    catalog = {
+        "sections": SECTIONS,
+        "engine": {"name": evals.engine, "depth": evals.depth,
+                   "generated": evals.generated},
+        "openings": [{
+            **brief(op, ("id", "name", "eco", "section", "orientation",
+                         "tagline", "level")),
+            "feedback": min(feedback_level(line) for line in op["lines"]),
+            "deviations": sum(len(s) for s in op.get("branchsets", [])),
+            "lines": [line_summary(line) for line in op["lines"]],
+        } for op in ported],
+        "structures": [brief(s, ("id", "name", "tier")) for s in structures],
+        "games": [brief(g, ("id", "name", "op", "tier")) for g in ported_games],
+    }
+
+    compact = lambda o: json.dumps(o, separators=(",", ":"))
+    files = {"catalog.json": compact(catalog)}
+    for op in ported:
+        files[f"openings/{op['id']}.json"] = compact(op)
+    # Structures are shared reference content, so all of them ship — but the
+    # derived back-references must only name openings the new site has pages
+    # for, or the structure card would link into a 404.
+    files["structures.json"] = compact([
+        {**s, "openings": [o for o in s["openings"] if o["id"] in PORTED]}
+        for s in structures])
+    for g in ported_games:
+        files[f"games/{g['id']}.json"] = compact(g)
+    return files
+
+
+def emit(outdir):
+    """Write web/content/ fresh.
+
+    The directory is generated and gitignored, so it is cleared first: an
+    opening dropped from PORTED must take its file with it, not linger for the
+    web build to find.
+    """
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    for name, text in emit_files().items():
+        path = os.path.join(outdir, name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+        print(f"wrote {os.path.join('web', 'content', name)}", len(text) // 1024, "KB")
+
+
 CONTENT_TYPES = {".html": "text/html; charset=utf-8"}
 
 
@@ -913,6 +1050,9 @@ def arg(name, default):
 def main():
     if "--check" in sys.argv:
         check()
+        return
+    if "--emit" in sys.argv:
+        emit(WEB_CONTENT)
         return
     if "--serve" in sys.argv:
         # Loopback unless asked otherwise: exposing the port to the network

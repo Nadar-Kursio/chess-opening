@@ -5,6 +5,7 @@ __pycache__/
 *.zip
 .worktrees/
 docs/
+web/content/
 node_modules/
 .wrangler/
 
