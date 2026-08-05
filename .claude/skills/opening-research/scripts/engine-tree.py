@@ -21,9 +21,10 @@ Two kinds of node:
 
   spine    a position on the line itself. Searched at --depth.
   answer   the position after the opponent leaves the line. Searched at
-           --answer-depth, and only for the --expand best deviations, because a
-           MultiPV-all search is minutes of engine time and there are thirty of
-           them at every ply.
+           --answer-depth, and only for the --expand best deviations and the
+           --punish worst, because a MultiPV-all search is minutes of engine time
+           and there are thirty replies at every ply. See sandboxes() for why
+           both ends and not just the good one.
 
 An unexpanded deviation is not a gap in the answer: it still carries its eval and
 the engine's punishment, priced in the same search as every other reply. What it
@@ -238,8 +239,32 @@ class Tree:
 ANSWER_PVS = 5
 
 
-def build(tree, moves, expand, learner):
-    """Walk the line, pricing every position on it and the best deviations from it.
+def sandboxes(moves, san, best, worst):
+    """Which deviations get a position of their own, from both ends of the list.
+
+    Taking the best N is the obvious rule and it is half a rule. In a quiet
+    opening position the *worst* legal moves are not the absurd ones -- a pointless
+    rook move costs a third of a pawn -- they are the tempting piece moves that
+    hang something to a tactic. At the Chigorin branch point the four worst are
+    Nd5, Nd4, Nb4 and Bg4, and Bg4 is the move 9.h3 exists to punish: the single
+    deviation a reader most wants to sit down and work out, and the one a
+    best-N rule is guaranteed to leave out, because a blunder is by definition
+    not among the best moves in the position.
+
+    So: the top of the list, which is what a decent opponent plays, and the
+    bottom, which is what a hopeful one plays. The middle is quiet moves that
+    cost a tenth of a pawn and raise no question worth a sandbox.
+    """
+    other = [m["s"] for m in moves if m["s"] != san]
+    picked = other[:best]
+    for s in other[-worst:] if worst else []:
+        if s not in picked:
+            picked.append(s)
+    return picked
+
+
+def build(tree, moves, learner, best, worst):
+    """Walk the line, pricing every position on it and the deviations from it.
 
     `learner` is the side the reader plays. Only the *opponent's* moves get their
     deviations expanded into sandboxes: a deviation by the reader is a move they
@@ -251,7 +276,7 @@ def build(tree, moves, expand, learner):
     for ply, san in enumerate(moves, 1):
         here = spine[-1]
         if board.turn != learner:
-            wanted = [m["s"] for m in tree.nodes[here]["m"] if m["s"] != san][:expand]
+            wanted = sandboxes(tree.nodes[here]["m"], san, best, worst)
             print(f"— ply {ply}: expanding {len(wanted)} deviations from "
                   f"{'' if board.turn == chess.WHITE else '…'}{san}", flush=True)
             for other in wanted:
@@ -273,8 +298,10 @@ def main():
     ap.add_argument("--depth", type=int, default=18, help="search depth on the line itself")
     ap.add_argument("--answer-depth", type=int, default=16,
                     help="search depth in the positions a deviation reaches")
-    ap.add_argument("--expand", type=int, default=8,
-                    help="how many deviations per opponent move get a sandbox")
+    ap.add_argument("--expand", type=int, default=6,
+                    help="how many of the BEST deviations per opponent move get a sandbox")
+    ap.add_argument("--punish", type=int, default=4,
+                    help="and how many of the worst — the ones with a refutation to find")
     ap.add_argument("--threads", type=int, default=3)
     ap.add_argument("--cache", default=os.path.join(ROOT, ".engine", "tree-cache.json"))
     args = ap.parse_args()
@@ -307,7 +334,7 @@ def main():
     started = time.time()
     tree = Tree(eng, args.depth, args.answer_depth, cache, flush)
     try:
-        spine = build(tree, moves, args.expand, learner)
+        spine = build(tree, moves, learner, args.expand, args.punish)
     finally:
         eng.quit()
         flush()

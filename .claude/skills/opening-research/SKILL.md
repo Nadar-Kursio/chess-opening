@@ -154,7 +154,7 @@ build never runs a search.
 
 ```bash
 .venv/bin/python3 .claude/skills/opening-research/scripts/engine-tree.py ruylopez \
-    --moves "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7"
+    --moves "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7 Nbd2 cxd4 cxd4 Nc6 Nb3 a5 Be3 a4 Nbd2 Bd7 Rc1 Qb7 Bb1"
 ```
 
 About an hour for a twenty-two-ply line at the defaults, and **every search is
@@ -168,10 +168,14 @@ What to decide before you start it:
 
 - **`--moves` is the spine**, and it is what the build matches lines against by
   prefix. Give it the longest version of the line you want covered.
-- **`--expand`** (8) is how many deviations per opponent move get a searched
-  position of their own — the ones you can then play *from*. Cost is roughly
-  linear in it and it is most of the run. The unexpanded ones still carry a score
-  and a punishment line, so this is the sandbox-vs-hour dial, not a coverage one.
+- **`--expand`** (6) and **`--punish`** (4) are how many deviations per opponent
+  move get a searched position of their own — the ones you can then play *from* —
+  taken from the top of the ranked list and from the bottom. Cost is roughly
+  linear in their sum and it is most of the run. Unexpanded deviations still carry
+  a score and a punishment line, so this is the sandbox-vs-hour dial, not a
+  coverage one. Read `sandboxes()` before changing the split: the bottom of the
+  list is where the moves with a refutation to find live, and a best-only rule
+  gives sandboxes to exactly the deviations that raise no question.
 - **`--depth` / `--answer-depth`** (18 / 16). Changing either re-searches, because
   the cache is keyed by depth as well as by position.
 

@@ -1,7 +1,7 @@
 # Chess Opening Course — interactive, self-contained
 
 An interactive opening trainer: 13 openings, 66 variations, 1,518 engine-validated
-moves, 3,126 Stockfish-scored replies behind the Closed Spanish, chess.com-style
+moves, 6,143 Stockfish-scored replies behind the Closed Spanish, chess.com-style
 arrows (including bent knight arrows), and an auto-generated "what this move does"
 line under every move. The whole app is a single HTML file with no external
 dependencies — open it in any browser.
@@ -12,9 +12,9 @@ leave the line at any point, play whatever your opponent actually played, and ge
 Stockfish's score for it on the spot along with the line that takes advantage. When
 your opponent plays something else, the deviation panel answers *the move they
 actually played*, sorted into blunder / inaccuracy / playable — because most
-deviations are none of the first
-two, and a trainer that answers every one with a red cross teaches you to hunt for
-refutations that were never there. Every line ends with a plan card naming the pawn
+deviations are none of the first two, and a trainer that answers every one with a
+red cross teaches you to hunt for refutations that were never there. Every line
+ends with a plan card naming the pawn
 structure it reached, and structures are shared across openings, so learning the
 isolani once pays out in four of them. A variation can also carry a **win bar** —
 the chess.com-style white/draw/black split of the master games that reached its key
@@ -281,7 +281,7 @@ content:
 
 ```
 .venv/bin/python3 .claude/skills/opening-research/scripts/engine-tree.py ruylopez \
-    --moves "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7"
+    --moves "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7 Nbd2 cxd4 cxd4 Nc6 Nb3 a5 Be3 a4 Nbd2 Bd7 Rc1 Qb7 Bb1"
 ```
 
 That run is about an hour. The build is half a second, and it stays that way
@@ -298,7 +298,18 @@ that still means something. Two things set where the edge falls:
 | | |
 | --- | --- |
 | **On the line** | Every position the variation passes through is searched with MultiPV over *all* legal moves, so every reply your opponent could possibly choose has a score and a punishment line. There are no gaps here. |
-| **After a deviation** | The `--expand` best deviations per opponent move (8 by default) get a searched position of their own, which is what makes free play work there. The rest still carry their score and the engine's line — you can read what to do about them and walk it, you just cannot then play a fourth thing and be priced for it. |
+| **After a deviation** | Ten deviations per opponent move get a searched position of their own, which is what makes free play work there: the `--expand` best (6) and the `--punish` worst (4). The rest still carry their score and the engine's line — you can read what to do about them and walk it, you just cannot then play a fourth thing and be priced for it. |
+
+**Both ends of the list, not the top of it.** Taking the best N is the obvious
+rule and it is half a rule. In a quiet opening position the *worst* legal moves
+are not the absurd ones — a pointless rook move costs a third of a pawn — they
+are the tempting piece moves that hang something to a tactic. At the Chigorin
+branch point the four worst replies are ...Nd5, ...Nd4, ...Nb4 and ...Bg4, and
+...Bg4 is the move 9.h3 exists to punish: the one deviation a reader most wants
+to sit down and work out, and the one a best-N rule is guaranteed to leave out,
+because a blunder is by definition not among the best moves in the position. The
+middle of the list is quiet moves costing a tenth of a pawn, which raise no
+question worth a sandbox.
 
 Which lines have a tree is a `tree` key the build attaches, by matching a spine's
 moves against each line's by prefix — so one spine serves the Chigorin and its
