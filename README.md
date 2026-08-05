@@ -298,6 +298,13 @@ The same note can be written while you are reading, without a rebuild. Under
 every move there is **Write a note on this position**; it opens a text box and
 turns the board into a drawing surface.
 
+All of it is behind the **Notes** button beside Flip and Arrows. With that
+switched off there is no way in, and neither drawing gesture below does anything
+— both are presses the board would otherwise have used for something else, and a
+gesture that made a mark you could not see would be the page quietly changing its
+mind about what a press means. Switching the layer off while you are mid-note
+saves what you typed and closes the editor, the same as walking away from it.
+
 | To draw | With a mouse | With a finger |
 | --- | --- | --- |
 | An arrow | **Right-drag** across the board | **Hold** a square, then drag to the target |

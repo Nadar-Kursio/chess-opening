@@ -52,7 +52,7 @@ function drawArrows(){
   if(drillHidesArrows()) return;
   if(state.arrows) drawMoveArrows(ctx, size/8);
   // Last, so your own mark is never the thing buried under five engine arrows.
-  if(state.mine || state.note) drawMyMarks(ctx, size/8);
+  if(state.mine) drawMyMarks(ctx, size/8);
 }
 
 /* What the move that was just played attacks, defends and controls. */

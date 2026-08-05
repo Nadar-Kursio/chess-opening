@@ -49,9 +49,6 @@ function noteBegin(){
     spots: (from.spots||[]).slice(),
     tool: null, from: null, focus: false,
   };
-  // You cannot annotate what is hidden, so asking to write a note is also
-  // asking to see the layer it goes on.
-  state.mine = true;
 }
 
 function noteCancel(){ state.note = null; render(); }
@@ -92,10 +89,13 @@ function noteSave(){
    list, another variation, another opening, entering a deviation. So this runs
    there rather than at eight call sites, one of which would eventually be
    forgotten. What was typed is kept rather than dropped -- navigating away is
-   not a decision to throw work out. */
+   not a decision to throw work out.
+
+   Switching the Notes layer off counts as leaving. An editor that outlived the
+   layer would be a card nobody can see still holding the next Save. */
 function noteSyncPosition(){
   if(!state.note) return;
-  if(state.view === "op" && state.note.key === noteKey(currentPly())) return;
+  if(state.mine && state.view === "op" && state.note.key === noteKey(currentPly())) return;
   noteStore();
   state.note = null;
 }
@@ -138,8 +138,17 @@ function noteTool(sq){
    The exception is a two-tap tool, which exists precisely because a finger has
    no right button. Pressing Make arrow or Circle square is what buys a plain tap
    its new meaning, and it buys it for exactly two taps. */
+/* Nothing draws while the Notes layer is switched off. A gesture that made a
+   mark you could not see would be a page that had quietly changed its mind about
+   what a press means -- and both of these are presses the board would otherwise
+   have used for something else. The switch is the whole of the feature: with it
+   off, this file may as well not be here. */
+function noteCanDraw(){
+  return state.view === "op" && state.mine && !drillHidesArrows();
+}
+
 function noteDrawGesture(e){
-  if(state.view !== "op" || drillHidesArrows()) return false;
+  if(!noteCanDraw()) return false;
   if(e.button === 2) return true;
   return e.button === 0 && !!(state.note && state.note.tool);
 }
@@ -151,8 +160,6 @@ function noteDrawGesture(e){
 const NOTE_HOLD_MS = 420;
 const NOTE_HOLD_SLOP = 10;      // px of travel that says "this is a drag, not a hold"
 let noteHold = null;
-
-function noteCanDraw(){ return state.view === "op" && !drillHidesArrows(); }
 
 document.getElementById("content").addEventListener("pointerdown", e=>{
   const cell = e.target.closest("[data-sq]");

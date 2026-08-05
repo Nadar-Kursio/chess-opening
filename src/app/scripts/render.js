@@ -131,7 +131,8 @@ function studyHTML(op, line, p){
         ? "Tap the squares for the mark you are making. <b>Esc</b> to stop."
         : state.mode==="drill"
         ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
-        : "Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step. Hold or right-drag to draw."
+        : `Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step.${
+            state.mine ? " Hold or right-drag to draw." : ""}`
     })}
 
     <div class="study__notes">

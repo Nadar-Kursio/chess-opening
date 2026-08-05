@@ -406,6 +406,43 @@ step("holding a square draws, on a device with no right button", () => {
   checkLeaks("held to draw");
 });
 
+step("with Notes switched off, neither gesture draws", () => {
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 2; app("state").note = null;
+  app("state").mine = true; app("render")();
+  want("the way in is offered while the layer is on", $(".mynote-add"));
+
+  click($("#b-mine"));
+  want("the layer is off", !app("state.mine"));
+  want("and there is no way in", !$(".mynote-add") && !$(".mynote"));
+  want("a right press draws nothing", !app("noteDrawGesture({button:2})"));
+  press("f1", 0, 9, "touch");
+  want("a hold does not even arm", !app("noteHold"));
+  press("f1", 2, 10);
+  want("and a right-drag starts nothing", !app("state.drawing"));
+
+  click($("#b-mine"));
+  want("switching it back on restores both", app("state.mine") && $(".mynote-add")
+       && app("noteDrawGesture({button:2})"));
+  checkLeaks("notes off");
+});
+
+step("switching the layer off closes an open editor without losing it", () => {
+  app("go")(app("DATA[0].id"));
+  app("state").line = 0; app("state").ply = 3; app("state").mine = true; app("render")();
+  click($(".mynote-add") || $(".mynote__edit"));
+  const here = app("noteKey(currentPly())");
+  $("#notetext").value = "Typed, then hidden.";
+  $("#notetext").dispatchEvent(new window.Event("input", { bubbles: true }));
+  click($("#b-mine"));
+  want("the editor does not outlive the layer", !app("state.note"));
+  want("but what was typed is kept",
+       app(`db.notes[${JSON.stringify(here)}]?.text`) === "Typed, then hidden.");
+  click($("#b-mine"));
+  want("and comes back with the layer", $(".mynote__body")?.textContent === "Typed, then hidden.");
+  checkLeaks("layer off with editor open");
+});
+
 step("an open note follows its own position, not the cursor", () => {
   app("go")(app("DATA[0].id"));
   app("state").line = 0; app("state").ply = 6; app("render")();
