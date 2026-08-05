@@ -145,6 +145,41 @@ the second one shows what the inversion below actually looks like on the page.
 - `tests/test_content.py` enforces the key sets exactly, so a typo'd key is a
   test failure rather than a shrug. Run the tests before the build.
 
+### The engine tree, for lines that ship Explore mode
+
+`branches` is the deviations you chose to write about. The engine tree is *every*
+legal reply to every position on a line, priced, with the engine's continuation
+attached — the data behind Explore mode. It is generated, committed and read; the
+build never runs a search.
+
+```bash
+.venv/bin/python3 .claude/skills/opening-research/scripts/engine-tree.py ruylopez \
+    --moves "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7"
+```
+
+About an hour for a twenty-two-ply line at the defaults, and **every search is
+cached by position under `.engine/tree-cache.json`**, so extending a spine,
+changing how much of it gets expanded, or re-running after a crash pays only for
+what is new. Extend a line rather than starting a second spine where you can: the
+Chigorin's deep dive is the same moves plus thirteen, so one longer run covers
+both and the cache makes the shared twenty-two free.
+
+What to decide before you start it:
+
+- **`--moves` is the spine**, and it is what the build matches lines against by
+  prefix. Give it the longest version of the line you want covered.
+- **`--expand`** (8) is how many deviations per opponent move get a searched
+  position of their own — the ones you can then play *from*. Cost is roughly
+  linear in it and it is most of the run. The unexpanded ones still carry a score
+  and a punishment line, so this is the sandbox-vs-hour dial, not a coverage one.
+- **`--depth` / `--answer-depth`** (18 / 16). Changing either re-searches, because
+  the cache is keyed by depth as well as by position.
+
+Nothing in the build can tell a true eval from an invented one, so **never edit
+one of these files by hand** — what it does check is that the tree is a tree.
+`--expand 2 --depth 8` finishes in a minute and is the right way to test a change
+to the shape of the file rather than to its numbers.
+
 ## 3. Verify
 
 Build the engine once (about four minutes; the binary is gitignored):

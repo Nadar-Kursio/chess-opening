@@ -113,6 +113,7 @@ function coachNoteHTML(p){
 
 function studyHTML(op, line, p){
   const inDeviation = !!state.deviation;
+  const exploring = !!state.explore;
   const plies = currentPlies(), idx = currentIndex();
   const locked = drillAsking();     // stepping forward in drill would reveal the answer
 
@@ -121,14 +122,23 @@ function studyHTML(op, line, p){
     ${modeBarHTML(line)}
 
     ${boardColumnHTML({
-      ply:p, index:idx, total:plies.length-1, locked, arrows:true,
+      ply:p, index:idx, total:plies.length-1, locked,
+      // The engine tree ships evals, not the build's arrows and tactical text --
+      // those are generated per line and a position off the line has none.
+      arrows:!exploring,
       notes:true,
-      canPlay:state.mode!=="drill" && !inDeviation,
+      canPlay:state.mode==="read" && !inDeviation,
       readout: inDeviation
         ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
+        : exploring
+        ? (idx===0
+            ? `Exploring from move <b>${state.explore.from}</b> of the line`
+            : `Exploring &mdash; <b>${idx}</b> ${idx===1?"move":"moves"} off move ${state.explore.from}`)
         : `Move <b>${state.ply}</b> of ${line.plies.length-1} &middot; ${state.flipped?"Black":"White"} up`,
       hint: state.note && state.note.tool
         ? "Tap the squares for the mark you are making. <b>Esc</b> to stop."
+        : exploring
+        ? `Play anything, for either side. <b>←</b> <b>→</b> to step back through it.`
         : state.mode==="drill"
         ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
         : `Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step.${
@@ -141,10 +151,14 @@ function studyHTML(op, line, p){
           aria-pressed="${i===state.line}" data-line="${i}">${l.name}</button>`).join("")}
       </div>
       <p class="variation__note">${line.note}</p>
-      ${recordHTML(line)}
-      <div class="scoresheet scroller${inDeviation?" scoresheet--muted":""}" id="tape">${scoresheetHTML(line)}</div>
+      <!-- The win bar answers a question about the line, and explore is a walk
+           away from it. Two bars of the same shape, one counting master games and
+           one scoring the position on the board, would be read as one thing. -->
+      ${exploring ? "" : recordHTML(line)}
+      <div class="scoresheet scroller${inDeviation||exploring?" scoresheet--muted":""}" id="tape">${scoresheetHTML(line)}</div>
       ${state.picking ? devPickerHTML() : ""}
-      ${inDeviation ? devPanelHTML()
+      ${exploring ? explorePanelHTML()
+        : inDeviation ? devPanelHTML()
         : state.mode==="drill" ? drillPanelHTML(line)
         : `${state.drill.verdict && state.drill.verdictPly === state.ply
               ? `<p class="verdict verdict--framed" data-tone="${state.drill.tone||"flat"}">${state.drill.verdict}</p>` : ""}
@@ -213,7 +227,7 @@ function pathHTML(op){
 
 function bindView(el){
   if(state.view!=="op" && state.view!=="game") return;
-  const jump = n=>{ if(state.deviation) state.deviation.at=n; else state.ply=n; render(); };
+  const jump = n=>{ setIndex(n); render(); };
   document.getElementById("b-first").onclick = ()=>{stopAutoplay();jump(0)};
   document.getElementById("b-prev").onclick  = ()=>{stopAutoplay();step(-1)};
   document.getElementById("b-next").onclick  = ()=>{stopAutoplay();step(1)};
@@ -223,13 +237,21 @@ function bindView(el){
   document.getElementById("b-mine").onclick  = ()=>{state.mine=!state.mine;render()};
   document.getElementById("b-play").onclick  = toggleAutoplay;
   el.querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>{
-    stopAutoplay(); state.deviation=null; state.picking=false;
+    stopAutoplay(); state.deviation=null; state.picking=false; exploreExit();
     state.line=+b.dataset.line; state.ply=0;
-    if(state.mode==="drill") drillStart(); else render();
+    if(state.mode==="drill") drillStart();
+    // A variation with no tree cannot be explored, and a dead Explore panel is a
+    // worse answer than the reading view the button was next to.
+    else if(state.mode==="explore" && !exploreReady(currentLine())){ state.mode="read"; render(); }
+    else if(state.mode==="explore") exploreStart();
+    else render();
   });
+  // In explore the line's own move list is how you pick a different place to
+  // leave it from, so it restarts the walk there rather than being inert.
   el.querySelectorAll("[data-ply]").forEach(b=>b.onclick=()=>{
     stopAutoplay(); state.deviation=null; state.picking=false;
-    state.ply=+b.dataset.ply; render();
+    state.ply=+b.dataset.ply;
+    if(state.explore){ exploreExit(); exploreStart(); } else render();
   });
 }
 
@@ -260,7 +282,7 @@ function step(d){
   const plies = currentPlies();
   const n = currentIndex() + d;
   if(n<0 || n>plies.length-1) return false;
-  if(state.deviation) state.deviation.at = n; else state.ply = n;
+  setIndex(n);
   render(); return true;
 }
 function toggleAutoplay(){
@@ -289,7 +311,7 @@ document.addEventListener("keydown",e=>{
   if(drillKey(e)){ e.preventDefault(); return; }
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if(state.view!=="op" && state.view!=="game") return;
-  const jump = n=>{ if(state.deviation) state.deviation.at=n; else state.ply=n; render(); };
+  const jump = n=>{ setIndex(n); render(); };
   if(e.key==="ArrowRight"){ stopAutoplay(); step(1); e.preventDefault(); }
   if(e.key==="ArrowLeft"){ stopAutoplay(); step(-1); e.preventDefault(); }
   if(e.key==="Home"){ stopAutoplay(); jump(0); e.preventDefault(); }
