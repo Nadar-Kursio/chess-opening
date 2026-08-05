@@ -1,8 +1,12 @@
 # The four families every opening book divides the openings into, in the order
-# they are taught: 1.e4 e5 first, then the defences that decline it, then 1.d4.
+# they are taught: 1.e4 e5 first, then the defences that decline it, then 1.d4 —
+# and after them the traps, which are not a family at all but earn a section the
+# same way the families do: they are what a beginner actually meets.
 #
 # A family is identified by the moves that reach it and not by a name someone
 # chose, so `label` is that move order and the nav prints it under the name.
+# The traps have no defining move order, so their label says what the section
+# is for instead.
 #
 # This is the split the literature uses and the ECO volumes mostly follow: C is
 # the Open Games, B the semi-open defences, D the Closed Games, E the Indians.
@@ -17,4 +21,5 @@ SECTIONS = [
     {"id": "semi-open", "group": "Semi-Open Games", "label": "1.e4, Black declines e5"},
     {"id": "closed", "group": "Closed Games", "label": "1.d4 d5"},
     {"id": "indian", "group": "Indian Defences", "label": "1.d4 Nf6"},
+    {"id": "traps", "group": "Opening Traps", "label": "know them from both sides"},
 ]
