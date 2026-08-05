@@ -19,7 +19,13 @@ body{
      rather than set the width of the page it is in. */
   overflow-wrap:break-word;
 }
-a{color:inherit}
+/* This app navigates with real links where the old page used buttons, so the
+   browser's default underline would paint the nav, the variation rows and every
+   card that is a link. Those carry their own affordance; prose is the one place
+   an underline still means "this is a link", and it stays quiet there. */
+a{color:inherit;text-decoration:none}
+p a,li a{text-decoration:underline;text-decoration-color:var(--border-strong);text-underline-offset:2px}
+p a:hover,li a:hover{text-decoration-color:var(--accent)}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
