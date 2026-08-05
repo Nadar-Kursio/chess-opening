@@ -181,6 +181,88 @@ step("read: the win bar", () => {
   checkLeaks("win bar");
 });
 
+/* The eval bar is on every board the course draws, so what is worth proving is
+   that it follows the position rather than the view: the same component has to
+   turn up while reading, inside a deviation and in a model game, and has to be
+   absent — not blank, not stale — for an opening whose scores were never
+   generated. */
+step("the engine's score, wherever a board is", () => {
+  const scored = app(`(function(){
+    for(const o of DATA) for(let i=0;i<o.lines.length;i++)
+      if(o.lines[i].plies.some(p=>p.ev !== undefined)) return {op:o.id, line:i};
+    return null;
+  })()`);
+  report.scoredAt = scored;
+  if (!scored) { report.scored = "none generated"; return; }
+
+  app("go")(scored.op);
+  app("state").line = scored.line;
+  app("state").ply = 4;
+  app("render")();
+  want("the bar draws", $(".evalbar__track .evalbar__white"));
+  want("with a number on it", /^[+−]\d+\.\d\d$|^−?M\d+$/.test($(".evalbar__score").textContent.trim()));
+  // A main-line move changes almost nothing, and a row that said so every time
+  // would train the reader to skip the one time it matters.
+  want("a quiet move gets no sentence, only the bar", !$(".evalmove"));
+  checkLeaks("eval: reading");
+
+  // Every ply of the line, not just the one that happened to be on screen.
+  const total = app("currentLine().plies.length");
+  for (let i = 0; i < total; i++) {
+    app("state").ply = i; app("render")();
+    want(`ply ${i} carries a bar`, $(".evalbar__score"));
+  }
+
+  // Inside a deviation the swing is measured from the line it branched off --
+  // a different array from the one being stepped through, so this is the case
+  // that breaks if the panel diffs against the wrong position.
+  const costly = app(`(function(){
+    const line = currentLine();
+    for(let ply=0; ply<line.plies.length; ply++){
+      const before = line.plies[ply];
+      if(before.ev === undefined) continue;
+      const list = devAt(ply);
+      for(let i=0;i<list.length;i++){
+        const first = list[i].plies[0];
+        if(first.ev !== undefined && evalSwing(before, first, first.turn) <= -50)
+          return {ply, i, san:first.san};
+      }
+    }
+    return null;
+  })()`);
+  report.costlyDeviation = costly;
+  want("some deviation costs enough to be worth a sentence", costly);
+  if (costly) {
+    app("state").ply = costly.ply;
+    app("devEnter")(costly.ply, costly.i, "read");
+    want("a deviation draws the bar too", $(".evalbar__score"));
+    want("and says what its own first move cost", $(".coach .evalmove"));
+    want("naming the move and both scores",
+         new RegExp(`${costly.san}\\s+gives up`).test($(".evalmove").textContent.replace(/\s+/g, " ")));
+    checkLeaks("eval: deviation");
+    key("Escape");
+  }
+
+  const game = app(`GAMES.find(g=>g.op === ${JSON.stringify(scored.op)}
+                                  && g.plies.some(p=>p.ev !== undefined))`);
+  if (game) {
+    app("go")("game:" + game.id);
+    app("state").ply = 10; app("render")();
+    want("a model game draws it as well", $(".evalbar__score"));
+    checkLeaks("eval: game");
+  }
+
+  // An opening with no scores must render as though the feature is not there.
+  const bare = app(`(DATA.find(o=>o.lines.every(l=>l.plies.every(p=>p.ev === undefined)))||{}).id`);
+  if (bare) {
+    app("go")(bare);
+    app("state").ply = 4; app("render")();
+    want("an unscored opening shows no bar at all", !$(".evalbar"));
+    want("and no swing line", !$(".evalmove"));
+    checkLeaks("eval: unscored opening");
+  }
+});
+
 step("read: playing a move on the board", () => {
   app("go")(opening);
   const next = app("currentPlies()[1]");

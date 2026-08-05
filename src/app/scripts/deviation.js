@@ -172,6 +172,7 @@ function devPanelHTML(){
           <span class="label">${p.turn==="w"?"White to have moved":"Black to have moved"}</span>
         </header>
         ${p.tactics?tacticsLineHTML(p.tactics):""}
+        ${evalMoveHTML(evalPrev(d.plies, at), p)}
         <div class="coach__actions">
           <button class="btn" data-act="devprev" ${at===0?"disabled":""}>&#8592; Back</button>
           <button class="btn" data-act="devnext" ${last?"disabled":""}>Next &#8594;</button>

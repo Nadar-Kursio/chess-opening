@@ -47,6 +47,7 @@ from engine.notes import parse_notes
 SRC = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(SRC, "app")
 NOTES = os.path.join(SRC, "content", "notes")
+EVALS = os.path.join(SRC, "content", "evals")
 DOCS = os.path.join(os.path.dirname(SRC), "docs")
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
@@ -55,9 +56,9 @@ DOCS = os.path.join(os.path.dirname(SRC), "docs")
 # theme.js has to set the theme before the first paint, not after it.
 HEAD_SCRIPTS = ["shim", "theme"]
 STYLES = ["tokens", "base", "controls", "shell", "page", "board", "notation",
-          "record", "coach", "notes", "deviation", "study", "strategy", "path",
-          "structures", "primer", "progress", "responsive"]
-SCRIPTS = ["state", "store", "appbar", "nav", "board", "arrows", "move",
+          "record", "coach", "eval", "notes", "deviation", "study", "strategy",
+          "path", "structures", "primer", "progress", "responsive"]
+SCRIPTS = ["state", "store", "appbar", "nav", "eval", "board", "arrows", "move",
            "drill", "deviation", "notepad", "plan", "structure", "render",
            "primer", "progress", "boot"]
 
@@ -137,9 +138,11 @@ class BranchIndex:
     lines pass through still ships its deviations one time.
     """
 
-    def __init__(self, op, errors, notes):
+    def __init__(self, op, errors, notes, evals):
+        self.op_id = op["id"]
         self.errors = errors
         self.notes = notes
+        self.evals = evals
         self.sets = []          # what gets emitted
         self.authored = {}      # epd -> raw entries
         self.built = {}         # epd -> index into self.sets
@@ -166,9 +169,9 @@ class BranchIndex:
             return None
         if epd not in self.built:
             self.built[epd] = len(self.sets)
-            self.sets.append(build_branches(f"{where} / ply {ply}", board,
+            self.sets.append(build_branches(self.op_id, f"{where} / ply {ply}", board,
                                             self.authored[epd], ply, self.errors,
-                                            self.notes))
+                                            self.notes, self.evals))
         return self.built[epd]
 
     def unused(self, op_id):
@@ -194,7 +197,7 @@ class BranchIndex:
         return out
 
 
-def build_branches(where, board, entries, ply, errors, notes):
+def build_branches(op_id, where, board, entries, ply, errors, notes, evals):
     """Validate and build the deviations attached to one position.
 
     `board` is the position the branches answer, so every branch is parsed
@@ -248,6 +251,7 @@ def build_branches(where, board, entries, ply, errors, notes):
                 "arrows": arrows, "tactics": tactics,
             })
             notes.attach(work, plies[-1])
+            evals.attach(op_id, work, plies[-1], f"{where} branch '{san}' / {step}")
             num += 1
 
         record = {"san": san, "sev": br["severity"], "why": br["why"], "plies": plies}
@@ -256,6 +260,98 @@ def build_branches(where, board, entries, ply, errors, notes):
                 record[key] = br[key]
         out.append(record)
     return out
+
+
+class EvalIndex:
+    """Every scored position, keyed by EPD, across every opening that has a file.
+
+    One index rather than one per opening, because a position is a position: the
+    Four Knights transposing into a Ruy Lopez position gets the Ruy Lopez's
+    number without either file knowing about the other, exactly the way branches
+    and personal notes already work.
+
+    A missing score is a warning, not an error. The files are generated from the
+    content, so any edit to a line puts them out of date, and stopping the build
+    over that would mean a typo in a note could not be fixed without an hour of
+    engine time first. The count is printed on every build instead, and it is the
+    only thing that will tell you the bar has gaps.
+    """
+
+    def __init__(self, errors):
+        self.scores = {}        # epd -> {"v": cp, "n": mate}
+        self.covered = set()    # opening ids with a file of their own
+        self.skipped = set()    # model games their file deliberately left out
+        self.depth = None
+        self.engine = None
+        self.generated = None
+        self.used = set()
+        self.missing = []
+        for name in sorted(os.listdir(EVALS)) if os.path.isdir(EVALS) else []:
+            if not name.endswith(".json"):
+                continue
+            self.covered.add(name[:-len(".json")])
+            with open(os.path.join(EVALS, name), encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except ValueError as e:
+                    errors.append(f"evals/{name}: {e}")
+                    continue
+            # One depth for every number on the page. Two positions searched to
+            # different depths cannot be compared, and the bar is on screen for
+            # both of them precisely so they can be.
+            if self.depth is not None and data.get("depth") != self.depth:
+                errors.append(f"evals/{name}: searched at depth {data.get('depth')}, and "
+                              f"another file used {self.depth} — one bar, one depth")
+                continue
+            self.depth = data.get("depth")
+            self.engine = data.get("engine")
+            self.generated = data.get("generated")
+            self.skipped.update(data.get("skipped") or [])
+            for epd, score in (data.get("scores") or {}).items():
+                if not isinstance(score, dict) or not isinstance(score.get("v"), int):
+                    errors.append(f"evals/{name}: {epd!r} has no centipawn score")
+                    continue
+                self.scores[epd] = score
+
+    def attach(self, op_id, board, ply, where, scope=None):
+        """Hang this position's score off the ply record, if there is one.
+
+        Gated on the opening having a file of its own, and not merely on the
+        position happening to be in one. Scores are keyed by position, so a
+        transposition into a scored line would otherwise light up a bar for four
+        plies of an opening that has none -- and a bar that comes and goes inside
+        one variation is worse than no bar at all.
+
+        `scope` is the model game a position belongs to, if any. A game its file
+        names as skipped is out of scope rather than unscored: it draws no bar and
+        is not reported as a gap. That is the same all-or-nothing rule one level
+        down -- a game whose bar stopped at move fifteen would read as a bug, so
+        a game is either scored throughout or not at all.
+        """
+        if op_id not in self.covered or (scope is not None and scope in self.skipped):
+            return
+        score = self.scores.get(board.epd())
+        if score is None:
+            self.missing.append(where)
+            return
+        self.used.add(board.epd())
+        ply["ev"] = score["v"]
+        if score.get("n") is not None:
+            ply["mate"] = score["n"]
+
+    def report(self):
+        if not self.scores:
+            return
+        print(f"engine scores: {len(self.used)} of {len(self.scores)} positions used, "
+              f"depth {self.depth}, {self.engine}")
+        for game in sorted(self.skipped):
+            print(f"  game '{game}' is deliberately unscored")
+        if self.missing:
+            print(f"  warning: {len(self.missing)} positions have no score — "
+                  f"re-run position-evals.py. First: {self.missing[0]}")
+        stale = len(self.scores) - len(self.used)
+        if stale:
+            print(f"  warning: {stale} scored positions no line reaches any more")
 
 
 class NoteIndex:
@@ -385,7 +481,7 @@ def packed_legal(board):
     return "".join(seen)
 
 
-def build_line(op_id, index, line, errors, side=None, branches=None, notes=None):
+def build_line(op_id, index, line, errors, side=None, branches=None, notes=None, evals=None):
     """Replay one line, returning its ply-by-ply record.
 
     When the line opts in with "drill": True, every position carries `legal` --
@@ -403,6 +499,9 @@ def build_line(op_id, index, line, errors, side=None, branches=None, notes=None)
         "san": "", "fen": board_array(board), "from": None, "to": None,
         "note": OPENING_NOTE, "num": "", "turn": "w",
     }]
+    where = f"{op_id} / line {index} '{line['name']}'"
+    if evals is not None:
+        evals.attach(op_id, board, plies[0], f"{where} / the starting position")
     drilled = bool(line.get("drill"))
 
     for i, san in enumerate(line["moves"].split()):
@@ -442,6 +541,8 @@ def build_line(op_id, index, line, errors, side=None, branches=None, notes=None)
         })
         if notes is not None:
             notes.attach(board, plies[-1])
+        if evals is not None:
+            evals.attach(op_id, board, plies[-1], f"{where} / ply {ply} {san}")
 
     if line.get("record"):
         errors.extend(record_errors(f"{op_id} / line {index} '{line['name']}'",
@@ -456,7 +557,7 @@ def build_line(op_id, index, line, errors, side=None, branches=None, notes=None)
     return out
 
 
-def build_openings(games):
+def build_openings(games, evals):
     errors = []
     warnings = []
     out = []
@@ -464,10 +565,10 @@ def build_openings(games):
     for op in load():
         side = chess.WHITE if op["orientation"] == "white" else chess.BLACK
         notes = NoteIndex(op["id"], errors)
-        branches = BranchIndex(op, errors, notes)
+        branches = BranchIndex(op, errors, notes, evals)
         lines = with_deep_line(op)
         record = {k: v for k, v in op.items() if k not in ("deep", "branches", "games")}
-        record["lines"] = [build_line(op["id"], i, line, errors, side, branches, notes)
+        record["lines"] = [build_line(op["id"], i, line, errors, side, branches, notes, evals)
                            for i, line in enumerate(lines)]
         if branches.sets:
             record["branchsets"] = branches.sets
@@ -478,7 +579,7 @@ def build_openings(games):
         warnings.extend(notes.unplaced(op["id"]))
         written += len(notes.notes)
         placed += len(notes.used)
-        games.extend(build_game(op["id"], i, g, errors)
+        games.extend(build_game(op["id"], i, g, errors, evals)
                      for i, g in enumerate(op.get("games") or []))
         out.append(record)
 
@@ -506,10 +607,11 @@ def build_openings(games):
     print(f"{total} moves, {missing} without commentary")
     if written:
         print(f"{placed} of {written} personal notes attached to a position")
+    evals.report()
     return out
 
 
-def build_game(op_id, index, game, errors):
+def build_game(op_id, index, game, errors, evals):
     """Replay an annotated game into the same ply shape a line uses.
 
     Without engine intel, deliberately. intel.py is calibrated for openings --
@@ -522,6 +624,8 @@ def build_game(op_id, index, game, errors):
         "san": "", "fen": board_array(board), "from": None, "to": None,
         "note": game.get("note", ""), "num": "", "turn": "w",
     }]
+    where = f"{op_id} / game '{game['id']}'"
+    evals.attach(op_id, board, plies[0], f"{where} / the starting position", game["id"])
     for i, san in enumerate(game["moves"].split()):
         try:
             move = board.parse_san(san)
@@ -542,6 +646,7 @@ def build_game(op_id, index, game, errors):
             "num": f"{(ply + 1) // 2}.{'' if mover == 'w' else '..'}{san}",
             "turn": mover, "check": board.is_check(),
         })
+        evals.attach(op_id, board, plies[-1], f"{where} / ply {ply} {san}", game["id"])
     record = {k: game[k] for k in ("id", "name", "tier", "note") if k in game}
     record["op"] = op_id
     record["plies"] = plies
@@ -600,7 +705,7 @@ def read(*parts):
         return f.read()
 
 
-def assemble(data_str, structures_str, games_str):
+def assemble(data_str, structures_str, games_str, engine_str):
     """Inline every asset into one self-contained page.
 
     Plain concatenation, deliberately: the output has to keep working from a
@@ -625,6 +730,7 @@ def assemble(data_str, structures_str, games_str):
     for placeholder, text in (("__SECTIONS__", json.dumps(SECTIONS)),
                               ("__STRUCTURES__", structures_str),
                               ("__GAMES__", games_str),
+                              ("__ENGINE__", engine_str),
                               ("__DATA__", data_str)):
         if placeholder not in page:
             raise SystemExit(f"assembled page is missing the {placeholder} placeholder")
@@ -640,8 +746,9 @@ def outputs():
     files, and skipping it makes deploys faster.
     """
     games = []
-    openings = build_openings(games)
     errors = []
+    evals = EvalIndex(errors)
+    openings = build_openings(games, evals)
     structures = build_structures(openings, errors)
     if errors:
         print("=== CONTENT ERRORS ===")
@@ -652,7 +759,10 @@ def outputs():
     compact = lambda o: json.dumps(o, separators=(",", ":"))
     return {
         "chess-opening-course.html": assemble(compact(openings), compact(structures),
-                                              compact(games)),
+                                              compact(games),
+                                              compact({"name": evals.engine,
+                                                       "depth": evals.depth,
+                                                       "generated": evals.generated})),
         "index.html": read("index.html"),
         ".nojekyll": "",
     }

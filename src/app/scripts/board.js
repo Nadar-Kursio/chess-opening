@@ -50,6 +50,8 @@ function boardColumnHTML(opts){
           ply.check?(ply.turn==="w"?"b":"w"):null, state.flipped)}<canvas class="arrows" id="arrowlayer"></canvas></div>
       </div>
 
+      ${evalBarHTML(ply)}
+
       <div class="transport">
         <button class="btn btn--icon" id="b-first" ${atStart?"disabled":""}
           aria-label="Back to the start" title="Start (Home)">&#8676;</button>

@@ -145,6 +145,32 @@ the second one shows what the inversion below actually looks like on the page.
 - `tests/test_content.py` enforces the key sets exactly, so a typo'd key is a
   test failure rather than a shrug. Run the tests before the build.
 
+### The eval bar, for openings that ship one
+
+Separate from everything above, and generated rather than authored: one Stockfish
+score per position, which the build hangs off each ply so the bar under the board
+has a number wherever the reader is.
+
+```bash
+.venv/bin/python3 .claude/skills/opening-research/scripts/position-evals.py ruylopez
+```
+
+It walks every position the opening reaches — lines, deep dive, the continuation
+of every deviation, and the games — and searches each at one depth with MultiPV
+at one. Twenty minutes or so for the Ruy Lopez's 841 positions, cached by position
+under `.engine/eval-cache.json`.
+
+- **Re-run it whenever the content moves.** The file is generated *from* the
+  lines, so adding a deviation or changing a move leaves the bar blank on the
+  plies you touched. The build warns and names the first one; the tests fail on
+  it. This is the step that is easy to forget and invisible on the page.
+- **One depth for every opening.** The build refuses two files that disagree,
+  because the bar exists so two positions can be compared.
+- Adding a second opening is cheap — the cache is shared and keyed by position,
+  so anything the two have in common is already searched.
+- Nothing checks that a score is *true*, which is the usual rule here: never
+  hand-edit one of these files.
+
 ## 3. Verify
 
 Build the engine once (about four minutes; the binary is gitignored):
