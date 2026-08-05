@@ -30,7 +30,7 @@ export function Scoresheet({
   }, [ply]);
 
   return (
-    <div className={`scoresheet scroller${muted ? " scoresheet--muted" : ""}`} id="tape" ref={ref}>
+    <div className={`scoresheet scroller${muted ? " scoresheet--muted" : ""}`} ref={ref}>
       {line.plies.slice(1).map((q, i) => {
         const idx = i + 1;
         const num = q.turn === "w"

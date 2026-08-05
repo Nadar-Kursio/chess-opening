@@ -97,35 +97,34 @@ export function DevPanel({
   onNext: () => void;
   onAt: (n: number) => void;
 }) {
-  const d = branch;
   const at = deviation.at;
-  const p = d.plies[at];
-  const last = at >= d.plies.length - 1;
-  const jump = devTarget(d.see, catalog);
+  const ply = branch.plies[at];
+  const last = at >= branch.plies.length - 1;
+  const jump = devTarget(branch.see, catalog);
   /* The position the move on screen was played from: a deviation's first move
      was played from the line position it branched off. */
-  const prev = at > 0 ? d.plies[at - 1] : line.plies[deviation.fromPly] || null;
+  const prev = at > 0 ? branch.plies[at - 1] : line.plies[deviation.fromPly] || null;
 
   return (
-    <article className="coach" data-tone={d.sev}>
+    <article className="coach" data-tone={branch.sev}>
       <header className="coach__head">
-        <SeverityChip sev={d.sev} />
-        <span className="coach__move">{d.plies[0].num}</span>
-        {d.name ? <span className="coach__name">{d.name}</span> : null}
+        <SeverityChip sev={branch.sev} />
+        <span className="coach__move">{branch.plies[0].num}</span>
+        {branch.name ? <span className="coach__name">{branch.name}</span> : null}
         <button className="coach__close" onClick={onExit} aria-label="Back to the line"
           title="Back to the line (Esc)">✕</button>
       </header>
-      <p className="coach__body" dangerouslySetInnerHTML={{ __html: d.why }} />
+      <p className="coach__body" dangerouslySetInnerHTML={{ __html: branch.why }} />
       {jump ? (
         <Link className="jump-card" href={jump.href} prefetch={false}>
           <span className="jump-card__lead label">{jump.lead}</span>
           <span className="jump-card__name">{jump.label}</span>
         </Link>
       ) : null}
-      {d.plies.length > 1 ? (
+      {branch.plies.length > 1 ? (
         <>
           <div className="scoresheet scoresheet--inline">
-            {d.plies.map((q, i) => {
+            {branch.plies.map((q, i) => {
               const num = q.turn === "w"
                 ? <span className="scoresheet__no">{Math.ceil((i + 1) / 2)}.</span>
                 : null;
@@ -139,11 +138,11 @@ export function DevPanel({
             })}
           </div>
           <header className="coach__head coach__head--plain">
-            <span className="coach__move">{p.num}</span>
-            <span className="label">{p.turn === "w" ? "White to have moved" : "Black to have moved"}</span>
+            <span className="coach__move">{ply.num}</span>
+            <span className="label">{ply.turn === "w" ? "White to have moved" : "Black to have moved"}</span>
           </header>
-          {p.tactics ? <TacticsLine tactics={p.tactics} /> : null}
-          <EvalMove before={prev} after={p} />
+          {ply.tactics ? <TacticsLine tactics={ply.tactics} /> : null}
+          <EvalMove before={prev} after={ply} />
           <div className="coach__actions">
             <button className="btn" onClick={onPrev} disabled={at === 0}>← Back</button>
             <button className="btn" onClick={onNext} disabled={last}>Next →</button>

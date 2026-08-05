@@ -99,19 +99,19 @@ step("shell: the nav filter narrows and recovers", async () => {
 
 step("read: the board, stepping, the coach card and the plan", async () => {
   const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
-  ok(document.querySelectorAll("#board [data-sq]").length === 64, "64 squares");
-  ok(document.querySelectorAll("#board .piece").length === 32, "32 pieces at the start");
+  ok(document.querySelectorAll(".board [data-sq]").length === 64, "64 squares");
+  ok(document.querySelectorAll(".board .piece").length === 32, "32 pieces at the start");
   ok(document.querySelector(".coach__move")?.textContent === "Start", "the start card");
 
-  document.getElementById("b-next").click();
+  document.querySelector('[aria-label="Forward one move"]').click();
   await tick(window, 40);
   ok(lab(window).state.ply === 1, "the cursor at move 1");
   ok(document.querySelector(".coach__move")?.textContent === "1.e4", "the coach card on 1.e4");
-  ok(document.querySelector("#tape .move.current")?.textContent === "e4", "the tape's current move");
+  ok(document.querySelector(".scoresheet.scroller .move.current")?.textContent === "e4", "the tape's current move");
 
   await act(window, (a) => a.toEnd());
   ok(document.querySelector(".plan"), "the plan card at the end of the line");
-  document.getElementById("b-first").click();
+  document.querySelector('[aria-label="Back to the start"]').click();
   await tick(window, 40);
   ok(lab(window).state.ply === 0, "back at the start");
 
@@ -194,7 +194,7 @@ step("drill: a full line, scored and finished", async () => {
   await act(window, (a) => a.setMode("drill"));
   ok(lab(window).state.drill.phase === "ask", "the drill asking");
   ok(document.querySelector(".coach__prompt"), "the prompt");
-  ok(document.querySelector("#tape .move--masked"), "the tape masked ahead of the cursor");
+  ok(document.querySelector(".scoresheet.scroller .move--masked"), "the tape masked ahead of the cursor");
 
   for (let guard = 0; guard < 80; guard++) {
     const s = lab(window).state;
@@ -203,7 +203,7 @@ step("drill: a full line, scored and finished", async () => {
       const answer = lab(window).plies[s.ply + 1];
       await act(window, (a) => a.boardMove(answer.from, answer.to));
     } else {
-      await act(window, (a) => a.cont());
+      await act(window, (a) => a.continueLine());
     }
   }
   ok(lab(window).state.drill.phase === "done", "the line to finish");
@@ -236,7 +236,7 @@ step("drill: a wrong move is answered, an illegal one refused, a hint helps", as
 step("drill: a trap line played as Black asks for Black's moves", async () => {
   const { window, document } = await loadPage("openings/scholarsmate/defusing", { expectIsland: true });
   ok(lab(window).state.flipped === true, "the board turned around for a Black line");
-  ok(document.querySelector("#board [data-sq]")?.dataset.sq === "h1", "h1 drawn first when flipped");
+  ok(document.querySelector(".board [data-sq]")?.dataset.sq === "h1", "h1 drawn first when flipped");
   await act(window, (a) => a.setMode("drill"));
   const s = lab(window).state;
   const answer = lab(window).plies[s.ply + 1];
@@ -331,7 +331,7 @@ step("drill: a drilled deviation re-arms the question on the way out", async () 
       if (!answer) break;
       await act(window, (a) => a.boardMove(answer.from, answer.to));
     } else if (s.drill.phase === "done") break;
-    else await act(window, (a) => a.cont());
+    else await act(window, (a) => a.continueLine());
   }
   ok(list.length > 0, "a drill question with authored deviations");
   const first = list[0].plies[0];
@@ -382,7 +382,7 @@ step("notes: written here, saved to this browser's storage", async () => {
   ok(add, "the invitation to write a note");
   add.click();
   await tick(window, 40);
-  const box = document.getElementById("notetext");
+  const box = document.querySelector(".mynote__text");
   ok(box, "the editor");
   setTextarea(window, box, "my own idea about this position");
   await tick(window, 40);
@@ -480,7 +480,7 @@ step("notes: a browser note shadows the file note; Delete brings it back", async
     const fileText = document.querySelector(".mynote__body")?.textContent || "";
     btnByText(document, /^Edit$/).click();
     await tick(window, 40);
-    setTextarea(window, document.getElementById("notetext"), "my correction");
+    setTextarea(window, document.querySelector(".mynote__text"), "my correction");
     await tick(window, 30);
     btnByText(document, /^Save$/).click();
     await tick(window, 40);
@@ -504,7 +504,7 @@ step("notes: leaving the position keeps what was typed", async () => {
   const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
   document.querySelector(".mynote-add").click();
   await tick(window, 40);
-  setTextarea(window, document.getElementById("notetext"), "half a thought");
+  setTextarea(window, document.querySelector(".mynote__text"), "half a thought");
   await tick(window, 30);
   const key = lab(window).plies[0].turn + lab(window).plies[0].fen;
   await act(window, (a) => a.step(1)); // navigate away mid-sentence

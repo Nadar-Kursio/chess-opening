@@ -32,7 +32,8 @@ interface Props {
   rejected: Rejected | null;
   mine: NoteRecord | null;
   drawing: Drawing | null;
-  tail: string | null;
+  /** The first square of a two-tap note arrow, waiting for its second. */
+  pendingFrom: string | null;
   depth: number | null;
   readout: React.ReactNode;
   hint: React.ReactNode;
@@ -46,11 +47,16 @@ interface Props {
   onPlay: () => void;
 }
 
-export default function BoardColumn(p: Props) {
-  const atStart = p.index === 0;
-  const atEnd = p.index >= p.total;
-  const showArrows = p.arrowsOn && !p.hidesOverlays;
-  const showMine = p.mineOn && !p.hidesOverlays;
+export default function BoardColumn({
+  ply, index, total, locked, flipped, autoplay, canPlay, arrowsOn, mineOn,
+  hidesOverlays, live, gridNav, grabSide, selected, cursor, targets, rejected,
+  mine, drawing, pendingFrom, depth, readout, hint,
+  onFirst, onPrev, onNext, onLast, onFlip, onArrows, onMine, onPlay,
+}: Props) {
+  const atStart = index === 0;
+  const atEnd = index >= total;
+  const showArrows = arrowsOn && !hidesOverlays;
+  const showMine = mineOn && !hidesOverlays;
   /* The canvas measures THIS board — never a lookup by id, so a page may one
      day carry a second board (structures, games) without the layers fighting
      over which one they belong to. */
@@ -60,71 +66,71 @@ export default function BoardColumn(p: Props) {
       <div className="board-frame">
         <div className="board-square" ref={squareRef}>
           <Board
-            fen={p.ply.fen}
-            from={p.ply.from}
-            to={p.ply.to}
-            checkSide={p.ply.check ? (p.ply.turn === "w" ? "b" : "w") : null}
-            flipped={p.flipped}
-            live={p.live}
-            gridNav={p.gridNav}
-            grabSide={p.grabSide}
-            selected={p.selected}
-            cursor={p.cursor}
-            targets={p.targets}
-            rejected={p.rejected}
-            pieceAt={(sq) => pieceAt(p.ply.fen, sq)}
+            fen={ply.fen}
+            from={ply.from}
+            to={ply.to}
+            checkSide={ply.check ? (ply.turn === "w" ? "b" : "w") : null}
+            flipped={flipped}
+            live={live}
+            gridNav={gridNav}
+            grabSide={grabSide}
+            selected={selected}
+            cursor={cursor}
+            targets={targets}
+            rejected={rejected}
+            pieceAt={(sq) => pieceAt(ply.fen, sq)}
           />
           <ArrowLayer
             boardRef={squareRef}
-            fen={p.ply.fen}
-            arrows={p.ply.arrows || []}
-            mine={showMine ? p.mine : null}
-            drawing={showMine ? p.drawing : null}
-            tail={showMine ? p.tail : null}
-            rejected={p.rejected}
+            fen={ply.fen}
+            arrows={ply.arrows || []}
+            mine={showMine ? mine : null}
+            drawing={showMine ? drawing : null}
+            pendingFrom={showMine ? pendingFrom : null}
+            rejected={rejected}
             showArrows={showArrows}
             showMine={showMine}
-            flipped={p.flipped}
+            flipped={flipped}
           />
         </div>
       </div>
 
-      <EvalBar ply={p.ply} depth={p.depth} />
+      <EvalBar ply={ply} depth={depth} />
 
       <div className="transport">
-        <button className="btn btn--icon" id="b-first" disabled={atStart}
-          aria-label="Back to the start" title="Start (Home)" onClick={p.onFirst}>⇤</button>
-        <button className="btn btn--icon" id="b-prev" disabled={atStart}
-          aria-label="Back one move" title="Back (←)" onClick={p.onPrev}>←</button>
-        <span className="transport__readout">{p.readout}</span>
-        <button className="btn btn--icon" id="b-next" disabled={atEnd || p.locked}
-          aria-label="Forward one move" title="Forward (→)" onClick={p.onNext}>→</button>
-        <button className="btn btn--icon" id="b-last" disabled={atEnd || p.locked}
-          aria-label="Jump to the end" title="End (End)" onClick={p.onLast}>⇥</button>
+        <button className="btn btn--icon" disabled={atStart}
+          aria-label="Back to the start" title="Start (Home)" onClick={onFirst}>⇤</button>
+        <button className="btn btn--icon" disabled={atStart}
+          aria-label="Back one move" title="Back (←)" onClick={onPrev}>←</button>
+        <span className="transport__readout">{readout}</span>
+        <button className="btn btn--icon" disabled={atEnd || locked}
+          aria-label="Forward one move" title="Forward (→)" onClick={onNext}>→</button>
+        <button className="btn btn--icon" disabled={atEnd || locked}
+          aria-label="Jump to the end" title="End (End)" onClick={onLast}>⇥</button>
       </div>
 
       <div className="board-tools">
-        <button className={`btn${p.autoplay ? " on" : ""}`} id="b-play" disabled={!p.canPlay}
-          onClick={p.onPlay}>
-          <span className="glyph" aria-hidden="true">{p.autoplay ? "■" : "▶"}</span>
-          {p.autoplay ? "Stop" : "Play"}
+        <button className={`btn${autoplay ? " on" : ""}`} disabled={!canPlay}
+          onClick={onPlay}>
+          <span className="glyph" aria-hidden="true">{autoplay ? "■" : "▶"}</span>
+          {autoplay ? "Stop" : "Play"}
         </button>
-        <button className="btn" id="b-flip"
-          aria-label={`Flip the board to put ${p.flipped ? "White" : "Black"} at the bottom`}
-          title={`Flip the board to put ${p.flipped ? "White" : "Black"} at the bottom`}
-          onClick={p.onFlip}>
+        <button className="btn" 
+          aria-label={`Flip the board to put ${flipped ? "White" : "Black"} at the bottom`}
+          title={`Flip the board to put ${flipped ? "White" : "Black"} at the bottom`}
+          onClick={onFlip}>
           <span className="glyph" aria-hidden="true">⇅</span>Flip
         </button>
-        <button className={`btn${showArrows ? " on" : ""}`} id="b-arrows"
-          aria-pressed={showArrows} disabled={p.hidesOverlays}
+        <button className={`btn${showArrows ? " on" : ""}`} 
+          aria-pressed={showArrows} disabled={hidesOverlays}
           title="What the move attacks, defends and controls, drawn on the board"
-          onClick={p.onArrows}>
+          onClick={onArrows}>
           <span className="glyph" aria-hidden="true">↗</span>Arrows
         </button>
-        <button className={`btn${showMine ? " on" : ""}`} id="b-mine"
-          aria-pressed={showMine} disabled={p.hidesOverlays}
+        <button className={`btn${showMine ? " on" : ""}`} 
+          aria-pressed={showMine} disabled={hidesOverlays}
           title="Your own notes and the marks that go with them"
-          onClick={p.onMine}>
+          onClick={onMine}>
           <span className="glyph" aria-hidden="true">✎</span>Notes
         </button>
       </div>
@@ -144,7 +150,7 @@ export default function BoardColumn(p: Props) {
         </div>
       ) : null}
 
-      {p.hint ? <p className="board-hint">{p.hint}</p> : null}
+      {hint ? <p className="board-hint">{hint}</p> : null}
     </div>
   );
 }

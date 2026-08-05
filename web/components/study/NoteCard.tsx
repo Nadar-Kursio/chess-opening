@@ -21,7 +21,7 @@ function markLabels(n: { arrows?: { f: string; t: string }[]; spots?: string[] }
 }
 
 function editorHint(n: NoteEditor): string {
-  if (n.from) return "Now tap the square it points at.";
+  if (n.pendingFrom) return "Now tap the square it points at.";
   if (n.tool === "arrow") return "Tap the square the arrow starts from.";
   if (n.tool === "spot") return "Tap a square to circle it.";
   return "Hold a square to circle it, or hold and drag for an arrow. Right-drag with a mouse.";
@@ -66,7 +66,6 @@ export default function NoteCard({
         <textarea
           ref={boxRef}
           className="mynote__text"
-          id="notetext"
           rows={3}
           spellCheck
           placeholder="What this move does, in your words."

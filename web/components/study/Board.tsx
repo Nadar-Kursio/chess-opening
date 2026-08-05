@@ -57,7 +57,7 @@ export default function Board({
   if (flipped) order.reverse();
 
   return (
-    <div className={`board${live ? " live" : ""}`} id="board" role={gridNav ? "grid" : undefined} ref={ref}>
+    <div className={`board${live ? " live" : ""}`} role={gridNav ? "grid" : undefined} ref={ref}>
       {order.map((i, pos) => {
         const file = i % 8;
         const rank = 7 - ((i / 8) | 0);

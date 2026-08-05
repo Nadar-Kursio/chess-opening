@@ -32,8 +32,8 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   const { state, line, side, actions, plies, index, current, devList, devCurrent } =
     useStudy(opening, lineIndex);
 
-  const sref = useRef(state);
-  sref.current = state;
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const dragRef = useRef<{ from: string; id: number } | null>(null);
   /* A finger holding still on a square is what it has instead of a right
      button: long enough that neither a tap nor a piece-drag arms it by
@@ -82,6 +82,12 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     return () => document.removeEventListener("touchmove", stop);
   }, [state.drawing]);
 
+  /* A press followed by navigation inside the hold window must not fire the
+     timer into an unmounted island. */
+  useEffect(() => () => {
+    if (holdRef.current) clearTimeout(holdRef.current.timer);
+  }, []);
+
   /* A deliberate test seam: the artifact smoke drives the island through this
      handle, the way the old harness reached the globals. */
   useEffect(() => {
@@ -100,7 +106,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
-      const s = sref.current;
+      const s = stateRef.current;
       const k = e.key;
 
       if (!(e.metaKey || e.ctrlKey || e.altKey)) {
@@ -124,7 +130,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
             if (k === "s" || k === "S") { actions.show(); e.preventDefault(); return; }
             if (k === "r" || k === "R") { actions.restart(); e.preventDefault(); return; }
             if ((k === "Enter" || k === " ") && (s.drill.phase === "right" || s.drill.phase === "reveal")) {
-              actions.cont(); e.preventDefault(); return;
+              actions.continueLine(); e.preventDefault(); return;
             }
             const board = boardEl();
             const onBoard = board && board.contains(document.activeElement);
@@ -138,7 +144,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
                 if (actions.moveCursor(delta[0], delta[1])) {
                   requestAnimationFrame(() => {
                     boardEl()?.querySelector<HTMLElement>(
-                      `[data-sq="${sref.current.drill.cursor}"]`
+                      `[data-sq="${stateRef.current.drill.cursor}"]`
                     )?.focus();
                   });
                 }
@@ -191,10 +197,10 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     /* Drawing is the right button, and only the right button: a left-drag
        means "play this move". The exception is an armed two-tap tool, which
        is what buys a plain tap its new meaning. */
-    const drawGesture = canDraw && (e.button === 2 || (e.button === 0 && !!sref.current.note?.tool));
+    const drawGesture = canDraw && (e.button === 2 || (e.button === 0 && !!stateRef.current.note?.tool));
     if (drawGesture) {
       e.preventDefault();
-      if (sref.current.note?.tool) { actions.noteTapSquare(sq); return; }
+      if (stateRef.current.note?.tool) { actions.noteTapSquare(sq); return; }
       dragRef.current = null;
       actions.noteStartDraw(sq, e.pointerId);
       try { cell.setPointerCapture(e.pointerId); } catch {}
@@ -223,8 +229,8 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
 
     if (e.button !== 0) return;
     if (!live) return;
-    const s = sref.current;
-    const here = opening.lines[lineIndex].plies[s.ply];
+    const s = stateRef.current;
+    const here = line.plies[s.ply];
     e.preventDefault();
     if (!s.selected && isOwnPiece(here.fen, sq, moverSide(line.plies, s.ply))) {
       dragRef.current = { from: sq, id: e.pointerId };
@@ -239,7 +245,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
         && (Math.abs(e.clientX - hold.x) > 10 || Math.abs(e.clientY - hold.y) > 10)) {
       holdCancel(); // travel means a piece-drag, not a hold
     }
-    if (sref.current.drawing?.id === e.pointerId) {
+    if (stateRef.current.drawing?.id === e.pointerId) {
       const sq = squareAt(e);
       if (sq) actions.noteDrawTo(sq, e.pointerId);
     }
@@ -247,7 +253,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
 
   const onPointerUp = (e: React.PointerEvent) => {
     holdCancel();
-    if (sref.current.drawing?.id === e.pointerId) {
+    if (stateRef.current.drawing?.id === e.pointerId) {
       actions.noteEndDraw(squareAt(e), e.pointerId);
       return;
     }
@@ -332,7 +338,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
         rejected={drillOn || state.drill.verdictPly === state.ply ? state.drill.rejected : null}
         mine={marksShown}
         drawing={state.drawing}
-        tail={state.note?.from ?? null}
+        pendingFrom={state.note?.pendingFrom ?? null}
         depth={catalog.engine.depth}
         readout={readout}
         hint={hint}
@@ -360,7 +366,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
           ply={state.ply}
           hide={drillOn}
           muted={inDeviation}
-          onJump={actions.jump}
+          onJump={actions.jumpLine}
         />
         {state.picking ? (
           <DevPicker
@@ -393,7 +399,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
             onHint={actions.hint}
             onShow={actions.show}
             onRestart={actions.restart}
-            onContinue={actions.cont}
+            onContinue={actions.continueLine}
             onRead={() => actions.setMode("read")}
           />
         ) : (

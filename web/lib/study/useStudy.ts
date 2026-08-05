@@ -29,7 +29,8 @@ export interface NoteEditor {
   arrows: { f: string; t: string }[];
   spots: string[];
   tool: "arrow" | "spot" | null;
-  from: string | null;
+  /** The first square of a two-tap arrow, waiting for its second. */
+  pendingFrom: string | null;
   focus: boolean;
 }
 
@@ -95,17 +96,17 @@ export function useStudy(opening: Opening, lineIndex: number) {
     drawing: null,
   }));
 
-  const ref = useRef(state);
-  ref.current = state;
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   /* Thin bindings over the module-level cursor helpers below, so nothing in
      `actions` closes over a per-render value — the memo freezes first-render
-     closures, and only bindings that reach state through `ref.current` (or
+     closures, and only bindings that reach state through `stateRef.current` (or
      per-mount-stable props) are safe inside it. */
-  const devAt = (ply: number) => devAtOf(opening, line, ply);
-  const pliesOf = (s: StudyState) => pliesIn(opening, line, s);
-  const indexOf = (s: StudyState) => indexIn(s);
-  const stepped = (s: StudyState, d: number) => steppedIn(opening, line, s, d);
+  const devsAt = (ply: number) => devsAtIn(opening, line, ply);
+  const currentPlies = (s: StudyState) => currentPliesIn(opening, line, s);
+  const currentIndex = (s: StudyState) => currentIndexIn(s);
+  const steppedBy = (s: StudyState, delta: number) => steppedByIn(opening, line, s, delta);
 
   /* ---- transitions; each builds the next state and commits once ---- */
 
@@ -134,11 +135,11 @@ export function useStudy(opening: Opening, lineIndex: number) {
        a deviation, the Notes layer switched off. What was typed is kept, not
        dropped: navigating away is not a decision to throw work out. */
     if (next.note && (!next.mine
-        || next.note.key !== noteKey(pliesIn(opening, line, next)[indexIn(next)]))) {
+        || next.note.key !== noteKey(currentPliesIn(opening, line, next)[currentIndexIn(next)]))) {
       noteStore(next.note);
       next = { ...next, note: null, drawing: null };
     }
-    ref.current = next;
+    stateRef.current = next;
     setState(next);
   };
 
@@ -186,53 +187,60 @@ export function useStudy(opening: Opening, lineIndex: number) {
   };
 
   const actions = useMemo(() => {
-    const a = {
+    const actions = {
       jump(n: number) {
-        const s = stopAutoplay(ref.current);
+        const s = stopAutoplay(stateRef.current);
         commit(s.deviation ? { ...s, deviation: { ...s.deviation, at: n } } : { ...s, ply: n });
       },
-      step(d: number): boolean {
-        const s = stopAutoplay(ref.current);
-        const next = stepped(s, d);
+      /* The move tape names a LINE ply, so a tap there leaves any deviation —
+         the old app's behaviour — rather than writing a line index into the
+         branch cursor, whose plies it may overrun. */
+      jumpLine(n: number) {
+        const s = stopAutoplay(stateRef.current);
+        commit({ ...s, deviation: null, picking: false, ply: n });
+      },
+      step(delta: number): boolean {
+        const s = stopAutoplay(stateRef.current);
+        const next = steppedBy(s, delta);
         commit(next || s);
         return !!next;
       },
       /* Not stopAutoplay: the autoplay interval itself steps through here. */
       autoStep(): boolean {
-        const next = stepped(ref.current, 1);
+        const next = steppedBy(stateRef.current, 1);
         if (next) commit(next);
         return !!next;
       },
       toEnd() {
-        const s = stopAutoplay(ref.current);
-        a.jump(pliesOf(s).length - 1);
+        const s = stopAutoplay(stateRef.current);
+        actions.jump(currentPlies(s).length - 1);
       },
       toggleAutoplay() {
-        const s = ref.current;
+        const s = stateRef.current;
         commit({ ...s, autoplay: !s.autoplay });
       },
       flip() {
-        const s = ref.current;
+        const s = stateRef.current;
         commit({ ...s, flipped: !s.flipped });
       },
       toggleArrows() {
-        const s = ref.current;
+        const s = stateRef.current;
         db.ui.arrows = !s.arrows;
         dbSave();
         commit({ ...s, arrows: !s.arrows });
       },
       toggleMine() {
-        const s = ref.current;
+        const s = stateRef.current;
         db.ui.mine = !s.mine;
         dbSave();
         commit({ ...s, mine: !s.mine });
       },
       toggleVars() {
-        const s = ref.current;
+        const s = stateRef.current;
         commit({ ...s, varsOpen: !s.varsOpen });
       },
       restorePrefs() {
-        const s = ref.current;
+        const s = stateRef.current;
         commit({
           ...s,
           arrows: typeof db.ui.arrows === "boolean" ? db.ui.arrows : s.arrows,
@@ -242,7 +250,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
       },
 
       setMode(mode: "read" | "drill") {
-        const s = stopAutoplay(ref.current);
+        const s = stopAutoplay(stateRef.current);
         const base = { ...s, mode, selected: null };
         if (mode === "drill") {
           commit(drillResetState(base));
@@ -253,7 +261,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
       },
       toggleBothSides() {
         // Restarts the line: the score is out of a different number of moves now.
-        const s = ref.current;
+        const s = stateRef.current;
         const bothSides = !s.drill.bothSides;
         db.ui.bothSides = bothSides;
         dbSave();
@@ -263,13 +271,13 @@ export function useStudy(opening: Opening, lineIndex: number) {
           : "Answering for your own colour only, from the start of the line.");
       },
       restart() {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.mode !== "drill") return;
         commit(drillResetState(stopAutoplay(s)));
         announce("Drill started. Play the move on the board.");
       },
-      cont() {
-        const s = ref.current;
+      continueLine() {
+        const s = stateRef.current;
         if (s.drill.phase === "done") return;
         commit(advanceToAsk({
           ...s,
@@ -278,15 +286,15 @@ export function useStudy(opening: Opening, lineIndex: number) {
         }));
       },
       hint() {
-        const s = ref.current;
+        const s = stateRef.current;
         const d = s.drill;
         if (s.mode !== "drill" || d.phase === "done" || d.hint >= 3) return;
-        if (d.hint + 1 === 3) { a.show(); return; }
+        if (d.hint + 1 === 3) { actions.show(); return; }
         commit({ ...s, drill: { ...d, hint: d.hint + 1, phase: "ask" } });
         announce(d.hint + 1 === 1 ? "Hint: which piece." : "Hint: the idea.");
       },
       show() {
-        const s = ref.current;
+        const s = stateRef.current;
         const answer = line.plies[s.ply + 1];
         if (!answer) return;
         const d = s.drill;
@@ -302,24 +310,24 @@ export function useStudy(opening: Opening, lineIndex: number) {
 
       /* ---- deviations ---- */
       openPicker() {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.deviation) return;
         commit({ ...s, picking: !s.picking, selected: null });
       },
       cancelPicker() {
-        commit({ ...ref.current, picking: false });
+        commit({ ...stateRef.current, picking: false });
       },
       devList(): Branch[] {
-        return devAt(ref.current.ply);
+        return devsAt(stateRef.current.ply);
       },
       devEnter(idx: number, origin: "read" | "drill") {
-        const s = ref.current;
+        const s = stateRef.current;
         commit({ ...s, deviation: { fromPly: s.ply, idx, at: 0, origin }, picking: false, selected: null });
-        const d = devAt(s.ply)[idx];
+        const d = devsAt(s.ply)[idx];
         if (d) announce(`${d.sev}. ${d.san}.`);
       },
       devExit() {
-        const s = ref.current;
+        const s = stateRef.current;
         const origin = s.deviation?.origin;
         let next: StudyState = { ...s, deviation: null, selected: null };
         if (origin === "drill" && s.mode === "drill") {
@@ -329,13 +337,13 @@ export function useStudy(opening: Opening, lineIndex: number) {
         announce("Back to the line.");
       },
       devAtSet(n: number) {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.deviation) commit({ ...s, deviation: { ...s.deviation, at: n } });
       },
 
       /* ---- board input (drill.js's attempt logic, verbatim in spirit) ---- */
       pick(sq: string) {
-        const s = ref.current;
+        const s = stateRef.current;
         let next = s;
         if (s.drill.rejected || s.drill.verdict) {
           next = { ...s, drill: { ...s.drill, rejected: null, verdict: "", tone: "" } };
@@ -344,22 +352,22 @@ export function useStudy(opening: Opening, lineIndex: number) {
         if (next.selected) {
           const from = next.selected;
           commit({ ...next, selected: null });
-          a.boardMove(from, sq);
+          actions.boardMove(from, sq);
           return;
         }
-        const here = pliesOf(next)[indexOf(next)];
+        const here = currentPlies(next)[currentIndex(next)];
         if (!isOwnPiece(here.fen, sq, moverSide(line.plies, next.ply))) { commit(next); return; }
         commit({ ...next, selected: sq, drill: { ...next.drill, cursor: sq } });
       },
 
       boardMove(from: string, to: string) {
-        const s = ref.current;
-        if (s.picking || s.mode !== "drill") a.readModeTry(from, to);
-        else a.drillTry(from, to);
+        const s = stateRef.current;
+        if (s.picking || s.mode !== "drill") actions.readModeTry(from, to);
+        else actions.drillTry(from, to);
       },
 
       readModeTry(from: string, to: string) {
-        const s = ref.current;
+        const s = stateRef.current;
         const here = line.plies[s.ply];
         [from, to] = normaliseMove(here.fen, from, to);
 
@@ -373,13 +381,13 @@ export function useStudy(opening: Opening, lineIndex: number) {
           return;
         }
 
-        const hit = devAt(s.ply).findIndex((b) => {
+        const hit = devsAt(s.ply).findIndex((b) => {
           const first = b.plies[0];
           return first && first.from === from && first.to === to;
         });
         if (hit >= 0) {
           commit({ ...s, selected: null, drill: { ...s.drill, rejected: null } });
-          a.devEnter(hit, "read");
+          actions.devEnter(hit, "read");
           return;
         }
 
@@ -401,7 +409,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
       },
 
       drillTry(from: string, to: string) {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.mode !== "drill" || s.drill.phase === "done") return;
         const here = line.plies[s.ply];
         const answer = line.plies[s.ply + 1];
@@ -467,7 +475,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
         }
 
         // An authored deviation answers the move actually played — the whole point.
-        const hit = devAt(s.ply).findIndex((b) => {
+        const hit = devsAt(s.ply).findIndex((b) => {
           const first = b.plies[0];
           return first && first.from === from && first.to === to;
         });
@@ -477,7 +485,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
           db.streak.cur = 0;
           dbSave();
           commit({ ...s, drill: { ...d, tries: d.tries + 1, streak: 0, seen } });
-          a.devEnter(hit, "drill");
+          actions.devEnter(hit, "drill");
           return;
         }
 
@@ -504,15 +512,15 @@ export function useStudy(opening: Opening, lineIndex: number) {
 
       /* ---- your own note on this position ---- */
       noteEdit() {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.note) return;
         commit({ ...s, note: noteBeginFrom(opening, line, s, true) });
       },
       noteCancel() {
-        commit({ ...ref.current, note: null, drawing: null });
+        commit({ ...stateRef.current, note: null, drawing: null });
       },
       noteSave() {
-        const s = ref.current;
+        const s = stateRef.current;
         if (!s.note) return;
         const keep = noteStore(s.note);
         commit({ ...s, note: null, drawing: null });
@@ -521,7 +529,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
       /* Nothing in a browser can edit a file, so Delete only drops the copy
          saved here — the shipped note, if there was one, comes straight back. */
       noteDelete() {
-        const s = ref.current;
+        const s = stateRef.current;
         if (!s.note) return;
         delete db.notes[s.note.key];
         dbSave();
@@ -530,16 +538,16 @@ export function useStudy(opening: Opening, lineIndex: number) {
         announce("Note removed.");
       },
       noteSetText(text: string) {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.note) commit({ ...s, note: { ...s.note, text } });
       },
       noteSetTool(tool: "arrow" | "spot") {
-        const s = ref.current;
+        const s = stateRef.current;
         if (!s.note) return;
-        commit({ ...s, note: { ...s.note, tool: s.note.tool === tool ? null : tool, from: null } });
+        commit({ ...s, note: { ...s.note, tool: s.note.tool === tool ? null : tool, pendingFrom: null } });
       },
       noteRemoveMark(i: number) {
-        const s = ref.current;
+        const s = stateRef.current;
         if (!s.note) return;
         const arrows = [...s.note.arrows];
         const spots = [...s.note.spots];
@@ -550,28 +558,28 @@ export function useStudy(opening: Opening, lineIndex: number) {
       /* The two-tap tools: the same marks without a drag, for a finger and for
          anyone who would rather press a button than know a gesture. */
       noteTapSquare(sq: string) {
-        const s = ref.current;
+        const s = stateRef.current;
         const n = s.note;
         if (!n) return;
         if (n.tool === "spot") {
           commit({ ...s, note: { ...n, spots: toggleSpot(n.spots, sq), tool: null } });
           return;
         }
-        if (!n.from) {
-          commit({ ...s, note: { ...n, from: sq } });
+        if (!n.pendingFrom) {
+          commit({ ...s, note: { ...n, pendingFrom: sq } });
           return;
         }
-        const from = n.from;
-        commit({ ...s, note: { ...n, from: null, tool: null, arrows: toggleArrow(n.arrows, from, sq) } });
+        const from = n.pendingFrom;
+        commit({ ...s, note: { ...n, pendingFrom: null, tool: null, arrows: toggleArrow(n.arrows, from, sq) } });
       },
       /* ---- drawing: right-drag on a mouse, hold-to-draw on touch ---- */
       noteStartDraw(sq: string, id: number) {
-        const s = ref.current;
+        const s = stateRef.current;
         const note = s.note || noteBeginFrom(opening, line, s, false);
         commit({ ...s, note, drawing: { from: sq, to: sq, id }, selected: null });
       },
       noteDrawTo(sq: string, id: number) {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.drawing && s.drawing.id === id && s.drawing.to !== sq) {
           commit({ ...s, drawing: { ...s.drawing, to: sq } });
         }
@@ -579,7 +587,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
       /* A press that never left its square is a circle; one that travelled is
          an arrow. */
       noteEndDraw(sq: string | null, id: number) {
-        const s = ref.current;
+        const s = stateRef.current;
         const d = s.drawing;
         if (!d || d.id !== id || !s.note) return;
         const to = sq || d.from;
@@ -592,12 +600,12 @@ export function useStudy(opening: Opening, lineIndex: number) {
       /* A drag the browser takes away — a phone call, a gesture the OS claims —
          must not leave a rubber band with nothing holding it. */
       noteAbortDraw(id: number) {
-        const s = ref.current;
+        const s = stateRef.current;
         if (s.drawing && s.drawing.id === id) commit({ ...s, drawing: null });
       },
 
       moveCursor(dcol: number, drow: number): boolean {
-        const s = ref.current;
+        const s = stateRef.current;
         const cur = s.drill.cursor;
         const file = FILES.indexOf(cur[0]) + (s.flipped ? -dcol : dcol);
         const rank = +cur[1] + (s.flipped ? -drow : drow);
@@ -606,7 +614,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
         return true;
       },
     };
-    return a;
+    return actions;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opening, lineIndex]);
 
@@ -621,10 +629,10 @@ export function useStudy(opening: Opening, lineIndex: number) {
 
   return {
     state, line, side, sideColour, actions,
-    plies: pliesOf(state),
-    index: indexOf(state),
-    current: pliesOf(state)[indexOf(state)] || pliesOf(state)[0],
-    devList: devAt(state.ply),
+    plies: currentPlies(state),
+    index: currentIndex(state),
+    current: currentPlies(state)[currentIndex(state)] || currentPlies(state)[0],
+    devList: devsAt(state.ply),
     devCurrent: devCurrentIn(opening, line, state),
   };
 }
@@ -635,7 +643,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
 
 /* The deviation sets are shared between every line that reaches the position,
    so the move THIS line plays is dropped: from here it is the main line. */
-function devAtOf(opening: Opening, line: Line, ply: number): Branch[] {
+function devsAtIn(opening: Opening, line: Line, ply: number): Branch[] {
   const sets = opening.branchsets;
   if (!sets) return [];
   const here = line.plies[ply];
@@ -645,21 +653,21 @@ function devAtOf(opening: Opening, line: Line, ply: number): Branch[] {
 }
 
 function devCurrentIn(opening: Opening, line: Line, s: StudyState): Branch | null {
-  return s.deviation ? devAtOf(opening, line, s.deviation.fromPly)[s.deviation.idx] || null : null;
+  return s.deviation ? devsAtIn(opening, line, s.deviation.fromPly)[s.deviation.idx] || null : null;
 }
 
-function pliesIn(opening: Opening, line: Line, s: StudyState): Ply[] {
+function currentPliesIn(opening: Opening, line: Line, s: StudyState): Ply[] {
   const d = devCurrentIn(opening, line, s);
   return d ? d.plies : line.plies;
 }
 
-function indexIn(s: StudyState): number {
+function currentIndexIn(s: StudyState): number {
   return s.deviation ? s.deviation.at : s.ply;
 }
 
-function steppedIn(opening: Opening, line: Line, s: StudyState, d: number): StudyState | null {
-  const n = indexIn(s) + d;
-  if (n < 0 || n > pliesIn(opening, line, s).length - 1) return null;
+function steppedByIn(opening: Opening, line: Line, s: StudyState, delta: number): StudyState | null {
+  const n = currentIndexIn(s) + delta;
+  if (n < 0 || n > currentPliesIn(opening, line, s).length - 1) return null;
   return s.deviation
     ? { ...s, deviation: { ...s.deviation, at: n } }
     : { ...s, ply: n };
@@ -680,15 +688,15 @@ function toggleSpot(spots: string[], sq: string) {
 /* A working copy seeded from whatever note the position shows — the shipped
    file note included, so editing it starts from its text and marks. */
 function noteBeginFrom(opening: Opening, line: Line, s: StudyState, focus: boolean): NoteEditor {
-  const p = pliesIn(opening, line, s)[indexIn(s)];
-  const from = noteShown(p);
+  const ply = currentPliesIn(opening, line, s)[currentIndexIn(s)];
+  const seed = noteShown(ply);
   return {
-    key: noteKey(p),
-    text: from ? noteText(from, noteIsLocal(p)) : "",
-    arrows: (from?.arrows || []).map((a) => ({ f: a.f, t: a.t })),
-    spots: (from?.spots || []).slice(),
+    key: noteKey(ply),
+    text: seed ? noteText(seed, noteIsLocal(ply)) : "",
+    arrows: (seed?.arrows || []).map((a) => ({ f: a.f, t: a.t })),
+    spots: (seed?.spots || []).slice(),
     tool: null,
-    from: null,
+    pendingFrom: null,
     focus,
   };
 }

@@ -30,7 +30,7 @@ interface Props {
   arrows: Arrow[];
   mine: NoteRecord | null;
   drawing: Drawing | null;
-  tail: string | null;
+  pendingFrom: string | null;
   rejected: Rejected | null;
   showArrows: boolean;
   showMine: boolean;
@@ -38,7 +38,7 @@ interface Props {
 }
 
 export default function ArrowLayer({
-  boardRef, fen, arrows, mine, drawing, tail, rejected, showArrows, showMine, flipped,
+  boardRef, fen, arrows, mine, drawing, pendingFrom, rejected, showArrows, showMine, flipped,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -110,7 +110,7 @@ export default function ArrowLayer({
         } else if (drawing) {
           drawRing(ctx, drawing.from, ARROW_COLORS.live, square, flipped);
         }
-        if (tail) drawRing(ctx, tail, ARROW_COLORS.live, square, flipped);
+        if (pendingFrom) drawRing(ctx, pendingFrom, ARROW_COLORS.live, square, flipped);
       }
     };
     draw();
@@ -118,7 +118,7 @@ export default function ArrowLayer({
     return () => window.removeEventListener("resize", draw);
   });
 
-  return <canvas className="arrows" id="arrowlayer" ref={ref}></canvas>;
+  return <canvas className="arrows" ref={ref}></canvas>;
 }
 
 /* ---- geometry, verbatim from arrows.js ---- */
