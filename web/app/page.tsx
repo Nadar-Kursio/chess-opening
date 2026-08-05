@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getCatalog, getOpening } from "@/lib/content/load";
-import { PRIMER_HTML } from "@/components/primerHtml";
+import { getCatalog, getOpening, getPrimer } from "@/lib/content/load";
 
 /* The front page: the hero introduces the course, the primer teaches the ideas
    every opening leans on, and the catalogue links into the openings. Stats are
@@ -61,7 +60,7 @@ export default function Home() {
         })}
       </section>
 
-      <div dangerouslySetInnerHTML={{ __html: PRIMER_HTML }} />
+      <div dangerouslySetInnerHTML={{ __html: getPrimer() }} />
     </>
   );
 }

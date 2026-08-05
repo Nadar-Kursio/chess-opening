@@ -4,9 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { OpeningSummary, Section } from "@/lib/content/types";
+import { announce } from "@/lib/announce";
 import { db, dbRevision, dbServerRevision, dbSubscribe, dbTheme } from "@/lib/db";
 import { FEEDBACK_LEVELS } from "@/lib/study/drill";
-import { announce } from "@/lib/study/useStudy";
 
 /* The app bar and the course nav — one nav, presented two ways: a rail beside
    the content on a wide screen, the same markup sliding in over it on a narrow

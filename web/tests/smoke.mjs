@@ -139,7 +139,7 @@ step("read: variations are links, and a trap line names its chair", async () => 
   const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
   const rows = [...document.querySelectorAll(".variation")];
   ok(rows.length === 7, `7 variation rows (got ${rows.length})`);
-  ok(rows[0].getAttribute("aria-pressed") === "true", "the current row marked");
+  ok(rows[0].getAttribute("aria-current") === "page", "the current row marked");
   ok(rows[1].getAttribute("href") === "/openings/ruylopez/exchange/", "a slug URL on the second row");
   window.close();
 
@@ -147,6 +147,31 @@ step("read: variations are links, and a trap line names its chair", async () => 
   const chips = [...trap.document.querySelectorAll(".variation__side")].map((el) => el.textContent);
   ok(chips.includes("as Black"), "the chair chip on a Black-played trap line");
   trap.window.close();
+});
+
+step("read: a picked-up piece shows where it can go, chess.com style", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  ok(document.querySelector(".board.live"), "the board live in read mode");
+  ok(document.querySelectorAll(".sq.grab").length === 16, "White's 16 pieces wearing the grab cursor");
+
+  await act(window, (a) => a.pick("g1"));
+  ok(document.querySelector('[data-sq="g1"].picked-up'), "the knight picked up");
+  const dots = [...document.querySelectorAll(".sq.target")].map((el) => el.dataset.sq).sort();
+  ok(dots.join(",") === "f3,h3", `the knight's two squares (got ${dots.join(",")})`);
+
+  await act(window, (a) => a.pick("g1")); // second tap puts it down
+  ok(!document.querySelector(".sq.target"), "the dots gone when the piece is put down");
+
+  await act(window, (a) => a.pick("f1"));  // the bishop is blocked by its own pawns
+  ok(document.querySelector('[data-sq="f1"].picked-up'), "a blocked piece still picks up");
+  ok(!document.querySelector(".sq.target"), "and shows nowhere to go");
+
+  await act(window, (a) => a.pick("f1"));
+  await act(window, (a) => a.toEnd());     // the final position takes input too
+  ok(document.querySelectorAll(".sq.grab").length > 0, "pieces grabbable at the end of the line");
+  const plies = lab(window).plies;
+  ok(typeof plies[plies.length - 1].legal === "string", "the final position shipping its legal moves");
+  window.close();
 });
 
 step("read: an off-book move is answered, an illegal one is refused", async () => {

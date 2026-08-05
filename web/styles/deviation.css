@@ -51,6 +51,9 @@
    cue pointing at it. */
 .board.live{touch-action:none}
 .board.live .sq{cursor:pointer}
+/* A piece you may pick up says so with the hand every chess site uses. */
+.board.live .sq.grab{cursor:grab}
+.board.live .sq.grab:active{cursor:grabbing}
 
 .sq.picked-up::after{
   content:"";position:absolute;inset:0;z-index:var(--z-cue);

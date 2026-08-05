@@ -38,8 +38,7 @@ function dbDefaults(): Db {
   };
 }
 
-let dbMem: string | null = null; // session-lifetime fallback when storage is unavailable
-let dbFrozen = false;            // payload came from a newer build: read it, never overwrite
+let dbFrozen = false; // payload came from a newer build: read it, never overwrite
 let dbTimer: ReturnType<typeof setTimeout> | null = null;
 let listeners: (() => void)[] = [];
 let revision = 0;
@@ -92,13 +91,13 @@ export function dbSave(): void {
   dbTimer = setTimeout(dbFlush, 400);
 }
 
+/* When storage is unavailable the live `db` object simply stays session-only —
+   there is nothing useful to do with a payload that cannot be written. */
 export function dbFlush(): void {
   if (dbTimer) { clearTimeout(dbTimer); dbTimer = null; }
   if (dbFrozen) return;
-  const raw = JSON.stringify(db);
-  if (dbOK) {
-    try { window.localStorage.setItem(DB_KEY, raw); } catch { dbMem = raw; }
-  } else dbMem = raw;
+  if (!dbOK) return;
+  try { window.localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch {}
 }
 
 if (typeof window !== "undefined") {

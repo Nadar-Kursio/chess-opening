@@ -521,10 +521,12 @@ def packed_legal(board):
 def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None):
     """Replay one line, returning its ply-by-ply record.
 
-    When the line opts in with "drill": True, every position carries `legal` --
-    the only chess legality the browser ever sees. It hangs off the ply that OWNS
-    that position, not off the move played from it: those are two different
-    positions, and putting them on one record invites a fencepost bug.
+    Every position carries `legal` -- the only chess legality the browser ever
+    sees. The board is an input surface on every position, so a ply without the
+    list is one where the pieces go quiet; that is why it is unconditional, the
+    final position included. It hangs off the ply that OWNS the position, not
+    off the move played from it: those are two different positions, and putting
+    them on one record invites a fencepost bug.
 
     Both sides, not just the learner's. The drill only ever asks about the
     learner's moves, but the deviation picker is the learner entering what their
@@ -539,11 +541,9 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
     where = f"{op_id} / line {index} '{line['name']}'"
     if evals is not None:
         evals.attach(op_id, board, plies[0], f"{where} / the starting position")
-    drilled = bool(line.get("drill"))
 
     for i, san in enumerate(line["moves"].split()):
-        if drilled:
-            plies[i]["legal"] = packed_legal(board)
+        plies[i]["legal"] = packed_legal(board)
         if branches is not None:
             # Built once per position and referenced by index. Four Italian lines
             # share their opening moves, so emitting the set inline would ship
@@ -580,6 +580,8 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
             notes.attach(board, plies[-1])
         if evals is not None:
             evals.attach(op_id, board, plies[-1], f"{where} / ply {ply} {san}")
+
+    plies[-1]["legal"] = packed_legal(board)
 
     if line.get("record"):
         errors.extend(record_errors(f"{op_id} / line {index} '{line['name']}'",
@@ -893,7 +895,10 @@ def emit_files():
     }
 
     compact = lambda o: json.dumps(o, separators=(",", ":"))
-    files = {"catalog.json": compact(catalog)}
+    files = {"catalog.json": compact(catalog),
+             # The front page's prose, single-sourced from src/app/primer.html
+             # so the two sites cannot drift while both are shipping.
+             "primer.html": read("primer.html")}
     for op in ported:
         files[f"openings/{op['id']}.json"] = compact(op)
     # Structures are shared reference content, so all of them ship — but the

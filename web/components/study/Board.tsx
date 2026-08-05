@@ -15,7 +15,12 @@ interface Props {
   to: string | null;
   checkSide: "w" | "b" | null;
   flipped: boolean;
+  /** The board accepts moves: pointer cursors, pick-up and target cues. */
   live: boolean;
+  /** Drill's keyboard navigation: grid semantics and the square cursor. */
+  gridNav: boolean;
+  /** Whose pieces may be picked up — they wear the grab cursor. */
+  grabSide: "w" | "b" | null;
   selected: string | null;
   cursor: string;
   targets: string[];
@@ -24,7 +29,7 @@ interface Props {
 }
 
 export default function Board({
-  fen, from, to, checkSide, flipped, live, selected, cursor, targets, rejected, pieceAt,
+  fen, from, to, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, rejected, pieceAt,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -52,7 +57,7 @@ export default function Board({
   if (flipped) order.reverse();
 
   return (
-    <div className={`board${live ? " live" : ""}`} id="board" role={live ? "grid" : undefined} ref={ref}>
+    <div className={`board${live ? " live" : ""}`} id="board" role={gridNav ? "grid" : undefined} ref={ref}>
       {order.map((i, pos) => {
         const file = i % 8;
         const rank = 7 - ((i / 8) | 0);
@@ -67,6 +72,7 @@ export default function Board({
           if (checkSide && ch.toLowerCase() === "k" && (isWhite ? "w" : "b") === checkSide) {
             cls.push("in-check");
           }
+          if (live && grabSide && (isWhite ? "w" : "b") === grabSide) cls.push("grab");
           piece = (
             <span className={`piece ${isWhite ? "white" : "black"}${name === to ? " arriving" : ""}`}>
               {PIECE_GLYPH[ch.toLowerCase()]}
@@ -74,7 +80,7 @@ export default function Board({
           );
         }
         if (name === selected) cls.push("picked-up");
-        if (live && name === cursor) cls.push("cursor");
+        if (gridNav && name === cursor) cls.push("cursor");
         const isTarget = targets.includes(name);
         if (isTarget) {
           cls.push("target");
@@ -91,8 +97,8 @@ export default function Board({
             key={name}
             className={cls.join(" ")}
             data-sq={name}
-            role={live ? "gridcell" : undefined}
-            tabIndex={live ? (name === cursor ? 0 : -1) : undefined}
+            role={gridNav ? "gridcell" : undefined}
+            tabIndex={gridNav ? (name === cursor ? 0 : -1) : undefined}
           >
             {/* Labels always show the square's TRUE file/rank; flipping changes
                 position, not identity. */}

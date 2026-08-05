@@ -29,7 +29,8 @@ LINE_SUMMARY_EXTRA = {"tier", "side"}
 def built():
     """Emit once for the whole file, with the build's narration held."""
     with contextlib.redirect_stdout(io.StringIO()):
-        return {name: json.loads(text) for name, text in emit_files().items()}
+        return {name: json.loads(text) if name.endswith(".json") else text
+                for name, text in emit_files().items()}
 
 
 class TestEmit(unittest.TestCase):
@@ -93,17 +94,21 @@ class TestEmit(unittest.TestCase):
                     self.assertEqual(len(p["fen"]), 64, where)
                     self.assertIn(p["turn"], ("w", "b"), where)
 
-    def test_legal_packs_to_whole_moves(self):
-        packed = 0
+    def test_every_position_carries_its_legal_moves(self):
+        """The board takes input everywhere, so every ply — the final position
+        included — ships the engine's packed move list."""
         for summary in self.catalog["openings"]:
             op = self.files[f"openings/{summary['id']}.json"]
             for line in op["lines"]:
-                for p in line["plies"]:
-                    if "legal" in p:
-                        packed += 1
-                        self.assertEqual(len(p["legal"]) % 4, 0,
-                                         f"{op['id']} / {line['slug']}")
-        self.assertTrue(packed, "no line shipped a legal-move list at all")
+                for i, p in enumerate(line["plies"]):
+                    # Present on every ply; EMPTY is legitimate — a line may
+                    # end in mate, where there is nothing legal to pack.
+                    where = f"{op['id']} / {line['slug']} / ply {i}"
+                    self.assertIn("legal", p, where)
+                    self.assertEqual(len(p["legal"]) % 4, 0, where)
+
+    def test_the_primer_ships_alongside_the_catalog(self):
+        self.assertIn('class="primer"', self.files["primer.html"])
 
     def test_bx_points_into_the_branchsets(self):
         for summary in self.catalog["openings"]:

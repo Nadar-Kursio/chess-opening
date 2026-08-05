@@ -30,7 +30,7 @@ function Row({ op, l, i, on, mounted }: { op: Opening; l: Line; i: number; on: b
   ].filter(Boolean);
   return (
     <Link className="variation" href={lineHref(op, i)} prefetch={false}
-      aria-pressed={on} title={l.note}>
+      aria-current={on ? "page" : undefined} title={l.note}>
       <span className="variation__name">
         {l.name}
         {l.side && l.side !== op.orientation ? (

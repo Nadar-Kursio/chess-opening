@@ -1,6 +1,7 @@
 "use client";
 
-import type { Ply } from "@/lib/content/types";
+import { useRef } from "react";
+import type { Ply, Turn } from "@/lib/content/types";
 import type { NoteRecord } from "@/lib/db";
 import type { Rejected } from "@/lib/study/useStudy";
 import { pieceAt } from "@/lib/chess/read";
@@ -23,6 +24,8 @@ interface Props {
   mineOn: boolean;
   hidesOverlays: boolean;
   live: boolean;
+  gridNav: boolean;
+  grabSide: Turn | null;
   selected: string | null;
   cursor: string;
   targets: string[];
@@ -46,10 +49,14 @@ export default function BoardColumn(p: Props) {
   const atEnd = p.index >= p.total;
   const showArrows = p.arrowsOn && !p.hidesOverlays;
   const showMine = p.mineOn && !p.hidesOverlays;
+  /* The canvas measures THIS board — never a lookup by id, so a page may one
+     day carry a second board (structures, games) without the layers fighting
+     over which one they belong to. */
+  const squareRef = useRef<HTMLDivElement>(null);
   return (
     <div className="study__board">
       <div className="board-frame">
-        <div className="board-square">
+        <div className="board-square" ref={squareRef}>
           <Board
             fen={p.ply.fen}
             from={p.ply.from}
@@ -57,6 +64,8 @@ export default function BoardColumn(p: Props) {
             checkSide={p.ply.check ? (p.ply.turn === "w" ? "b" : "w") : null}
             flipped={p.flipped}
             live={p.live}
+            gridNav={p.gridNav}
+            grabSide={p.grabSide}
             selected={p.selected}
             cursor={p.cursor}
             targets={p.targets}
@@ -64,6 +73,7 @@ export default function BoardColumn(p: Props) {
             pieceAt={(sq) => pieceAt(p.ply.fen, sq)}
           />
           <ArrowLayer
+            boardRef={squareRef}
             arrows={p.ply.arrows || []}
             mine={showMine ? p.mine : null}
             rejected={p.rejected}

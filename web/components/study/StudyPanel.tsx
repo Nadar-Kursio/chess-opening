@@ -2,15 +2,17 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Catalog, Opening } from "@/lib/content/types";
-import { db, dbRevision, dbServerRevision, dbSubscribe } from "@/lib/db";
+import { dbRevision, dbServerRevision, dbSubscribe } from "@/lib/db";
 import { isOwnPiece, legalTargets } from "@/lib/chess/read";
 import { moverSide } from "@/lib/study/drill";
+import { noteIsLocal, noteShown } from "@/lib/study/notes";
 import { useStudy } from "@/lib/study/useStudy";
 import ModeBar from "./ModeBar";
 import BoardColumn from "./BoardColumn";
 import Variations from "./Variations";
 import { RecordBar, Scoresheet } from "./Scoresheet";
-import { CoachNote, NoteCard, Verdict } from "./Coach";
+import { CoachNote, Verdict } from "./Coach";
+import NoteCard from "./NoteCard";
 import DrillPanel from "./DrillPanel";
 import { DevPanel, DevPicker } from "./Deviation";
 import { PlanFor } from "./PlanCard";
@@ -33,6 +35,10 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   const sref = useRef(state);
   sref.current = state;
   const dragRef = useRef<{ from: string; id: number } | null>(null);
+  /* Board lookups stay inside this island — a second board elsewhere on a
+     future page must never catch this panel's queries. */
+  const rootRef = useRef<HTMLElement>(null);
+  const boardEl = () => rootRef.current?.querySelector<HTMLElement>(".board") ?? null;
 
   useSyncExternalStore(dbSubscribe, dbRevision, dbServerRevision);
   const [mounted, setMounted] = useState(false);
@@ -100,7 +106,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
             if ((k === "Enter" || k === " ") && (s.drill.phase === "right" || s.drill.phase === "reveal")) {
               actions.cont(); e.preventDefault(); return;
             }
-            const board = document.getElementById("board");
+            const board = boardEl();
             const onBoard = board && board.contains(document.activeElement);
             if (onBoard) {
               if (k === "Enter" || k === " ") { actions.pick(s.drill.cursor); e.preventDefault(); return; }
@@ -111,8 +117,8 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
               if (delta) {
                 if (actions.moveCursor(delta[0], delta[1])) {
                   requestAnimationFrame(() => {
-                    document.querySelector<HTMLElement>(
-                      `#board [data-sq="${sref.current.drill.cursor}"]`
+                    boardEl()?.querySelector<HTMLElement>(
+                      `[data-sq="${sref.current.drill.cursor}"]`
                     )?.focus();
                   });
                 }
@@ -168,10 +174,15 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   };
 
   const here = line.plies[state.ply];
-  const targets = state.selected && live && drillOn ? legalTargets(here, state.selected) : [];
-  const noteShown = mounted
-    ? db.notes[current.turn + current.fen] || current.mine || null
-    : current.mine || null;
+  /* Where the picked-up piece may go — the engine's list, every position,
+     both modes. Blocked and illegal squares are simply not in it. */
+  const targets = state.selected && live ? legalTargets(here, state.selected) : [];
+  const grabSide = live ? moverSide(line.plies, state.ply) : null;
+  /* One source for the note on this position: a browser-saved note shadows the
+     shipped file note. Before mount only the file note exists, so the server
+     render is deterministic. */
+  const note = mounted ? noteShown(current) : current.mine || null;
+  const noteLocal = mounted ? noteIsLocal(current) : false;
 
   const readout = inDeviation ? (
     <>Deviation &mdash; <b>{index + 1}</b> of {plies.length}</>
@@ -186,7 +197,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   );
 
   return (
-    <section className="study" id={`moves-${opening.id}`}
+    <section className="study" id={`moves-${opening.id}`} ref={rootRef}
       onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
       <ModeBar
         line={line}
@@ -210,12 +221,14 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
         arrowsOn={state.arrows}
         mineOn={state.mine}
         hidesOverlays={hidesOverlays}
-        live={live && drillOn}
+        live={live}
+        gridNav={live && drillOn}
+        grabSide={grabSide}
         selected={state.selected}
         cursor={state.drill.cursor}
         targets={targets}
         rejected={drillOn || state.drill.verdictPly === state.ply ? state.drill.rejected : null}
-        mine={noteShown}
+        mine={note}
         depth={catalog.engine.depth}
         readout={readout}
         hint={hint}
@@ -287,7 +300,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
             <CoachNote ply={current} index={index} prev={index > 0 ? plies[index - 1] : null} />
           </>
         )}
-        <NoteCard ply={current} show={state.mine && !hidesOverlays && !drillOn} />
+        <NoteCard note={note} local={noteLocal} show={state.mine && !hidesOverlays && !drillOn} />
         {!inDeviation && !drillOn && index >= plies.length - 1 ? (
           <PlanFor op={opening} line={line} structures={catalog.structures} />
         ) : null}

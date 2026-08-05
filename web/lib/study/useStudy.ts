@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Branch, Line, Opening, Ply, Turn } from "@/lib/content/types";
+import { announce } from "@/lib/announce";
 import { isLegalMove, isOwnPiece, moveName, normaliseMove, FILES } from "@/lib/chess/read";
 import { db, dbLineKey, dbSave } from "@/lib/db";
-import { drillAskedCount, drillRedact, moverSide, movePrinciple, feedbackLevel } from "./drill";
+import { drillAskedCount, moverSide, movePrinciple, feedbackLevel } from "./drill";
 
 /* The study island's state machine, ported from state.js + drill.js +
    deviation.js + the read-mode half of render.js. One hook per mounted page;
@@ -45,13 +46,6 @@ export interface StudyState {
   drill: DrillState;
 }
 
-export function announce(msg: string): void {
-  const el = document.getElementById("announce");
-  if (!el) return;
-  el.textContent = "";
-  setTimeout(() => { el.textContent = msg; }, 30);
-}
-
 function freshDrill(flipped: boolean): DrillState {
   return {
     phase: "ask", hint: 0, tries: 0, seen: {}, streak: 0,
@@ -82,25 +76,14 @@ export function useStudy(opening: Opening, lineIndex: number) {
   const ref = useRef(state);
   ref.current = state;
 
-  /* ---- reading the cursor, deviation-aware (state.js) ---- */
-
-  const devAt = (ply: number): Branch[] => {
-    const sets = opening.branchsets;
-    if (!sets) return [];
-    const here = line.plies[ply];
-    if (!here || here.bx === undefined) return [];
-    const next = line.plies[ply + 1];
-    return sets[here.bx].filter((b) => !next || b.san !== next.san);
-  };
-
-  const devCurrentOf = (s: StudyState): Branch | null =>
-    s.deviation ? devAt(s.deviation.fromPly)[s.deviation.idx] || null : null;
-
-  const pliesOf = (s: StudyState): Ply[] => {
-    const d = devCurrentOf(s);
-    return d ? d.plies : line.plies;
-  };
-  const indexOf = (s: StudyState): number => (s.deviation ? s.deviation.at : s.ply);
+  /* Thin bindings over the module-level cursor helpers below, so nothing in
+     `actions` closes over a per-render value — the memo freezes first-render
+     closures, and only bindings that reach state through `ref.current` (or
+     per-mount-stable props) are safe inside it. */
+  const devAt = (ply: number) => devAtOf(opening, line, ply);
+  const pliesOf = (s: StudyState) => pliesIn(opening, line, s);
+  const indexOf = (s: StudyState) => indexIn(s);
+  const stepped = (s: StudyState, d: number) => steppedIn(opening, line, s, d);
 
   /* ---- transitions; each builds the next state and commits once ---- */
 
@@ -111,14 +94,6 @@ export function useStudy(opening: Opening, lineIndex: number) {
 
   const stopAutoplay = (s: StudyState): StudyState =>
     s.autoplay ? { ...s, autoplay: false } : s;
-
-  const stepped = (s: StudyState, d: number): StudyState | null => {
-    const n = indexOf(s) + d;
-    if (n < 0 || n > pliesOf(s).length - 1) return null;
-    return s.deviation
-      ? { ...s, deviation: { ...s.deviation, at: n } }
-      : { ...s, ply: n };
-  };
 
   /* Play the opponent's moves for them until it is the learner's turn again —
      the loop is what makes this correct rather than the alternation happening
@@ -322,7 +297,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
           a.boardMove(from, sq);
           return;
         }
-        const here = pliesOf(next)[next.ply];
+        const here = pliesOf(next)[indexOf(next)];
         if (!isOwnPiece(here.fen, sq, moverSide(line.plies, next.ply))) { commit(next); return; }
         commit({ ...next, selected: sq, drill: { ...next.drill, cursor: sq } });
       },
@@ -506,6 +481,42 @@ export function useStudy(opening: Opening, lineIndex: number) {
     index: indexOf(state),
     current: pliesOf(state)[indexOf(state)] || pliesOf(state)[0],
     devList: devAt(state.ply),
-    devCurrent: devCurrentOf(state),
+    devCurrent: devCurrentIn(opening, line, state),
   };
+}
+
+/* ---- the cursor, deviation-aware (state.js's currentPlies/currentIndex),
+   as module-level pure functions so they are unit-testable and cannot close
+   over stale render values ---- */
+
+/* The deviation sets are shared between every line that reaches the position,
+   so the move THIS line plays is dropped: from here it is the main line. */
+function devAtOf(opening: Opening, line: Line, ply: number): Branch[] {
+  const sets = opening.branchsets;
+  if (!sets) return [];
+  const here = line.plies[ply];
+  if (!here || here.bx === undefined) return [];
+  const next = line.plies[ply + 1];
+  return sets[here.bx].filter((b) => !next || b.san !== next.san);
+}
+
+function devCurrentIn(opening: Opening, line: Line, s: StudyState): Branch | null {
+  return s.deviation ? devAtOf(opening, line, s.deviation.fromPly)[s.deviation.idx] || null : null;
+}
+
+function pliesIn(opening: Opening, line: Line, s: StudyState): Ply[] {
+  const d = devCurrentIn(opening, line, s);
+  return d ? d.plies : line.plies;
+}
+
+function indexIn(s: StudyState): number {
+  return s.deviation ? s.deviation.at : s.ply;
+}
+
+function steppedIn(opening: Opening, line: Line, s: StudyState, d: number): StudyState | null {
+  const n = indexIn(s) + d;
+  if (n < 0 || n > pliesIn(opening, line, s).length - 1) return null;
+  return s.deviation
+    ? { ...s, deviation: { ...s.deviation, at: n } }
+    : { ...s, ply: n };
 }

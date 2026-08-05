@@ -61,14 +61,14 @@
   transition:background var(--speed) var(--ease);
 }
 .variation:hover{background:var(--layer-2)}
-.variation[aria-pressed="true"]{background:var(--layer-3);border-left-color:var(--accent)}
+.variation[aria-current="page"]{background:var(--layer-3);border-left-color:var(--accent)}
 
 .variation__name{
   display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);
   font-size:var(--text-ui);line-height:1.35;color:var(--text-soft);
 }
 .variation:hover .variation__name{color:var(--text)}
-.variation[aria-pressed="true"] .variation__name{color:var(--text);font-weight:600}
+.variation[aria-current="page"] .variation__name{color:var(--text);font-weight:600}
 /* Which stage of the learning path below this line belongs to. Ordered rather
    than decorative -- Foundation is read before Mastery is -- and the path names
    the same four stages further down the page. */
@@ -111,7 +111,7 @@
      setting; the button says how many there are. */
   .variations__count{display:none}
   .variations__toggle{display:inline-flex}
-  .variations:not(.variations--open) .variation:not([aria-pressed="true"]){display:none}
+  .variations:not(.variations--open) .variation:not([aria-current="page"]){display:none}
 
   /* The arrow key is worth its height on a wide screen and not on a phone,
      where the primer covers the same ground and the board needs the pixels. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { Arrow, Ply } from "@/lib/content/types";
+import type { Arrow } from "@/lib/content/types";
 import type { NoteRecord } from "@/lib/db";
 import type { Rejected } from "@/lib/study/useStudy";
 import { FILES } from "@/lib/chess/read";
@@ -24,6 +24,7 @@ const REJECTED_COLORS = {
 };
 
 interface Props {
+  boardRef: React.RefObject<HTMLElement | null>;
   arrows: Arrow[];
   mine: NoteRecord | null;
   rejected: Rejected | null;
@@ -32,13 +33,13 @@ interface Props {
   flipped: boolean;
 }
 
-export default function ArrowLayer({ arrows, mine, rejected, showArrows, showMine, flipped }: Props) {
+export default function ArrowLayer({ boardRef, arrows, mine, rejected, showArrows, showMine, flipped }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const draw = () => {
       const canvas = ref.current;
-      const board = document.getElementById("board");
+      const board = boardRef.current?.querySelector<HTMLElement>(".board");
       if (!canvas || !board) return;
       const size = board.clientWidth;
       if (!size) return;

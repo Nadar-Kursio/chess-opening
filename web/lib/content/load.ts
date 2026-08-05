@@ -32,6 +32,10 @@ export function getCatalog(): Catalog {
   return catalog;
 }
 
+export function getPrimer(): string {
+  return read("primer.html");
+}
+
 export function getOpening(id: string): Opening {
   let op = openings.get(id);
   if (!op) {
