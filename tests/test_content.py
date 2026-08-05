@@ -14,12 +14,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import chess
 
-from build import (BranchIndex, NoteIndex, attach_explore, build_line, explore_errors,
-                   load_explore, san_overclaim, with_deep_line)
+from build import BranchIndex, NoteIndex, build_line, san_overclaim, with_deep_line
 from content.openings import ORDER, load
 from content.sections import SECTIONS
 from content.structures import STRUCTURES
-from engine.board import board_array
 from engine.notes import parse_notes
 
 OPENING_KEYS = {"id", "name", "eco", "section", "orientation", "tagline",
@@ -29,8 +27,6 @@ STAGE_KEYS = {"tier", "when", "goal", "learn", "drill", "mistake", "ready"}
 
 OPENING_EXTRA = {"branches", "games"}
 LINE_KEYS = {"name", "note", "moves", "notes"}
-# `tree` is not here: it is attached by the build from the engine-tree files, not
-# authored, so a line carrying one in source is a mistake.
 LINE_EXTRA = {"tier", "drill", "plan", "record"}
 RECORD_KEYS = {"at", "games", "white", "draw", "black"}
 BRANCH_KEYS = {"san", "severity", "why"}
@@ -189,139 +185,6 @@ class TestCatalogue(unittest.TestCase):
             self.assertTrue(prog["stages"], f"{op['id']} has no stages")
             for stage in prog["stages"]:
                 self.assertEqual(set(stage), STAGE_KEYS, f"{op['id']} / {stage.get('tier')}")
-
-
-def square_index(name):
-    """The 64-char board string runs rank 8 first -- move.js's squareIndex."""
-    return (8 - int(name[1])) * 8 + "abcdefgh".index(name[0])
-
-
-def apply_move(board, m):
-    """explore.js's treeApply, in Python, so a test can hold it to the rules."""
-    squares = list(board)
-    f, o = square_index(m["f"]), square_index(m["o"])
-    squares[o] = m.get("q") or squares[f]
-    squares[f] = "."
-    if m.get("x"):
-        squares[square_index(m["x"])] = "."
-    if m.get("r"):
-        a, b = square_index(m["r"][0]), square_index(m["r"][1])
-        squares[b] = squares[a]
-        squares[a] = "."
-    return "".join(squares)
-
-
-class TestEngineTrees(unittest.TestCase):
-    """The generated engine trees, checked as data structures.
-
-    Nothing here can tell a true eval from an invented one -- that is what
-    generating the file rather than writing it is for. What these cover is the
-    shape the browser walks, where a wrong index is indistinguishable from a
-    right one at the point it is used.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.trees = load_explore([])
-        cls.openings = {op["id"]: op for op in load()}
-
-    def test_the_shape_is_valid(self):
-        for op_id, tree in self.trees.items():
-            self.assertFalse(explore_errors(op_id, tree), op_id)
-
-    def test_every_move_carries_a_price(self):
-        for op_id, tree in self.trees.items():
-            for i, node in enumerate(tree["nodes"]):
-                self.assertTrue(node["m"], f"{op_id}: position {i} has no moves")
-                for m in node["m"]:
-                    where = f"{op_id}: position {i} move {m.get('s')}"
-                    self.assertIn("v", m, where)
-                    self.assertRegex(m["f"], r"^[a-h][1-8]$", where)
-                    self.assertRegex(m["o"], r"^[a-h][1-8]$", where)
-
-    def test_a_spine_reaches_the_positions_it_claims(self):
-        """Every board on the spine is the board the moves actually produce.
-
-        The one check that would catch a tree generated from a different move
-        order than the one it says it covers -- which the browser would then use
-        to draw a position the reader never played into.
-        """
-        for op_id, tree in self.trees.items():
-            for spine in tree["spines"]:
-                board = chess.Board()
-                self.check_position(op_id, tree["nodes"][spine["at"][0]], board, 0)
-                for i, san in enumerate(spine["moves"].split(), 1):
-                    board.push_san(san)
-                    self.check_position(op_id, tree["nodes"][spine["at"][i]], board, i)
-
-    def check_position(self, op_id, node, board, i):
-        """One spine position: the right board, and all of its moves.
-
-        The move list is what the browser reads as this position's legality, so a
-        search that dropped one would have the page calling a legal move illegal.
-        Only checkable on the spine, which is the only place the board can be
-        reconstructed from the moves rather than from the file.
-        """
-        self.assertEqual(node["b"], board_array(board),
-                         f"{op_id}: spine position {i} is not the one the moves reach")
-        self.assertEqual(len(node["m"]), board.legal_moves.count(),
-                         f"{op_id}: spine position {i} lists {len(node['m'])} moves, "
-                         f"and {board.legal_moves.count()} are legal")
-
-    def test_the_browser_can_replay_every_move_in_the_tree(self):
-        """explore.js's treeApply, checked against python-chess on the real data.
-
-        Applying a move is the only chess the browser does, and it does it from
-        `f`, `o` and the three optional keys rather than from any knowledge of
-        the rules -- so the whole question is whether those keys describe the
-        move. Nothing else here would catch a castle that left its rook behind or
-        an en-passant that left the captured pawn standing: the position would
-        simply be wrong, silently, and only in the one line that reached it.
-
-        Every move at every reachable position, and every ply of every stored
-        continuation. The walk starts from the spine, which is the only place a
-        real board can be got hold of.
-        """
-        for op_id, tree in self.trees.items():
-            for spine in tree["spines"]:
-                seen = set()
-                self.walk(op_id, tree, spine["at"][0], chess.Board(), seen)
-
-    def walk(self, op_id, tree, i, board, seen):
-        if i in seen:
-            return                  # positions are shared; their moves do not change
-        seen.add(i)
-        node = tree["nodes"][i]
-        for m in node["m"]:
-            board.push(board.parse_san(m["s"]))
-            self.assertEqual(apply_move(node["b"], m), board_array(board),
-                             f"{op_id}: applying {m['s']} at position {i} lands "
-                             f"the browser on a different board")
-            self.replay(op_id, board, m.get("p") or [], f"{m['s']} at position {i}")
-            if "c" in m:
-                self.walk(op_id, tree, m["c"], board, seen)
-            board.pop()
-
-    def replay(self, op_id, board, pv, where):
-        """The same check down a stored continuation, then unwound."""
-        for step in pv:
-            before = board_array(board)
-            board.push(board.parse_san(step["s"]))
-            self.assertEqual(apply_move(before, step), board_array(board),
-                             f"{op_id}: the line after {where} puts the browser on "
-                             f"a different board at {step['s']}")
-        for _ in pv:
-            board.pop()
-
-    def test_a_tree_lands_on_at_least_one_line(self):
-        """A spine nobody's line matches ships an hour of search nothing renders."""
-        errors = []
-        for op_id, tree in self.trees.items():
-            lines = with_deep_line(self.openings[op_id])
-            attach_explore(op_id, lines, tree, errors)
-            self.assertTrue(any(l.get("tree") is not None for l in lines),
-                            f"{op_id}: no line matches the tree's spine")
-        self.assertFalse(errors)
 
 
 class TestStructures(unittest.TestCase):

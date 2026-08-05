@@ -174,7 +174,6 @@ function go(id){
   state.deviation = null;
   state.picking = false;
   state.selected = null;
-  exploreExit();
   if(id==="primer" || id==="progress"){ state.view=id; }
   else if(id.indexOf("structure:")===0){ state.view="structure"; state.structId=id.slice(10); }
   else if(id.indexOf("game:")===0){
@@ -186,9 +185,6 @@ function go(id){
     // State only: this function renders once, at the end, and a drill that
     // rendered here too would draw the view half-built.
     if(state.mode === "drill") drillReset();
-    // Not every opening has a tree. Arriving in a mode that cannot run and
-    // finding the board dead is worse than being put back into Read.
-    if(state.mode === "explore") state.mode = "read";
   }
   closeNav();
   dbRemember();

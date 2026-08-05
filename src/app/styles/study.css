@@ -38,21 +38,53 @@
 .feedback-level--2 .feedback-level__tag{color:var(--accent)}
 
 /* ---------- variations ---------- */
-.variations{display:flex;flex-wrap:wrap;gap:var(--space-2)}
-.variation{
-  flex:none;
-  padding:7px var(--space-3);border:1px solid var(--border);border-radius:var(--radius-pill);
-  font-size:var(--text-ui);color:var(--text-soft);background:var(--layer-2);
-  white-space:nowrap;transition:color var(--speed) var(--ease),border-color var(--speed) var(--ease);
+/* The rows a chapter list is made of, borrowing the rail's shape on purpose:
+   picking a variation and picking an opening are the same act one level down,
+   so they are the same control at two sizes rather than two inventions. */
+.variations{display:flex;flex-direction:column}
+.variations__head{
+  display:flex;align-items:baseline;gap:var(--space-3);
+  padding-bottom:var(--space-2);border-bottom:1px solid var(--border);
+  margin-bottom:var(--space-2);
 }
-.variation:hover{color:var(--text);border-color:var(--border-strong)}
-.variation[aria-pressed="true"]{
-  background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;
+.variations__count{
+  margin-left:auto;font-family:var(--font-mono);font-size:var(--text-label);
+  color:var(--text-faint);
+}
+.variations__toggle{display:none}
+.variations__list{display:flex;flex-direction:column;gap:2px}
+
+.variation{
+  display:block;width:100%;text-align:left;
+  padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);
+  border-left:2px solid transparent;
+  transition:background var(--speed) var(--ease);
+}
+.variation:hover{background:var(--layer-2)}
+.variation[aria-pressed="true"]{background:var(--layer-3);border-left-color:var(--accent)}
+
+.variation__name{
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);
+  font-size:var(--text-ui);line-height:1.35;color:var(--text-soft);
+}
+.variation:hover .variation__name{color:var(--text)}
+.variation[aria-pressed="true"] .variation__name{color:var(--text);font-weight:600}
+/* Which stage of the learning path below this line belongs to. Ordered rather
+   than decorative -- Foundation is read before Mastery is -- and the path names
+   the same four stages further down the page. */
+.variation__tier{
+  flex:none;font-size:var(--text-label);letter-spacing:var(--track-label);
+  text-transform:uppercase;font-weight:600;color:var(--text-faint);
 }
 .variation__note{
-  font-size:var(--text-ui);color:var(--text-soft);
-  border-left:2px solid var(--border-strong);padding-left:var(--space-3);margin:0;
+  display:block;font-size:var(--text-sm);line-height:1.5;
+  color:var(--text-soft);margin-top:var(--space-1);
 }
+.variation__meta{
+  display:block;font-family:var(--font-mono);font-size:var(--text-label);
+  line-height:1.4;color:var(--text-faint);margin-top:3px;
+}
+.variation__meta .sep{color:var(--border-strong);margin:0 3px}
 
 @media (max-width:900px){
   .study{
@@ -63,11 +95,15 @@
   .study__notes{gap:var(--space-3)}
   .feedback-level__what{display:none}
 
-  /* Every wrapped row is a row the board is pushed down by, but riding sideways
-     cost the reader the variations that were off the right edge -- and a strip
-     bled to both gutters is indistinguishable from the page sliding. They wrap,
-     set small enough that four of them take two rows rather than three. */
-  .variation{padding:5px var(--space-3);font-size:var(--text-sm)}
+  /* Every row here is a row the board is pushed down by, and the board is
+     pinned: ten of them standing between it and the notes is the chapter list
+     winning an argument it should lose. So it collapses to the line you are on
+     -- that row itself, not a second summary written to say the same thing --
+     and the button next to it opens the rest. Nothing is hidden behind a
+     setting; the button says how many there are. */
+  .variations__count{display:none}
+  .variations__toggle{display:inline-flex}
+  .variations:not(.variations--open) .variation:not([aria-pressed="true"]){display:none}
 
   /* The arrow key is worth its height on a wide screen and not on a phone,
      where the primer covers the same ground and the board needs the pixels. */

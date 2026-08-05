@@ -93,6 +93,63 @@ function recordHTML(line){
       </div>`;
 }
 
+/* Which of an opening's lines you are reading, and what the others are.
+   Capsules in a row fit three short names; the Four Knights teaches ten, half of
+   them long enough to wrap inside their own capsule -- and a name is the one
+   thing about a variation that does not help you choose it. So each line gets
+   the row a chapter list gives it: how hard it is, how long it runs, how
+   mainstream it is, and how your last drill of it went.
+
+   The sentence saying what the line is stays with the line you are on, where it
+   already was. Eleven of them stacked would be a page of prose above the coach
+   card, so the others carry theirs as a title, the way the rail does. */
+function variationRowHTML(op, l, i){
+  const on = i === state.line;
+  const score = dbProgress(op.id, i);
+  const meta = [
+    `${Math.ceil((l.plies.length - 1) / 2)} moves`,
+    l.record ? `${l.record.games.toLocaleString()} master games` : "",
+    score && score.asked ? `${score.right}/${score.asked} first try` : "",
+  ].filter(Boolean);
+  return `<button class="variation" data-line="${i}" aria-pressed="${on}" title="${esc(l.note)}">
+          <span class="variation__name">${l.name}
+            ${l.tier?`<span class="variation__tier">${l.tier}</span>`:""}</span>
+          ${on?`<span class="variation__note">${l.note}</span>`:""}
+          <span class="variation__meta">${meta.join('<span class="sep">&middot;</span>')}</span>
+        </button>`;
+}
+
+/* On a phone the list collapses to the line you are on. The board above it is
+   pinned and worth its pixels, and ten rows of chapter list between the two is
+   not reading -- but nothing is hidden behind a setting: the count says how many
+   there are and the button opens them. */
+function variationsHTML(op){
+  const open = state.varsOpen;
+  return `
+      <div class="variations${open?" variations--open":""}" role="group"
+        aria-label="Variations of ${op.name}">
+        <div class="variations__head">
+          <span class="label label--accent">Variations</span>
+          <span class="variations__count">${state.line+1} of ${op.lines.length}</span>
+          <button class="pill variations__toggle" id="varstoggle" data-act="vars"
+            aria-expanded="${open}" aria-controls="varlist">${open?"Fewer":`All ${op.lines.length}`}<span
+            class="glyph" aria-hidden="true">${open?"&#9652;":"&#9662;"}</span></button>
+        </div>
+        <div class="variations__list" id="varlist">
+          ${op.lines.map((l,i)=>variationRowHTML(op, l, i)).join("")}
+        </div>
+      </div>`;
+}
+
+/* Re-rendering drops focus, and a disclosure whose button vanishes from under
+   the keyboard has answered by moving the page out from under it. */
+ACTIONS.vars = ()=>{
+  state.varsOpen = !state.varsOpen;
+  render();
+  const toggle = document.getElementById("varstoggle");
+  if(toggle) toggle.focus();
+};
+
 function tacticsLineHTML(tactics){
   return `<div class="tactics"><span class="label">On the board</span>
     <span>${tacticsHTML(tactics)}.</span></div>`;
@@ -113,7 +170,6 @@ function coachNoteHTML(p){
 
 function studyHTML(op, line, p){
   const inDeviation = !!state.deviation;
-  const exploring = !!state.explore;
   const plies = currentPlies(), idx = currentIndex();
   const locked = drillAsking();     // stepping forward in drill would reveal the answer
 
@@ -122,23 +178,14 @@ function studyHTML(op, line, p){
     ${modeBarHTML(line)}
 
     ${boardColumnHTML({
-      ply:p, index:idx, total:plies.length-1, locked,
-      // The engine tree ships evals, not the build's arrows and tactical text --
-      // those are generated per line and a position off the line has none.
-      arrows:!exploring,
+      ply:p, index:idx, total:plies.length-1, locked, arrows:true,
       notes:true,
-      canPlay:state.mode==="read" && !inDeviation,
+      canPlay:state.mode!=="drill" && !inDeviation,
       readout: inDeviation
         ? `Deviation &mdash; <b>${idx+1}</b> of ${plies.length}`
-        : exploring
-        ? (idx===0
-            ? `Exploring from move <b>${state.explore.from}</b> of the line`
-            : `Exploring &mdash; <b>${idx}</b> ${idx===1?"move":"moves"} off move ${state.explore.from}`)
         : `Move <b>${state.ply}</b> of ${line.plies.length-1} &middot; ${state.flipped?"Black":"White"} up`,
       hint: state.note && state.note.tool
         ? "Tap the squares for the mark you are making. <b>Esc</b> to stop."
-        : exploring
-        ? `Play anything, for either side. <b>←</b> <b>→</b> to step back through it.`
         : state.mode==="drill"
         ? "Tap a piece then its square, or drag it. <b>H</b> hint · <b>S</b> show · <b>M</b> read"
         : `Play a move on the board and I'll answer it. <b>←</b> <b>→</b> to step.${
@@ -146,19 +193,11 @@ function studyHTML(op, line, p){
     })}
 
     <div class="study__notes">
-      <div class="variations" role="group" aria-label="Variations of ${op.name}">
-        ${op.lines.map((l,i)=>`<button class="variation"
-          aria-pressed="${i===state.line}" data-line="${i}">${l.name}</button>`).join("")}
-      </div>
-      <p class="variation__note">${line.note}</p>
-      <!-- The win bar answers a question about the line, and explore is a walk
-           away from it. Two bars of the same shape, one counting master games and
-           one scoring the position on the board, would be read as one thing. -->
-      ${exploring ? "" : recordHTML(line)}
-      <div class="scoresheet scroller${inDeviation||exploring?" scoresheet--muted":""}" id="tape">${scoresheetHTML(line)}</div>
+      ${variationsHTML(op)}
+      ${recordHTML(line)}
+      <div class="scoresheet scroller${inDeviation?" scoresheet--muted":""}" id="tape">${scoresheetHTML(line)}</div>
       ${state.picking ? devPickerHTML() : ""}
-      ${exploring ? explorePanelHTML()
-        : inDeviation ? devPanelHTML()
+      ${inDeviation ? devPanelHTML()
         : state.mode==="drill" ? drillPanelHTML(line)
         : `${state.drill.verdict && state.drill.verdictPly === state.ply
               ? `<p class="verdict verdict--framed" data-tone="${state.drill.tone||"flat"}">${state.drill.verdict}</p>` : ""}
@@ -227,7 +266,7 @@ function pathHTML(op){
 
 function bindView(el){
   if(state.view!=="op" && state.view!=="game") return;
-  const jump = n=>{ setIndex(n); render(); };
+  const jump = n=>{ if(state.deviation) state.deviation.at=n; else state.ply=n; render(); };
   document.getElementById("b-first").onclick = ()=>{stopAutoplay();jump(0)};
   document.getElementById("b-prev").onclick  = ()=>{stopAutoplay();step(-1)};
   document.getElementById("b-next").onclick  = ()=>{stopAutoplay();step(1)};
@@ -237,21 +276,13 @@ function bindView(el){
   document.getElementById("b-mine").onclick  = ()=>{state.mine=!state.mine;render()};
   document.getElementById("b-play").onclick  = toggleAutoplay;
   el.querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>{
-    stopAutoplay(); state.deviation=null; state.picking=false; exploreExit();
+    stopAutoplay(); state.deviation=null; state.picking=false; state.varsOpen=false;
     state.line=+b.dataset.line; state.ply=0;
-    if(state.mode==="drill") drillStart();
-    // A variation with no tree cannot be explored, and a dead Explore panel is a
-    // worse answer than the reading view the button was next to.
-    else if(state.mode==="explore" && !exploreReady(currentLine())){ state.mode="read"; render(); }
-    else if(state.mode==="explore") exploreStart();
-    else render();
+    if(state.mode==="drill") drillStart(); else render();
   });
-  // In explore the line's own move list is how you pick a different place to
-  // leave it from, so it restarts the walk there rather than being inert.
   el.querySelectorAll("[data-ply]").forEach(b=>b.onclick=()=>{
     stopAutoplay(); state.deviation=null; state.picking=false;
-    state.ply=+b.dataset.ply;
-    if(state.explore){ exploreExit(); exploreStart(); } else render();
+    state.ply=+b.dataset.ply; render();
   });
 }
 
@@ -282,7 +313,7 @@ function step(d){
   const plies = currentPlies();
   const n = currentIndex() + d;
   if(n<0 || n>plies.length-1) return false;
-  setIndex(n);
+  if(state.deviation) state.deviation.at = n; else state.ply = n;
   render(); return true;
 }
 function toggleAutoplay(){
@@ -311,7 +342,7 @@ document.addEventListener("keydown",e=>{
   if(drillKey(e)){ e.preventDefault(); return; }
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if(state.view!=="op" && state.view!=="game") return;
-  const jump = n=>{ setIndex(n); render(); };
+  const jump = n=>{ if(state.deviation) state.deviation.at=n; else state.ply=n; render(); };
   if(e.key==="ArrowRight"){ stopAutoplay(); step(1); e.preventDefault(); }
   if(e.key==="ArrowLeft"){ stopAutoplay(); step(-1); e.preventDefault(); }
   if(e.key==="Home"){ stopAutoplay(); jump(0); e.preventDefault(); }

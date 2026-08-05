@@ -47,7 +47,6 @@ from engine.notes import parse_notes
 SRC = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(SRC, "app")
 NOTES = os.path.join(SRC, "content", "notes")
-EXPLORE = os.path.join(SRC, "content", "explore")
 DOCS = os.path.join(os.path.dirname(SRC), "docs")
 
 # Concatenation order. CSS cascades and the scripts share a top-level scope, so
@@ -56,11 +55,11 @@ DOCS = os.path.join(os.path.dirname(SRC), "docs")
 # theme.js has to set the theme before the first paint, not after it.
 HEAD_SCRIPTS = ["shim", "theme"]
 STYLES = ["tokens", "base", "controls", "shell", "page", "board", "notation",
-          "record", "coach", "notes", "deviation", "explore", "study", "strategy",
-          "path", "structures", "primer", "progress", "responsive"]
+          "record", "coach", "notes", "deviation", "study", "strategy", "path",
+          "structures", "primer", "progress", "responsive"]
 SCRIPTS = ["state", "store", "appbar", "nav", "board", "arrows", "move",
-           "drill", "deviation", "explore", "notepad", "plan", "structure",
-           "render", "primer", "progress", "boot"]
+           "drill", "deviation", "notepad", "plan", "structure", "render",
+           "primer", "progress", "boot"]
 
 OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
                 "is the whole reason opening theory exists.")
@@ -259,104 +258,6 @@ def build_branches(where, board, entries, ply, errors, notes):
     return out
 
 
-def explore_errors(op_id, tree):
-    """What an engine tree gets wrong about itself, if anything.
-
-    Nothing here can tell a true eval from an invented one -- the numbers come
-    out of `engine-tree.py` and a hand-edited file would be accepted. What it
-    can check is that the tree is a tree: that its spines are playable, that
-    every move points at a position that exists, and that the boards are boards.
-    A dangling child index is the failure that matters, because the browser
-    walks these indices with no way to tell a wrong one from a right one.
-    """
-    out = []
-    nodes = tree.get("nodes") or []
-    for i, node in enumerate(nodes):
-        if len(node.get("b", "")) != 64:
-            out.append(f"explore/{op_id}.json: node {i} has no 64-square board")
-        for m in node.get("m") or []:
-            if "c" in m and not 0 <= m["c"] < len(nodes):
-                out.append(f"explore/{op_id}.json: node {i} move '{m.get('s')}' "
-                           f"points at position {m['c']}, and there are {len(nodes)}")
-
-    for s, spine in enumerate(tree.get("spines") or []):
-        board = chess.Board()
-        try:
-            for san in spine["moves"].split():
-                board.push_san(san)
-        except Exception as e:
-            out.append(f"explore/{op_id}.json: spine {s} is not playable: {e}")
-            continue
-        at = spine.get("at") or []
-        if len(at) != len(spine["moves"].split()) + 1:
-            out.append(f"explore/{op_id}.json: spine {s} covers {len(at)} positions "
-                       f"for {len(spine['moves'].split())} moves")
-        if any(not 0 <= n < len(nodes) for n in at):
-            out.append(f"explore/{op_id}.json: spine {s} names a position that is not there")
-    return out
-
-
-def load_explore(errors):
-    """Every opening's engine tree, keyed by opening id.
-
-    Generated, committed and read as data -- searching these positions takes
-    about an hour, and the build takes half a second. An opening with no file
-    simply has no Explore mode, which is why nothing below is required.
-    """
-    out = {}
-    for name in sorted(os.listdir(EXPLORE)) if os.path.isdir(EXPLORE) else []:
-        if not name.endswith(".json"):
-            continue
-        op_id = name[:-len(".json")]
-        with open(os.path.join(EXPLORE, name), encoding="utf-8") as f:
-            try:
-                tree = json.load(f)
-            except ValueError as e:
-                errors.append(f"explore/{name}: {e}")
-                continue
-        problems = explore_errors(op_id, tree)
-        errors.extend(problems)
-        # A tree that failed here is not handed on. Everything downstream walks
-        # its indices, so the reward for carrying a broken one further is a
-        # traceback in place of the error message just recorded.
-        if not problems:
-            out[op_id] = tree
-            print(f"engine tree: {op_id} — {len(tree.get('nodes') or [])} positions "
-                  f"at depth {tree.get('depth')}, {tree.get('engine')}")
-    return out
-
-
-def attach_explore(op_id, lines, tree, errors):
-    """Point each line at the spine that covers it, if one does.
-
-    A spine is a move list, matched against a line's by prefix in either
-    direction: the Chigorin's twenty-two moves and its deep dive's thirty-five
-    are the same opening walked to two depths, and one spine serves both -- the
-    shorter one stops early and says so rather than pretending the tree ended.
-    """
-    used = set()
-    # This function owns the key, so it clears it first: the line dicts come from
-    # an imported module and survive between builds in the same process, and a
-    # leftover `tree` from the last one would report itself as a second spine.
-    for line in lines:
-        line.pop("tree", None)
-    for i, spine in enumerate(tree.get("spines") or []):
-        covered = spine["moves"].split()
-        for line in lines:
-            moves = line["moves"].split()
-            short = min(len(moves), len(covered))
-            if moves[:short] != covered[:short]:
-                continue
-            if "tree" in line:
-                errors.append(f"{op_id} / line '{line['name']}': two spines cover it")
-                continue
-            line["tree"] = i
-            used.add(i)
-    for i in range(len(tree.get("spines") or [])):
-        if i not in used:
-            errors.append(f"explore/{op_id}.json: spine {i} covers no line")
-
-
 class NoteIndex:
     """One opening's personal notes, resolved from moves to positions.
 
@@ -552,13 +453,10 @@ def build_line(op_id, index, line, errors, side=None, branches=None, notes=None)
     for key in ("tier", "plan", "record"):
         if line.get(key):
             out[key] = line[key]
-    # Separately, because spine 0 is a real spine and `if line.get(...)` drops it.
-    if line.get("tree") is not None:
-        out["tree"] = line["tree"]
     return out
 
 
-def build_openings(games, trees):
+def build_openings(games):
     errors = []
     warnings = []
     out = []
@@ -568,8 +466,6 @@ def build_openings(games, trees):
         notes = NoteIndex(op["id"], errors)
         branches = BranchIndex(op, errors, notes)
         lines = with_deep_line(op)
-        if op["id"] in trees:
-            attach_explore(op["id"], lines, trees[op["id"]], errors)
         record = {k: v for k, v in op.items() if k not in ("deep", "branches", "games")}
         record["lines"] = [build_line(op["id"], i, line, errors, side, branches, notes)
                            for i, line in enumerate(lines)]
@@ -704,7 +600,7 @@ def read(*parts):
         return f.read()
 
 
-def assemble(data_str, structures_str, games_str, explore_str):
+def assemble(data_str, structures_str, games_str):
     """Inline every asset into one self-contained page.
 
     Plain concatenation, deliberately: the output has to keep working from a
@@ -729,7 +625,6 @@ def assemble(data_str, structures_str, games_str, explore_str):
     for placeholder, text in (("__SECTIONS__", json.dumps(SECTIONS)),
                               ("__STRUCTURES__", structures_str),
                               ("__GAMES__", games_str),
-                              ("__EXPLORE__", explore_str),
                               ("__DATA__", data_str)):
         if placeholder not in page:
             raise SystemExit(f"assembled page is missing the {placeholder} placeholder")
@@ -745,9 +640,8 @@ def outputs():
     files, and skipping it makes deploys faster.
     """
     games = []
+    openings = build_openings(games)
     errors = []
-    trees = load_explore(errors)
-    openings = build_openings(games, trees)
     structures = build_structures(openings, errors)
     if errors:
         print("=== CONTENT ERRORS ===")
@@ -758,7 +652,7 @@ def outputs():
     compact = lambda o: json.dumps(o, separators=(",", ":"))
     return {
         "chess-opening-course.html": assemble(compact(openings), compact(structures),
-                                              compact(games), compact(trees)),
+                                              compact(games)),
         "index.html": read("index.html"),
         ".nojekyll": "",
     }

@@ -4,7 +4,6 @@ const DATA = __DATA__;
 const SECTIONS = __SECTIONS__;
 const STRUCTURES = __STRUCTURES__;
 const GAMES = __GAMES__;
-const TREES = __EXPLORE__;
 
 const PIECE_GLYPH = {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
 const FILES = "abcdefgh";
@@ -18,10 +17,11 @@ const state = {
   mine:true,       // the marks written beside your own notes -- a separate
                    // switch, so you can look at your idea without the other five
 
-  mode:"read",     // "read" | "drill" | "explore"
+  mode:"read",     // "read" | "drill"
   selected:null,   // square the learner has picked up, e.g. "f1"
   drag:null,       // {from, id} while a pointer drag is live
   picking:false,   // the deviation picker is open
+  varsOpen:false,  // the variation list is showing all of them, on a narrow screen
   navOpen:false,   // the drawer, on a narrow screen
   navQuery:"",     // what is typed into the nav's filter
 
@@ -30,13 +30,6 @@ const state = {
      leaving a deviation is `state.deviation = null` and you are exactly where
      you were. Indices, not a resolved array, so it cannot go stale. */
   deviation:null,  // {fromPly, idx, at, origin}
-
-  /* Explore mode's board, as a line of its own: `steps` is ply-shaped, so the
-     board, the transport and the scoresheet render it with no code of their
-     own, and `at` is the cursor into it. Session-only -- an engine tree is
-     reference material and a walk through it is not progress. */
-  explore:null,    // {steps:[ply…], at, from}
-  exploreAll:false,// the reply list showing every legal move rather than the top six
 
   structId:null,   // view === "structure"
   gameId:null,     // view === "game"; a game reuses state.ply, so the transport works unchanged
@@ -64,7 +57,6 @@ const ACTIONS = {};
    sequence -- a deviation being stepped through, a model game -- plugs in here
    without any of their callers learning about it. */
 function currentPlies(){
-  if(state.explore) return state.explore.steps;
   if(state.deviation) return devPlies();
   if(state.view==="game"){
     const g = GAMES.find(x=>x.id===state.gameId);
@@ -73,20 +65,8 @@ function currentPlies(){
   const line = currentLine();
   return line ? line.plies : [];
 }
-function currentIndex(){
-  if(state.explore) return state.explore.at;
-  return state.deviation ? state.deviation.at : state.ply;
-}
+function currentIndex(){ return state.deviation ? state.deviation.at : state.ply; }
 function currentPly(){ const plies = currentPlies(); return plies[currentIndex()] || plies[0]; }
-
-/* The write half of currentIndex. Three cursors now answer to the transport, the
-   move list and the arrow keys, and each of those knowing which one is live is
-   three copies of the same conditional going stale at different rates. */
-function setIndex(n){
-  if(state.explore) state.explore.at = n;
-  else if(state.deviation) state.deviation.at = n;
-  else state.ply = n;
-}
 
 function currentOpening(){ return DATA.find(o=>o.id===state.opId) || null; }
 function currentLine(){ const op = currentOpening(); return op ? op.lines[state.line] : null; }

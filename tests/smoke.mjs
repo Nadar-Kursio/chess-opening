@@ -145,9 +145,20 @@ step("read: stepping and the transport", () => {
 step("read: variations", () => {
   const tabs = $$(".variation");
   want("more than one variation", tabs.length > 1);
+  want("the line you are on says what it is", $(`.variation[aria-pressed="true"] .variation__note`));
+  want("and every row says how long it runs", /\d+ moves/.test($(".variation__meta")?.textContent || ""));
   click(tabs[1]);
   want("the chosen variation is marked", $(`.variation[aria-pressed="true"]`));
+
+  // The list collapses to the chosen line on a phone. jsdom has no media
+  // queries, so what is checked here is the state the CSS hangs off.
+  click($("#varstoggle"));
+  want("the toggle opens the list", $(".variations--open"));
+  want("and says so", $("#varstoggle").getAttribute("aria-expanded") === "true");
+  click($("#varstoggle"));
+  want("and closes it again", !$(".variations--open"));
   click(tabs[0]);
+  checkLeaks("variations");
 });
 
 step("read: the win bar", () => {
@@ -236,129 +247,6 @@ step("deviations", () => {
   checkLeaks("deviation");
   key("ArrowRight"); key("Escape");
   want("Escape returns to the line", !app("state.deviation"));
-});
-
-/* Explore is the only mode whose board can reach a position no line contains, so
-   what is worth proving is the two edges: that a move off the line is priced,
-   and that walking past the end of the tree says so rather than leaving the last
-   number on screen. */
-step("explore: the engine answers whatever gets played", () => {
-  const found = app(`(function(){
-    for(const o of DATA) for(let i=0;i<o.lines.length;i++)
-      if(o.lines[i].tree !== undefined) return {op:o.id, line:i};
-    return null;
-  })()`);
-  report.treeAt = found;
-  want("some line ships an engine tree", found);
-  if (!found) return;
-
-  app("go")(found.op);
-  app("state").line = found.line;
-  app("state").ply = 4;
-  app("render")();
-  const seg = $('[data-act="mode"][data-v="explore"]');
-  want("explore is offered", seg && !seg.disabled);
-  click(seg);
-  want("the walk starts", app("!!state.explore"));
-  want("the score is on screen", $(".evalbar__score"));
-  want("and so are the engine's replies", $$(".reply").length > 1);
-  want("the best move is marked as such", $(".reply--best"));
-  checkLeaks("explore: opened");
-
-  // The move the line itself plays is recognised as the line, not as a mistake.
-  const book = app("currentLine().plies[5]");
-  app("exploreTry")(book.from, book.to);
-  want("playing the book move walks the line", app("currentPly().san") === book.san);
-  want("and is called out as the line", $(".severity--book"));
-  checkLeaks("explore: on the line");
-
-  // Anything else is priced against the best move in the position.
-  app("state.explore").at = 0;
-  const off = app(`(function(){
-    const n = TREES[state.opId].nodes[currentPly().node];
-    const book = currentLine().plies[5];
-    return n.m.find(m=>m.f !== book.from || m.o !== book.to);
-  })()`);
-  want("the position has another legal move", off);
-  app("exploreTry")(off.f, off.o);
-  want("a move off the line is answered", $(".coach[data-tone]"));
-  want("with a severity word", $(".severity__word"));
-  want("and a score", /[+−]\d|^M/.test($(".evalbar__score").textContent));
-  checkLeaks("explore: off the line");
-
-  // An illegal move is refused as illegal, not answered as bad.
-  app("exploreTry")("a1", "h7");
-  want("an illegal move is refused", $(".verdict"));
-
-  // The punishment is stored as moves, not as a sentence, so it can be walked.
-  want("the answer carries the engine's continuation", $(".pv__moves .move"));
-  click($$('[data-act="expline"]').pop());       // "Play it"
-  want("playing it out lands several moves on", app("state.explore.steps.length") > 2);
-  checkLeaks("explore: played the engine's line");
-
-  // A walked continuation runs past what was searched, and that has to be said
-  // rather than left showing the eval from before it.
-  want("the walk reaches the end of the tree", app("currentPly().node") < 0);
-  want("and says so rather than passing the score off as a fresh one", $(".beyond"));
-  want("no reply list is offered past the edge", !$(".reply"));
-  // The score along a stored line is still a real score, and dropping it would
-  // be as wrong as pretending it was searched here.
-  want("the line's own score is carried, and named as that",
-       app("currentPly().via") === "line"
-       && /engine's line/.test($(".evalbar__caption").textContent));
-  checkLeaks("explore: past the edge");
-
-  // The tape rewinds, and a move from a rewound position starts a new branch
-  // rather than quietly keeping the moves that were stepped back through.
-  const was = app("state.explore.steps.length");
-  click($$('[data-act="expat"]')[0]);
-  want("the tape rewinds", app("state.explore.at") === 0);
-  const alt = app("TREES[state.opId].nodes[currentPly().node].m[0]");
-  app("exploreTry")(alt.f, alt.o);
-  want("playing from a rewound position drops what came after",
-       app("state.explore.steps.length") === 2 && was > 2);
-
-  click($('[data-act="expreset"]'));
-  want("back to the line clears the walk", app("state.explore.steps.length") === 1);
-  click($('[data-act="mode"][data-v="read"]'));
-  want("leaving the mode ends the walk", !app("state.explore"));
-  checkLeaks("explore: left");
-
-  // Read mode has no paragraph for most moves. Where there is a tree, that is
-  // the moment to hand the move to the engine rather than to shrug at it.
-  app("state").ply = 4; app("render")();
-  app("readModeTry")("a2", "a3");
-  const ask = $('[data-act="expfrom"]');
-  want("read mode offers the engine when it has nothing written", ask);
-  if (!ask) return;
-  click(ask);
-  want("which lands in explore, on the move that was played",
-       app("state.mode") === "explore" && app("currentPly().san") === "a3");
-  checkLeaks("explore: handed over from read");
-  click($('[data-act="mode"][data-v="read"]'));
-});
-
-/* The one piece of chess the browser does. tests/test_content.py holds it to
-   python-chess across every move in the shipped tree, which covers castling and
-   en passant but reaches no promotion, because openings do not. These three are
-   the contract itself, stated where the code is. */
-step("explore: the board applies what a move disturbs, not just the piece", () => {
-  const at = app("squareIndex");
-  const put = (b, sq, ch) => b.slice(0, at(sq)) + ch + b.slice(at(sq) + 1);
-  const apply = (b, m) => app("treeApply")(b, m);
-
-  let b = put(put(".".repeat(64), "e1", "K"), "h1", "R");
-  b = apply(b, { f: "e1", o: "g1", r: ["h1", "f1"] });
-  want("castling drags the rook with it",
-       b === put(put(".".repeat(64), "g1", "K"), "f1", "R"));
-
-  b = put(put(".".repeat(64), "e5", "P"), "d5", "p");
-  b = apply(b, { f: "e5", o: "d6", x: "d5" });
-  want("en passant empties the square the pawn was not on",
-       b === put(".".repeat(64), "d6", "P"));
-
-  b = apply(put(".".repeat(64), "b7", "P"), { f: "b7", o: "b8", q: "Q" });
-  want("a promotion leaves the piece it promoted to", b === put(".".repeat(64), "b8", "Q"));
 });
 
 step("your own notes", () => {

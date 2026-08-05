@@ -63,12 +63,9 @@ function drillAskedCount(line){
 
 function setMode(mode){
   stopAutoplay();
-  const was = state.mode;
   state.mode = mode;
   state.selected = null;
-  if(was === "explore") exploreExit();
   if(mode === "drill") drillStart();
-  else if(mode === "explore"){ state.deviation = null; state.picking = false; exploreStart(); }
   else { state.drill.phase = "ask"; render(); }
 }
 
@@ -326,7 +323,6 @@ function modeBarHTML(line){
         <button class="seg" data-act="mode" data-v="drill"
           aria-pressed="${state.mode==="drill"}"
           title="Play each move before it is shown">Drill</button>
-        ${exploreSegHTML(line)}
       </div>
       ${state.mode==="drill"?`<button class="pill${state.drill.bothSides?" on":""}"
         data-act="bothsides" aria-pressed="${state.drill.bothSides}"
@@ -335,18 +331,13 @@ function modeBarHTML(line){
           : "Answer for both colours instead of having the replies played for you."}"
         ><span class="glyph" aria-hidden="true">⇄</span>Both sides</button>`:""}
       <span class="spacer"></span>
-      ${state.mode==="explore"?`<span class="feedback-level feedback-level--2"
-        title="Where these numbers come from">
-        <b class="feedback-level__tag">Engine</b>
-        <span class="feedback-level__what">every legal move priced by Stockfish before it shipped</span>
-      </span>`:`
       <span class="feedback-level feedback-level--${level}"
         title="How much this line can tell you about a wrong move">
         <b class="feedback-level__tag">${FEEDBACK_LEVELS[level].tag}</b>
         <span class="feedback-level__what">${FEEDBACK_LEVELS[level].blurb}</span>
       </span>
       <button class="pill pill--warn${state.picking?" on":""}" data-act="deviate"
-        ${state.deviation?"disabled":""}>They deviated<kbd>D</kbd></button>`}
+        ${state.deviation?"disabled":""}>They deviated<kbd>D</kbd></button>
     </div>`;
 }
 
@@ -459,11 +450,7 @@ function drillArm(){
 function drillPaint(){
   const board = document.getElementById("board");
   if(!board) return;
-  // currentPly(), not the line's ply: explore has a cursor of its own, and the
-  // squares being painted are the ones on screen rather than the ones the line
-  // happens to be standing on.
-  const here = currentPly();
-  if(!here) return;
+  const here = currentPlies()[state.ply];
   const targets = state.selected ? legalTargets(here, state.selected) : [];
   // The refused move was never played, so the board shows no trace of it unless
   // it is marked. Held until the next attempt rather than flashed -- you have to
@@ -513,7 +500,6 @@ function drillDrawRejected(ctx, square){
 /* Whose move it is in the position on screen -- which in drill is always the
    learner, and with the deviation picker open is always the opponent. */
 function moverSide(){
-  if(state.explore) return exploreTurn();
   const next = currentPlies()[state.ply + 1];
   return next ? next.turn : (state.ply % 2 === 0 ? "w" : "b");
 }
@@ -524,9 +510,6 @@ function moverSide(){
    forward -- the board is the interface, a button is the fallback. */
 function boardLive(){
   if(state.deviation) return false;
-  // Explore is the board taking moves and nothing else, so it comes before every
-  // rule below about which phase of a drill is allowed to.
-  if(exploreOn()) return !(state.note && state.note.tool);
   // Only while a two-tap mark tool is armed: those taps belong to the mark being
   // made. An open note editor otherwise leaves the board alone -- drawing is the
   // right button, so a text box on the page is no reason to stop taking moves.
@@ -543,8 +526,7 @@ function boardLive(){
 }
 
 function boardMove(from, to){
-  if(exploreOn()) exploreTry(from, to);
-  else if(state.picking || !drillOn()) readModeTry(from, to);
+  if(state.picking || !drillOn()) readModeTry(from, to);
   else drillTry(from, to);
 }
 
@@ -576,15 +558,9 @@ function readModeTry(from, to){
     state.drill.verdict = `<b>${name}</b> isn't a legal move in this position.`;
     state.drill.tone = "bad";
   } else {
-    // "Nobody wrote about that one" is exactly the moment the engine tree is for,
-    // so where there is one the answer carries the way into it rather than
-    // leaving the reader to find a mode switch and replay the move.
     state.drill.verdict = `<b>${name}</b> isn't one I have notes on. `
       + (next?`This line plays <b>${next.san}</b>. `:"")
-      + movePrinciple(here, from, to)
-      + (exploreReady(currentLine()) && exploreSpine(currentLine(), state.ply) >= 0
-         ? ` <button class="pill" data-act="expfrom" data-f="${from}" data-o="${to}"
-             >Ask Stockfish</button>` : "");
+      + movePrinciple(here, from, to);
     state.drill.tone = "flat";
   }
   // Mark the board, in the same two colours the drill uses and for the same two
@@ -602,7 +578,7 @@ function readModeTry(from, to){
 }
 
 function drillPick(sq){
-  const here = currentPly();
+  const here = currentPlies()[state.ply];
   // Before every early return below, and here rather than in the pointer handler
   // so the keyboard reaches it too: touching the board at all -- any square,
   // pickable or not -- means you are done looking at the last attempt.
@@ -623,7 +599,7 @@ document.getElementById("content").addEventListener("pointerdown", e=>{
   const cell = e.target.closest("[data-sq]");
   if(!cell) return;
   const sq = cell.dataset.sq;
-  const here = currentPly();
+  const here = currentPlies()[state.ply];
   e.preventDefault();
 
   if(!state.selected && isOwnPiece(here.fen, sq, moverSide())){
@@ -662,10 +638,7 @@ function drillKey(e){
     if(state.deviation){ devExit(); return true; }
     return false;
   }
-  if(k === "d" || k === "D"){
-    if(!state.deviation && !exploreOn()){ ACTIONS.deviate(); return true; }
-    return false;
-  }
+  if(k === "d" || k === "D"){ if(!state.deviation){ ACTIONS.deviate(); return true; } return false; }
   if(state.deviation){
     if(k === "ArrowRight"){ step(1); return true; }
     if(k === "ArrowLeft"){ step(-1); return true; }
