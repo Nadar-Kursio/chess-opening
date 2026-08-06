@@ -30,6 +30,7 @@ interface Props {
   cursor: string;
   targets: string[];
   rejected: Rejected | null;
+  animate: boolean;
   mine: NoteRecord | null;
   drawing: Drawing | null;
   /** The first square of a two-tap note arrow, waiting for its second. */
@@ -50,7 +51,7 @@ interface Props {
 export default function BoardColumn({
   ply, index, total, locked, flipped, autoplay, canPlay, arrowsOn, mineOn,
   hidesOverlays, live, gridNav, grabSide, selected, cursor, targets, rejected,
-  mine, drawing, pendingFrom, depth, readout, hint,
+  animate, mine, drawing, pendingFrom, depth, readout, hint,
   onFirst, onPrev, onNext, onLast, onFlip, onArrows, onMine, onPlay,
 }: Props) {
   const atStart = index === 0;
@@ -89,6 +90,7 @@ export default function BoardColumn({
             noted={noted}
             notedLive={notedLive}
             rejected={rejected}
+            animate={animate}
             pieceAt={(sq) => pieceAt(ply.fen, sq)}
           />
           <ArrowLayer

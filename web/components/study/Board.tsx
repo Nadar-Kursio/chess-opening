@@ -28,11 +28,13 @@ interface Props {
   noted: string[];
   notedLive: string[];
   rejected: Rejected | null;
+  /** False right after a drag-drop: the hand carried the piece, no glide. */
+  animate: boolean;
   pieceAt: (sq: string) => string;
 }
 
 export default function Board({
-  fen, from, to, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, noted, notedLive, rejected, pieceAt,
+  fen, from, to, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, noted, notedLive, rejected, animate, pieceAt,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -84,7 +86,7 @@ export default function Board({
              destination already translated back by the move's grid delta, and
              the animation carries it home. */
           let slide: React.CSSProperties | undefined;
-          if (name === to && from) {
+          if (animate && name === to && from) {
             const fromFile = FILES.indexOf(from[0]);
             const fromRank = +from[1] - 1;
             const fromCol = flipped ? 7 - fromFile : fromFile;
@@ -96,7 +98,7 @@ export default function Board({
           }
           piece = (
             <span style={slide}
-              className={`piece ${isWhite ? "white" : "black"}${name === to ? " arriving" : ""}`}>
+              className={`piece ${isWhite ? "white" : "black"}${animate && name === to ? " arriving" : ""}`}>
               {PIECE_GLYPH[ch.toLowerCase()]}
             </span>
           );

@@ -34,7 +34,16 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
 
   const stateRef = useRef(state);
   stateRef.current = state;
-  const dragRef = useRef<{ from: string; id: number } | null>(null);
+  /* A live piece drag: the glyph follows the pointer (imperative style — no
+     commits mid-drag, so nothing re-renders under the hand), and the square
+     it hovers wears the drag-over ring. */
+  const dragRef = useRef<{
+    from: string; id: number; piece: HTMLElement | null;
+    cx: number; cy: number; moved: boolean; over: HTMLElement | null;
+  } | null>(null);
+  /* False for exactly the render after a drag-drop: the hand carried the
+     piece, so it must not glide in a second time. */
+  const slideRef = useRef(true);
   /* A finger holding still on a square is what it has instead of a right
      button: long enough that neither a tap nor a piece-drag arms it by
      accident, cancelled by travel, superseded by any new press. */
@@ -65,6 +74,8 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   /* Nothing draws while the Notes layer is off — a gesture that made a mark
      you could not see would be a page that changed its mind about a press. */
   const canDraw = state.mine && !hidesOverlays;
+
+  useEffect(() => { slideRef.current = true; });
 
   useEffect(() => {
     setMounted(true);
@@ -186,6 +197,17 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     }
   };
 
+  const dragVisualReset = () => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    if (drag.piece) {
+      drag.piece.style.transform = "";
+      drag.piece.style.zIndex = "";
+      drag.piece.style.pointerEvents = "";
+    }
+    drag.over?.classList.remove("drag-over");
+  };
+
   const onPointerDown = (e: React.PointerEvent) => {
     const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-sq]");
     if (!cell) return;
@@ -201,6 +223,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     if (drawGesture) {
       e.preventDefault();
       if (stateRef.current.note?.tool) { actions.noteTapSquare(sq); return; }
+      dragVisualReset();
       dragRef.current = null;
       actions.noteStartDraw(sq, e.pointerId);
       try { cell.setPointerCapture(e.pointerId); } catch {}
@@ -217,6 +240,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
           holdRef.current = null;
           if (!hold) return;
           // The hold has won the pointer: a piece picked up on the way is dropped.
+          dragVisualReset();
           dragRef.current = null;
           actions.noteStartDraw(hold.from, hold.id);
           try {
@@ -233,7 +257,13 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     const here = line.plies[s.ply];
     e.preventDefault();
     if (!s.selected && isOwnPiece(here.fen, sq, moverSide(line.plies, s.ply))) {
-      dragRef.current = { from: sq, id: e.pointerId };
+      const rect = cell.getBoundingClientRect();
+      dragRef.current = {
+        from: sq, id: e.pointerId,
+        piece: cell.querySelector<HTMLElement>(".piece"),
+        cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2,
+        moved: false, over: null,
+      };
       try { cell.setPointerCapture(e.pointerId); } catch {}
     }
     actions.pick(sq);
@@ -249,6 +279,28 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
       const sq = squareAt(e);
       if (sq) actions.noteDrawTo(sq, e.pointerId);
     }
+
+    /* The picked-up piece follows the hand, chess.com style. */
+    const drag = dragRef.current;
+    if (drag && drag.id === e.pointerId && drag.piece) {
+      const dx = e.clientX - drag.cx;
+      const dy = e.clientY - drag.cy;
+      if (!drag.moved && Math.hypot(dx, dy) > 4) {
+        drag.moved = true;
+        drag.piece.style.zIndex = "6"; // above the arrows canvas
+        drag.piece.style.pointerEvents = "none"; // the drop square must be hittable
+      }
+      if (drag.moved) {
+        drag.piece.style.transform = `translate(${dx}px, ${dy}px) scale(1.15)`;
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        const overCell = under && under.closest ? under.closest<HTMLElement>("[data-sq]") : null;
+        if (overCell !== drag.over) {
+          drag.over?.classList.remove("drag-over");
+          if (overCell) overCell.classList.add("drag-over");
+          drag.over = overCell;
+        }
+      }
+    }
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
@@ -259,14 +311,18 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     }
     const drag = dragRef.current;
     if (!drag || drag.id !== e.pointerId) return;
+    dragVisualReset();
     dragRef.current = null;
     const drop = squareAt(e);
-    if (!drop || drop === drag.from) return; // a click, not a drag
+    // No square, or the piece's own: it snaps back and stays picked up.
+    if (!drop || drop === drag.from) return;
+    if (drag.moved) slideRef.current = false; // the hand already carried it
     actions.boardMove(drag.from, drop);
   };
 
   const onPointerCancel = (e: React.PointerEvent) => {
     holdCancel();
+    dragVisualReset();
     dragRef.current = null;
     actions.noteAbortDraw(e.pointerId);
   };
@@ -336,6 +392,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
         cursor={state.drill.cursor}
         targets={targets}
         rejected={drillOn || state.drill.verdictPly === state.ply ? state.drill.rejected : null}
+        animate={slideRef.current}
         mine={marksShown}
         drawing={state.drawing}
         pendingFrom={state.note?.pendingFrom ?? null}

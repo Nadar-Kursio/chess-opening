@@ -177,6 +177,26 @@ step("read: a picked-up piece shows where it can go, chess.com style", async () 
   window.close();
 });
 
+step("read: a held piece follows the hand and plays where it lands", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  const from = document.querySelector('[data-sq="e2"]');
+  const to = document.querySelector('[data-sq="e4"]');
+  fire(window, from, "pointerdown", { button: 0 });
+  await tick(window, 30);
+  window.document.elementFromPoint = () => to;
+  fire(window, from, "pointermove", { clientX: 48, clientY: 48 });
+  await tick(window, 30);
+  const piece = from.querySelector(".piece");
+  ok(/translate/.test(piece.getAttribute("style") || ""), "the piece following the pointer");
+  ok(to.classList.contains("drag-over"), "the hovered square wearing the ring");
+  fire(window, from, "pointerup", { clientX: 48, clientY: 48 });
+  await tick(window, 40);
+  ok(lab(window).state.ply === 1, "the dropped move played");
+  ok(!document.querySelector(".piece.arriving"), "no second glide after the hand carried it");
+  ok(!document.querySelector(".drag-over"), "the ring gone after the drop");
+  window.close();
+});
+
 step("read: an off-book move is answered, an illegal one is refused", async () => {
   const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
   await act(window, (a) => a.boardMove("g1", "h3")); // legal, off-book
