@@ -69,7 +69,7 @@
   --rail-w:266px;
   --page-max:1400px;
   --gutter:var(--space-5);
-  /* The lesson's diagram column: big enough to read a position from reading
+  /* A demo's diagram column: big enough to read a position from reading
      distance, small enough that the prose beside it stays the page's subject. */
   --demo-w:248px;
 

@@ -1,0 +1,34 @@
+/* A demo: prose whose moves drive a board (components/demo/Demo.tsx). The
+   chips wear the scoresheet's grammar — layered at rest, accent-filled when
+   they are the position on the board — so notation that can be pressed looks
+   like the notation the reader already presses elsewhere on the page. Where
+   the figure and body land is the composing layout's decision (lesson.css
+   places them today); everything here is the demo's own. */
+
+.demo__fig{margin:0;width:100%;min-width:0}
+.demo__nav{display:flex;align-items:center;gap:var(--space-2);padding-top:var(--space-2)}
+.demo__num{
+  flex:1 1 auto;min-width:0;text-align:center;
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.demo__body{display:grid;gap:var(--space-4);min-width:0}
+.demo__sub{margin:0 0 var(--space-2)}
+.demo__text{margin:0 0 var(--space-3);font-size:var(--text-body);line-height:1.65}
+.demo__text:last-child{margin-bottom:0}
+
+/* ---------- a move you can press ---------- */
+.chip{
+  appearance:none;-webkit-appearance:none;
+  font-family:var(--font-mono);font-size:var(--text-sm);font-weight:600;line-height:1.45;
+  color:var(--text);background:var(--layer-2);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:0 var(--space-1);margin:0 1px;
+  cursor:pointer;white-space:nowrap;
+  transition:background var(--speed) var(--ease),
+             border-color var(--speed) var(--ease),
+             color var(--speed) var(--ease);
+}
+.chip:hover{background:var(--layer-3);border-color:var(--border-strong)}
+.chip--current{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
