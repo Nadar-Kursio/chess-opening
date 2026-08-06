@@ -194,6 +194,8 @@ step("read: a held piece follows the hand and plays where it lands", async () =>
   ok(lab(window).state.ply === 1, "the dropped move played");
   ok(!document.querySelector(".piece.arriving"), "no second glide after the hand carried it");
   ok(!document.querySelector(".drag-over"), "the ring gone after the drop");
+  await act(window, (a) => a.pick("e7")); // reaching for the reply re-renders the board
+  ok(!document.querySelector(".piece.arriving"), "and still no replay of the glide");
   window.close();
 });
 

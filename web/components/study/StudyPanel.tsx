@@ -41,9 +41,12 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     from: string; id: number; piece: HTMLElement | null;
     cx: number; cy: number; moved: boolean; over: HTMLElement | null;
   } | null>(null);
-  /* False for exactly the render after a drag-drop: the hand carried the
-     piece, so it must not glide in a second time. */
-  const slideRef = useRef(true);
+  /* A drag-drop marks its move as hand-carried. The mark sticks to that
+     move's identity — not to one render — so later re-renders of the same
+     position (picking up the reply's piece, toggling a layer) cannot restart
+     a glide the hand already made. "pending" is consumed by the first render
+     after the drop, which is the one that knows the move's key. */
+  const handCarriedRef = useRef<string | null>(null);
   /* A finger holding still on a square is what it has instead of a right
      button: long enough that neither a tap nor a piece-drag arms it by
      accident, cancelled by travel, superseded by any new press. */
@@ -74,8 +77,6 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
   /* Nothing draws while the Notes layer is off — a gesture that made a mark
      you could not see would be a page that changed its mind about a press. */
   const canDraw = state.mine && !hidesOverlays;
-
-  useEffect(() => { slideRef.current = true; });
 
   useEffect(() => {
     setMounted(true);
@@ -316,7 +317,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     const drop = squareAt(e);
     // No square, or the piece's own: it snaps back and stays picked up.
     if (!drop || drop === drag.from) return;
-    if (drag.moved) slideRef.current = false; // the hand already carried it
+    if (drag.moved) handCarriedRef.current = "pending"; // the hand already carried it
     actions.boardMove(drag.from, drop);
   };
 
@@ -326,6 +327,11 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     dragRef.current = null;
     actions.noteAbortDraw(e.pointerId);
   };
+
+  const moveKey = `${index}|${current.fen}`;
+  if (handCarriedRef.current === "pending") handCarriedRef.current = moveKey;
+  else if (handCarriedRef.current && handCarriedRef.current !== moveKey) handCarriedRef.current = null;
+  const animate = handCarriedRef.current !== moveKey;
 
   const here = line.plies[state.ply];
   /* Where the picked-up piece may go — the engine's list, every position,
@@ -392,7 +398,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
         cursor={state.drill.cursor}
         targets={targets}
         rejected={drillOn || state.drill.verdictPly === state.ply ? state.drill.rejected : null}
-        animate={slideRef.current}
+        animate={animate}
         mine={marksShown}
         drawing={state.drawing}
         pendingFrom={state.note?.pendingFrom ?? null}
