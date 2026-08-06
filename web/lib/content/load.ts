@@ -1,7 +1,7 @@
 import "server-only";
 import { readFileSync } from "fs";
 import { join } from "path";
-import type { Catalog, Opening } from "./types";
+import type { Catalog, Opening, StructureRecord } from "./types";
 
 /* Build-time reads only: every page is statically generated, and nothing under
    web/content/ is served at runtime. The directory is generated and gitignored,
@@ -34,6 +34,15 @@ export function getCatalog(): Catalog {
 
 export function getPrimer(): string {
   return read("primer.html");
+}
+
+let structures: StructureRecord[] | null = null;
+
+export function getStructures(): StructureRecord[] {
+  if (!structures) {
+    structures = JSON.parse(read("structures.json")) as StructureRecord[];
+  }
+  return structures;
 }
 
 export function getOpening(id: string): Opening {

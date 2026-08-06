@@ -141,6 +141,86 @@ class TestEmit(unittest.TestCase):
             for opening in s["openings"]:
                 self.assertIn(opening["id"], PORTED, s["id"])
 
+    # ---- the lesson: the theory cut around the moves it names ----
+
+    @staticmethod
+    def _joined(seg):
+        return "".join(s if isinstance(s, str) else s["t"] for s in seg)
+
+    def _lesson_cards(self, op):
+        """Every (where, seg lists, boards, hero) the lesson record carries."""
+        lesson = op["lesson"]
+        yield "idea", [lesson["idea"]["seg"]], lesson["idea"]
+        yield "structure", [lesson["structure"]["seg"]], lesson["structure"]
+        yield "plans", lesson["plans"]["white"] + lesson["plans"]["black"], lesson["plans"]
+        for i, trap in enumerate(lesson["traps"]):
+            yield f"trap {i}", [trap["seg"]], trap
+
+    def test_every_ported_opening_carries_a_lesson(self):
+        for summary in self.catalog["openings"]:
+            op = self.files[f"openings/{summary['id']}.json"]
+            self.assertEqual(set(op["lesson"]),
+                             {"idea", "structure", "plans", "traps"}, op["id"])
+            self.assertEqual(len(op["lesson"]["traps"]),
+                             len(op["theory"]["traps"]), op["id"])
+
+    def test_the_lesson_reassembles_the_theory_byte_for_byte(self):
+        """Cutting the prose around its moves must lose nothing: the segments
+        joined back up are the authored text, and a trap's extracted name is
+        the authored prefix with only the colon between them."""
+        for summary in self.catalog["openings"]:
+            op = self.files[f"openings/{summary['id']}.json"]
+            lesson, theory = op["lesson"], op["theory"]
+            self.assertEqual(self._joined(lesson["idea"]["seg"]),
+                             theory["big_idea"], op["id"])
+            self.assertEqual(self._joined(lesson["structure"]["seg"]),
+                             theory["structure"], op["id"])
+            for side in ("white", "black"):
+                self.assertEqual([self._joined(seg) for seg in lesson["plans"][side]],
+                                 theory[f"{side}_plans"], op["id"])
+            for trap, text in zip(lesson["traps"], theory["traps"]):
+                body = self._joined(trap["seg"])
+                self.assertTrue(text.endswith(body), f"{op['id']}: {body[:40]!r}")
+                if "name" in trap:
+                    self.assertTrue(text.startswith(trap["name"] + ":"), op["id"])
+                else:
+                    self.assertEqual(text, body, op["id"])
+
+    def test_lesson_chips_point_at_moves_and_boards_link_up(self):
+        for summary in self.catalog["openings"]:
+            op = self.files[f"openings/{summary['id']}.json"]
+            for where, segs, card in self._lesson_cards(op):
+                w = f"{op['id']} / {where}"
+                boards = card.get("boards", [])
+                chips = [s for seg in segs for s in seg if isinstance(s, dict)]
+                if not boards:
+                    self.assertFalse(chips, w)
+                    continue
+                self.assertIn(card["hero"], range(len(boards)), w)
+                for s in chips:
+                    self.assertIn(s["b"], range(len(boards)), w)
+                    # A chip is a move, never the anchor a run starts from.
+                    self.assertTrue(boards[s["b"]]["num"], w)
+                for i, b in enumerate(boards):
+                    self.assertEqual(len(b["fen"]), 64, w)
+                    self.assertIn(b["turn"], ("w", "b"), w)
+                    if b["num"]:
+                        self.assertIn(b["p"], range(len(boards)), w)
+                        self.assertTrue(b["from"] and b["to"], w)
+                    else:
+                        self.assertIsNone(b["p"], w)
+                        self.assertIn(b.get("n"), range(len(boards)), w)
+                    if "n" in b:
+                        self.assertNotEqual(b["n"], i, w)
+
+    def test_the_lesson_found_boards_where_the_prose_plays_moves(self):
+        """The Ruy Lopez big idea plays 3.Bb5 in its first sentence; a lesson
+        record without a board for it means the extractor went quiet, which
+        must fail here rather than ship a page of plain prose."""
+        op = self.files["openings/ruylopez.json"]
+        self.assertTrue(op["lesson"]["idea"].get("boards"))
+        self.assertTrue(any(t.get("boards") for t in op["lesson"]["traps"]))
+
     def test_game_files_match_the_catalog_and_belong_here(self):
         listed = {g["id"] for g in self.catalog["games"]}
         on_disk = {name[len("games/"):-len(".json")]
