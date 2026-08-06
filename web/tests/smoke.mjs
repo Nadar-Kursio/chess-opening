@@ -108,6 +108,9 @@ step("read: the board, stepping, the coach card and the plan", async () => {
   ok(lab(window).state.ply === 1, "the cursor at move 1");
   ok(document.querySelector(".coach__move")?.textContent === "1.e4", "the coach card on 1.e4");
   ok(document.querySelector(".scoresheet.scroller .move.current")?.textContent === "e4", "the tape's current move");
+  const arriving = document.querySelector(".piece.arriving");
+  ok(arriving && /--slide-y/.test(arriving.getAttribute("style") || ""),
+    "the moved piece carrying its slide offset");
 
   await act(window, (a) => a.toEnd());
   ok(document.querySelector(".plan"), "the plan card at the end of the line");

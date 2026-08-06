@@ -45,6 +45,8 @@ export default function Board({
       const square = board.clientWidth / 8;
       if (square > 0) {
         board.style.fontSize = square * 0.74 + "px";
+        // The slide animation measures its start offset in squares.
+        board.style.setProperty("--sq", square + "px");
         board.querySelectorAll<HTMLElement>(".coord").forEach((c) => {
           c.style.fontSize = Math.max(7, square * 0.16) + "px";
         });
@@ -66,6 +68,8 @@ export default function Board({
         const rank = 7 - ((i / 8) | 0);
         const name = FILES[file] + (rank + 1);
         const light = (file + rank) % 2 === 1;
+        const col = pos % 8;
+        const row = (pos / 8) | 0;
         const cls = ["sq", light ? "light" : "dark"];
         if (name === from || name === to) cls.push("played");
         const ch = fen[i];
@@ -76,8 +80,23 @@ export default function Board({
             cls.push("in-check");
           }
           if (live && grabSide && (isWhite ? "w" : "b") === grabSide) cls.push("grab");
+          /* The moved piece glides in from its origin square: it mounts on the
+             destination already translated back by the move's grid delta, and
+             the animation carries it home. */
+          let slide: React.CSSProperties | undefined;
+          if (name === to && from) {
+            const fromFile = FILES.indexOf(from[0]);
+            const fromRank = +from[1] - 1;
+            const fromCol = flipped ? 7 - fromFile : fromFile;
+            const fromRow = flipped ? fromRank : 7 - fromRank;
+            slide = {
+              ["--slide-x" as string]: `calc(${fromCol - col} * var(--sq, 0px))`,
+              ["--slide-y" as string]: `calc(${fromRow - row} * var(--sq, 0px))`,
+            };
+          }
           piece = (
-            <span className={`piece ${isWhite ? "white" : "black"}${name === to ? " arriving" : ""}`}>
+            <span style={slide}
+              className={`piece ${isWhite ? "white" : "black"}${name === to ? " arriving" : ""}`}>
               {PIECE_GLYPH[ch.toLowerCase()]}
             </span>
           );
@@ -95,8 +114,6 @@ export default function Board({
           cls.push(rejected.kind === "illegal" ? "illegal" : "rejected");
           if (name === rejected.to) cls.push("rejected-to");
         }
-        const col = pos % 8;
-        const row = (pos / 8) | 0;
         return (
           <div
             key={name}
