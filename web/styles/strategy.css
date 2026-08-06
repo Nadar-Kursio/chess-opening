@@ -1,0 +1,26 @@
+/* The ideas behind the opening, and the plan card that ends a line. */
+
+/* min() on the track minimum, not a bare 280px: a bare one stays 280px wide on
+   a 300px screen and takes the page sideways with it. */
+.strategy{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:var(--space-4)}
+.strategy__who{
+  grid-column:1/-1;
+  background:linear-gradient(90deg,var(--accent-wash),transparent 70%);
+  border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);
+}
+.strategy__who p{margin:0;font-size:var(--text-body);font-style:italic;color:var(--text)}
+
+/* ---------- end-of-line plan card ---------- */
+.plan{
+  background:var(--layer-1);border:1px solid var(--border);
+  border-left:3px solid var(--accent);border-radius:var(--radius-md);
+  padding:var(--space-4);
+}
+.plan--generic{border-left-color:var(--border-strong)}
+.plan__point{margin:0;font-size:var(--text-body);line-height:1.65}
+.plan__sub{margin:var(--space-4) 0 var(--space-2)}
+.plan__next{margin:0;padding-left:var(--space-5);display:grid;gap:var(--space-1);
+  font-size:var(--text-ui);color:var(--text-soft)}
+.plan__endgame{margin:var(--space-3) 0 0;font-size:var(--text-ui);color:var(--text-soft)}
+.plan__endgame b{color:var(--text)}

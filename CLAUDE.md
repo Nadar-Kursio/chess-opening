@@ -3,6 +3,12 @@
 An interactive opening course. Everything under `src/` is source; the build emits
 one self-contained HTML file into `docs/`. See README.md for the layout.
 
+The course is being re-platformed: `web/` holds a Next.js app (static export)
+fed by the same build via `--emit`, currently carrying the openings named in
+`PORTED` in `src/build.py`. It deploys to the `chesslab-next` Pages project;
+chesslab.dev stays on the single-file site until the new app reaches parity.
+The wiki's Architecture page describes the target state.
+
 ## Commands
 
 `build.py` writes relative to the current directory, so in a worktree you must
@@ -12,7 +18,17 @@ one self-contained HTML file into `docs/`. See README.md for the layout.
 .venv/bin/python3 src/build.py                  # write docs/
 .venv/bin/python3 src/build.py --check          # fail if docs/ is stale
 .venv/bin/python3 src/build.py --serve          # preview on localhost
+.venv/bin/python3 src/build.py --emit           # write web/content/ for web/
 .venv/bin/python3 -m unittest discover tests
+```
+
+The web app, from `web/` (after `--emit`):
+
+```
+npm ci                # once
+npm run dev           # preview on localhost
+npm run build         # static export into web/out/
+npm test              # jsdom smoke over the exported pages in web/out/
 ```
 
 System `python3` has no `python-chess`. Use the venv.
