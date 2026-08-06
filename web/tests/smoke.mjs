@@ -420,6 +420,7 @@ step("notes: two-tap tools mark the board, chips take marks back", async () => {
   await tick(window, 30);
   ok([...document.querySelectorAll(".mynote__mark")].some((m) => /○d5/.test(m.textContent)),
     "the spot's chip");
+  ok(document.querySelector('[data-sq="d5"].noted'), "the square filled in the note colour");
   document.querySelector(".mynote__mark").click(); // the arrow chip — per-mark undo
   await tick(window, 30);
   ok(![...document.querySelectorAll(".mynote__mark")].some((m) => /e2→e4/.test(m.textContent)),
@@ -457,7 +458,8 @@ step("notes: a finger holds a square to draw; travel cancels the hold", async ()
   fire(window, cell, "pointerup", {});
   await tick(window, 30);
   ok(lab(window).state.note?.spots.includes("d4"),
-    "a press that never left its square is a circle");
+    "a press that never left its square marks it");
+  ok(document.querySelector('[data-sq="d4"].noted'), "the square filled in the note colour");
 
   // Travel before the hold fires means a drag, not a hold.
   const e4 = document.querySelector('[data-sq="e4"]');

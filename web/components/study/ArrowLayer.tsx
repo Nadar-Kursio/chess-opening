@@ -30,7 +30,6 @@ interface Props {
   arrows: Arrow[];
   mine: NoteRecord | null;
   drawing: Drawing | null;
-  pendingFrom: string | null;
   rejected: Rejected | null;
   showArrows: boolean;
   showMine: boolean;
@@ -38,7 +37,7 @@ interface Props {
 }
 
 export default function ArrowLayer({
-  boardRef, fen, arrows, mine, drawing, pendingFrom, rejected, showArrows, showMine, flipped,
+  boardRef, fen, arrows, mine, drawing, rejected, showArrows, showMine, flipped,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -98,21 +97,19 @@ export default function ArrowLayer({
       /* Last, so your own mark is never buried under five engine arrows. */
       if (showMine) {
         if (mine) {
-          (mine.spots || []).forEach((sq) => drawRing(ctx, sq, ARROW_COLORS.mine, square, flipped));
+          /* Spots are square fills painted by the board itself; the canvas
+             carries only the arrows. */
           (mine.arrows || []).forEach((a) => {
             drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square * 0.12, square, flipped,
               pieceOn(a.f));
           });
         }
-        /* The mark being made: a rubber band under the finger, and the tail of
-           a two-tap arrow waiting for its second square. */
+        /* The mark being made: a rubber band under the finger. A press still
+           on its own square previews as the board's own square fill. */
         if (drawing && drawing.to !== drawing.from) {
           drawArrowBetween(ctx, drawing.from, drawing.to, ARROW_COLORS.live,
             square * 0.12, square, flipped, pieceOn(drawing.from));
-        } else if (drawing) {
-          drawRing(ctx, drawing.from, ARROW_COLORS.live, square, flipped);
         }
-        if (pendingFrom) drawRing(ctx, pendingFrom, ARROW_COLORS.live, square, flipped);
       }
     };
     draw();

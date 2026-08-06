@@ -57,6 +57,10 @@
 .board.live .sq.grab{cursor:grab}
 .board.live .sq.grab:active{cursor:grabbing}
 .board.live .sq.target{cursor:pointer}
+/* A circled-in-spirit square: your note's mark fills it in your colour, the
+   way chess.com fills a right-clicked square — red stays the opening's. */
+.sq.noted::before{content:"";position:absolute;inset:0;background:var(--mine);opacity:.5;z-index:var(--z-cue)}
+.sq.noted--live::before{content:"";position:absolute;inset:0;background:var(--mine);opacity:.28;z-index:var(--z-cue)}
 
 .sq.picked-up::after{
   content:"";position:absolute;inset:0;z-index:var(--z-cue);

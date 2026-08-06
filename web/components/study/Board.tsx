@@ -24,12 +24,15 @@ interface Props {
   selected: string | null;
   cursor: string;
   targets: string[];
+  /** Squares your note marks — filled in the note colour, under the piece. */
+  noted: string[];
+  notedLive: string[];
   rejected: Rejected | null;
   pieceAt: (sq: string) => string;
 }
 
 export default function Board({
-  fen, from, to, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, rejected, pieceAt,
+  fen, from, to, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, noted, notedLive, rejected, pieceAt,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -86,6 +89,8 @@ export default function Board({
           cls.push("target");
           if (pieceAt(name) !== "") cls.push("target--capture");
         }
+        if (noted.includes(name)) cls.push("noted");
+        if (notedLive.includes(name)) cls.push("noted--live");
         if (rejected && (name === rejected.from || name === rejected.to)) {
           cls.push(rejected.kind === "illegal" ? "illegal" : "rejected");
           if (name === rejected.to) cls.push("rejected-to");

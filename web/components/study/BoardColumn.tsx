@@ -61,6 +61,15 @@ export default function BoardColumn({
      day carry a second board (structures, games) without the layers fighting
      over which one they belong to. */
   const squareRef = useRef<HTMLDivElement>(null);
+  /* Spots render as the board's own square fills; the live list previews the
+     press still on its square and the two-tap arrow's waiting tail. */
+  const noted = showMine ? mine?.spots || [] : [];
+  const notedLive = showMine
+    ? [
+        ...(drawing && drawing.to === drawing.from ? [drawing.from] : []),
+        ...(pendingFrom ? [pendingFrom] : []),
+      ]
+    : [];
   return (
     <div className="study__board">
       <div className="board-frame">
@@ -77,6 +86,8 @@ export default function BoardColumn({
             selected={selected}
             cursor={cursor}
             targets={targets}
+            noted={noted}
+            notedLive={notedLive}
             rejected={rejected}
             pieceAt={(sq) => pieceAt(ply.fen, sq)}
           />
@@ -86,7 +97,6 @@ export default function BoardColumn({
             arrows={ply.arrows || []}
             mine={showMine ? mine : null}
             drawing={showMine ? drawing : null}
-            pendingFrom={showMine ? pendingFrom : null}
             rejected={rejected}
             showArrows={showArrows}
             showMine={showMine}
