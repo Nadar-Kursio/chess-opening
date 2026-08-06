@@ -42,9 +42,9 @@ jobs:
 
       - run: python3 src/build.py
 
-      # The Next.js rewrite under web/, fed by the same validated build via
-      # --emit. It ships to its own Pages project (chesslab-next) until it
-      # reaches parity; chesslab.dev stays on the single-file site above.
+      # The site under web/, fed by the same validated build via --emit. The
+      # single-file build above still runs as the rollback path: a previous
+      # docs deployment can be restored from the Cloudflare dashboard.
       - run: python3 src/build.py --emit
 
       - run: npm ci --prefix web
@@ -60,22 +60,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy docs --project-name=chesslab --branch=${{ github.head_ref || github.ref_name }}
-
-      # First run only: creating a project that exists fails, and that is fine.
-      - uses: cloudflare/wrangler-action@v3
-        continue-on-error: true
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages project create chesslab-next --production-branch=main
-
-      - uses: cloudflare/wrangler-action@v3
-        id: deploy-next
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy web/out --project-name=chesslab-next --branch=${{ github.head_ref || github.ref_name }}
+          command: pages deploy web/out --project-name=chesslab --branch=${{ github.head_ref || github.ref_name }}
 
       - name: Comment the preview link
         if: github.event_name == 'pull_request'
@@ -87,8 +72,7 @@ jobs:
           # Pages derives a branch alias by lowercasing and hyphenating; it is the
           # stable URL, whereas deployment-url changes with every commit.
           alias=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
-          body="📖 Current site: https://${alias}.chesslab.pages.dev
-          ✨ New app (WIP): https://${alias}.chesslab-next.pages.dev
+          body="📖 Preview: https://${alias}.chesslab.pages.dev
 
           This commit: ${DEPLOY_URL:-_not reported_}"
           gh pr comment "${{ github.event.number }}" --body "$body" --edit-last \
