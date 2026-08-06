@@ -74,6 +74,46 @@ export interface Branch {
   see?: string;
 }
 
+/** A lesson text cut around its moves: prose, or a move that has a board. */
+export type Seg = string | { b: number; t: string };
+
+/** One position a lesson run reaches. `p`/`n` walk the run it belongs to;
+    an anchor — the position the run starts from — has `num: ""`. */
+export interface LessonBoard {
+  fen: string;
+  from: string | null;
+  to: string | null;
+  num: string;
+  turn: Turn;
+  check?: boolean;
+  p: number | null;
+  n?: number;
+}
+
+export interface LessonCard {
+  seg: Seg[];
+  boards?: LessonBoard[];
+  hero?: number;
+  /** Traps only: the colon-stopped name the author gave it. */
+  name?: string;
+}
+
+export interface LessonPlans {
+  white: Seg[][];
+  black: Seg[][];
+  boards?: LessonBoard[];
+  hero?: number;
+}
+
+/** The theory, cut around the moves it names — derived by engine/lesson.py,
+    every board replayed from a position the opening's lines reach. */
+export interface Lesson {
+  idea: LessonCard;
+  structure: LessonCard;
+  plans: LessonPlans;
+  traps: LessonCard[];
+}
+
 export interface Theory {
   big_idea: string;
   structure: string;
@@ -109,9 +149,19 @@ export interface Opening {
   tagline: string;
   level: string;
   theory: Theory;
+  lesson?: Lesson;
   progression: Progression;
   lines: Line[];
   branchsets?: Branch[][];
+}
+
+/** structures.json carries more (plans, pitfalls, taxonomy); the lesson reads
+    only the diagram and its name. */
+export interface StructureRecord {
+  id: string;
+  name: string;
+  board: string;
+  tier?: Tier;
 }
 
 export interface Section {

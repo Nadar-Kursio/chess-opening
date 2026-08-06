@@ -38,6 +38,7 @@ from content.sections import SECTIONS
 from content.structures import STRUCTURES
 from engine.board import board_array
 from engine.intel import move_data
+from engine.lesson import build_lesson
 from engine.notes import parse_notes
 
 SRC = os.path.dirname(os.path.abspath(__file__))
@@ -795,8 +796,17 @@ def emit_files():
     files = {"catalog.json": compact(catalog),
              # The front page's prose, authored as HTML in src/content/.
              "primer.html": primer}
+    # The lesson is derived from the authored theory here, at emit time: it is
+    # presentation, so it ships in the JSON and is never stored in the content
+    # modules it was cut from.
+    raw = {op["id"]: op for op in load()}
     for op in ported:
-        files[f"openings/{op['id']}.json"] = compact(op)
+        lesson, found, on_board = build_lesson(
+            op["id"], op["theory"],
+            [line["moves"] for line in with_deep_line(raw[op["id"]])],
+            lambda message: print("  lesson:", message))
+        print(f"  lesson: {op['id']}: {on_board} of {found} notation runs on a board")
+        files[f"openings/{op['id']}.json"] = compact({**op, "lesson": lesson})
     # Structures are shared reference content, so all of them ship — but the
     # derived back-references must only name openings the new site has pages
     # for, or the structure card would link into a 404.

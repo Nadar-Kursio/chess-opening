@@ -1,10 +1,10 @@
 import type { Catalog, Opening } from "@/lib/content/types";
 import StudyPanel from "@/components/study/StudyPanel";
+import Lesson from "@/components/lesson/Lesson";
 
-/* One opening page: the head, the study island, and the server-rendered prose
-   around it — the theory cards and the learning path, which is the content a
-   search engine (and a reader skimming) actually gets to see. Ported from
-   render.js's openingHTML/strategyHTML/pathHTML. */
+/* One opening page: the head, the study island, the lesson beneath it, and
+   the learning path — the content a search engine (and a reader skimming)
+   actually gets to see. */
 
 interface Props {
   opening: Opening;
@@ -17,7 +17,6 @@ export default function OpeningView({ opening, lineIndex, catalog }: Props) {
   const line = op.lines[lineIndex];
   const sec = catalog.sections.find((s) => s.id === op.section)!;
   const side = line.side || op.orientation;
-  const t = op.theory;
   const pr = op.progression;
 
   return (
@@ -44,29 +43,7 @@ export default function OpeningView({ opening, lineIndex, catalog }: Props) {
 
       <StudyPanel opening={op} lineIndex={lineIndex} catalog={catalog} />
 
-      <div className="strategy" id={`ideas-${op.id}`}>
-        <div className="card card--wide">
-          <p className="card__head label label--accent">The idea in one paragraph</p>
-          <p dangerouslySetInnerHTML={{ __html: t.big_idea }} />
-        </div>
-        <div className="card card--wide">
-          <p className="card__head label label--accent">The pawn structure</p>
-          <p dangerouslySetInnerHTML={{ __html: t.structure }} />
-        </div>
-        <div className="card">
-          <p className="card__head label label--accent">♔ White&rsquo;s plans</p>
-          <ul>{t.white_plans.map((x, i) => <li key={i} dangerouslySetInnerHTML={{ __html: x }} />)}</ul>
-        </div>
-        <div className="card">
-          <p className="card__head label label--accent">♚ Black&rsquo;s plans</p>
-          <ul>{t.black_plans.map((x, i) => <li key={i} dangerouslySetInnerHTML={{ __html: x }} />)}</ul>
-        </div>
-        <div className="card card--warn card--wide">
-          <p className="card__head label label--danger">Traps and things that lose games</p>
-          <ul>{t.traps.map((x, i) => <li key={i} dangerouslySetInnerHTML={{ __html: x }} />)}</ul>
-        </div>
-        <div className="strategy__who"><p dangerouslySetInnerHTML={{ __html: t.who }} /></div>
-      </div>
+      <Lesson opening={op} />
 
       <section className="path" id={`path-${op.id}`}>
         <div className="path__head">

@@ -1,0 +1,89 @@
+/* The ideas section, set like a chess book: the diagram beside the paragraph
+   that talks about it. The moves in the prose are the controls (.chip) and
+   wear the scoresheet's grammar — layered at rest, accent-filled when they are
+   the position on the board — so notation that can be pressed looks like the
+   notation the reader already presses elsewhere on the page. */
+
+.lesson{display:grid;gap:var(--space-4)}
+.lesson__hint{margin:0;font-size:var(--text-sm);color:var(--text-faint)}
+
+.lesson-card{
+  background:var(--layer-1);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);
+  display:grid;column-gap:var(--space-5);row-gap:var(--space-3);
+  grid-template-columns:var(--demo-w) minmax(0,1fr);
+  grid-template-areas:"head head" "fig body";
+  align-items:start;
+}
+.lesson-card--plain{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "body"}
+.lesson-card__head{grid-area:head;margin:0}
+.lesson-card__body{grid-area:body;max-width:70ch;display:grid;gap:var(--space-4)}
+.lesson-card__sub{margin:0 0 var(--space-2)}
+.lesson-card__text{margin:0 0 var(--space-3);font-size:var(--text-body);line-height:1.65}
+.lesson-card__text:last-child{margin-bottom:0}
+
+/* The same bullet the shared card draws, in the trap's colour on a trap. */
+.lesson-card__body ul{margin:0;padding-left:0;list-style:none}
+.lesson-card__body li{
+  position:relative;padding-left:var(--space-5);margin-bottom:var(--space-2);
+  font-size:var(--text-ui);color:var(--text);line-height:1.6;
+}
+.lesson-card__body li::before{
+  content:"";position:absolute;left:4px;top:9px;width:5px;height:5px;
+  border-radius:1px;background:var(--accent-deep);
+}
+.lesson-card__body li:last-child{margin-bottom:0}
+.lesson-card--danger .lesson-card__body li::before{background:var(--danger)}
+
+/* ---------- the diagram and its little transport ---------- */
+.lesson-card__fig{grid-area:fig;margin:0;width:100%;min-width:0}
+.lesson-card__nav{display:flex;align-items:center;gap:var(--space-2);padding-top:var(--space-2)}
+.lesson-card__num{
+  flex:1 1 auto;min-width:0;text-align:center;
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* ---------- a move you can press ---------- */
+.chip{
+  appearance:none;-webkit-appearance:none;
+  font-family:var(--font-mono);font-size:var(--text-sm);font-weight:600;line-height:1.45;
+  color:var(--text);background:var(--layer-2);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:0 var(--space-1);margin:0 1px;
+  cursor:pointer;white-space:nowrap;
+  transition:background var(--speed) var(--ease),
+             border-color var(--speed) var(--ease),
+             color var(--speed) var(--ease);
+}
+.chip:hover{background:var(--layer-3);border-color:var(--border-strong)}
+.chip--current{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+
+/* ---------- the traps, one card each ---------- */
+.lesson__traps{display:grid;gap:var(--space-4)}
+.lesson__traps-head{margin:var(--space-2) 0 0}
+
+.lesson__who{
+  background:linear-gradient(90deg,var(--accent-wash),transparent 70%);
+  border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);
+}
+.lesson__who p{margin:0;font-size:var(--text-body);font-style:italic;color:var(--text)}
+
+@media (max-width:900px){
+  .lesson-card{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "fig" "body"}
+  .lesson-card__fig .board-frame,
+  .lesson-card__nav{width:min(var(--demo-w),100%);margin-inline:auto}
+}
+
+/* The same argument as the pinned study board: the sentence "8.Qxd4?? c5! and
+   the bishop is boxed in" is only readable with the position on screen, so the
+   diagram stays put while its paragraph scrolls. Portrait only — on a phone on
+   its side there is no height to spare. */
+@media (max-width:900px) and (min-height:560px){
+  .lesson-card__fig{
+    position:sticky;top:var(--appbar-h);z-index:var(--z-sticky);
+    background:var(--layer-1);
+    padding-bottom:var(--space-2);border-bottom:1px solid var(--border);
+  }
+}

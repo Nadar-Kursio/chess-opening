@@ -99,8 +99,9 @@ step("shell: the nav filter narrows and recovers", async () => {
 
 step("read: the board, stepping, the coach card and the plan", async () => {
   const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
-  ok(document.querySelectorAll(".board [data-sq]").length === 64, "64 squares");
-  ok(document.querySelectorAll(".board .piece").length === 32, "32 pieces at the start");
+  // Scoped to the island: the lesson below the widget draws boards of its own.
+  ok(document.querySelectorAll(".study .board [data-sq]").length === 64, "64 squares");
+  ok(document.querySelectorAll(".study .board .piece").length === 32, "32 pieces at the start");
   ok(document.querySelector(".coach__move")?.textContent === "Start", "the start card");
 
   document.querySelector('[aria-label="Forward one move"]').click();
@@ -209,6 +210,58 @@ step("read: an off-book move is answered, an illegal one is refused", async () =
   const refused = document.querySelector(".verdict");
   ok(refused && /isn't a legal move/.test(refused.textContent), "the illegal move to be refused");
   checkLeaks(document, "read verdicts");
+  window.close();
+});
+
+/* ---------------- the lesson ---------------- */
+
+step("lesson: the moves in the theory are buttons that drive their card's board", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  const cards = [...document.querySelectorAll(".lesson-card")];
+  ok(cards.length >= 4, `lesson cards under the widget (got ${cards.length})`);
+  const card = cards.find((c) => c.querySelectorAll(".chip").length >= 2);
+  ok(card, "a card whose prose plays moves");
+  ok(card.querySelectorAll(".board [data-sq]").length === 64, "the card's own board");
+
+  const chips = [...card.querySelectorAll(".chip")];
+  const current = () => card.querySelector(".chip--current");
+  ok(current(), "the card opening on its hero position");
+  const pieces = () => card.querySelectorAll(".board .piece").length;
+
+  chips[0].click();
+  await tick(window, 40);
+  const atFirst = pieces();
+  ok(current() === chips[0], "the pressed move goes current");
+  ok(card.querySelector(".lesson-card__num")?.textContent.includes(
+    chips[0].textContent.replace(/[!?]+$/, "")), "the caption naming the position");
+  ok(card.querySelectorAll(".board .sq.played").length === 2, "the move marked on the board");
+
+  const back = card.querySelector('[aria-label="Back one move in this sequence"]');
+  back.click();
+  await tick(window, 40);
+  ok(!current(), "stepping behind the first move leaves no chip current");
+  ok(/^Before /.test(card.querySelector(".lesson-card__num")?.textContent || ""),
+    "the caption saying which move comes next");
+  const fwd = card.querySelector('[aria-label="Forward one move in this sequence"]');
+  fwd.click();
+  await tick(window, 40);
+  ok(current() === chips[0], "forward returning to the move");
+  ok(pieces() === atFirst, "the same position back after stepping away and back");
+  checkLeaks(document, "the lesson");
+  window.close();
+});
+
+step("lesson: a trap is its own card, and the structure card shows its diagram", async () => {
+  const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
+  const heads = [...document.querySelectorAll(".lesson-card__head")].map((el) => el.textContent);
+  ok(heads.some((h) => /Noah/.test(h)), "the Noah's Ark Trap named on its card");
+  const traps = document.querySelectorAll(".lesson__traps .lesson-card");
+  ok(traps.length >= 3, `a card per trap (got ${traps.length})`);
+  const structure = [...document.querySelectorAll(".lesson-card")]
+    .find((c) => /pawn structure/i.test(c.querySelector(".lesson-card__head")?.textContent || ""));
+  ok(structure.querySelectorAll(".board [data-sq]").length === 64, "the structure card's diagram");
+  ok((structure.querySelector(".lesson-card__num")?.textContent || "").length > 0,
+    "the diagram named for the structure it draws");
   window.close();
 });
 
