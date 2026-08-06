@@ -18,7 +18,7 @@
   /* The board is the same board either way, so every colour painted on it stays
      fixed: recolouring it per theme would only make the pieces and the arrows
      drawn over it wrong half the time. */
-  --square-light:#EBECD0; --square-dark:#739552; --square-marked:#EB6150;
+  --square-light:#EBECD0; --square-dark:#739552; --square-marked:#5CB3E6;
   --cue:#8FBF52;
   /* Your own marks, in a hue no engine arrow uses. Its canvas twin lives in
      ARROW_COLORS in arrows.js with the other five, so change both. */

@@ -10,15 +10,18 @@ import { FILES, pieceAt } from "@/lib/chess/read";
    the L-shaped knight arrows. Redraws whole on every relevant change; the
    canvas is cheap and the code stays the original's. */
 
+/* Two colours carry the whole convention: green is the move, red is
+   aggression — an attack, or the brighter red of check. The engine also ships
+   "defends" arrows and "controls" rings; they are deliberately not drawn, so
+   the board says one thing per move. */
 const ARROW_COLORS: Record<string, string> = {
   atk: "rgba(210,75,60,0.82)",
-  def: "rgba(78,138,214,0.80)",
   move: "rgba(124,163,90,0.72)",
   chk: "rgba(234,59,51,0.92)",
-  ctrl: "rgba(224,180,74,0.85)",
   mine: "rgba(168,116,208,0.88)", // --mine in tokens.css; change both
   live: "rgba(168,116,208,0.45)", // the same mark, still being dragged out
 };
+const DRAWN_KINDS = new Set(["move", "atk", "chk"]);
 const REJECTED_COLORS = {
   illegal: "rgba(204,106,98,0.85)",
   wrong: "rgba(221,169,74,0.85)",
@@ -76,14 +79,10 @@ export default function ArrowLayer({
       }
 
       if (showArrows) {
-        // control rings first (under the lines)
-        arrows.filter((a) => a.k === "ctrl").forEach((a) => {
-          drawRing(ctx, a.t, ARROW_COLORS.ctrl, square, flipped, [square * 0.14, square * 0.1]);
-        });
-        // then the arrows, move first (so attack/check sit on top)
-        const order: Record<string, number> = { move: 0, def: 1, atk: 2, chk: 3 };
+        // move first, so attack/check sit on top
+        const order: Record<string, number> = { move: 0, atk: 1, chk: 2 };
         arrows
-          .filter((a) => a.k !== "ctrl")
+          .filter((a) => DRAWN_KINDS.has(a.k))
           .sort((a, b) => (order[a.k] || 0) - (order[b.k] || 0))
           .forEach((a) => {
             const width = a.k === "chk" ? square * 0.16 : a.k === "move" ? square * 0.1 : square * 0.13;
@@ -129,20 +128,6 @@ function squareGrid(name: string, flipped: boolean) {
 }
 function gridCenter(cr: { col: number; row: number }, size: number) {
   return { x: (cr.col + 0.5) * size, y: (cr.row + 0.5) * size };
-}
-
-function drawRing(
-  ctx: CanvasRenderingContext2D, sq: string, color: string, square: number,
-  flipped: boolean, dash?: number[]
-) {
-  const c = gridCenter(squareGrid(sq, flipped), square);
-  ctx.beginPath();
-  ctx.arc(c.x, c.y, square * 0.34, 0, Math.PI * 2);
-  ctx.lineWidth = Math.max(2, square * 0.05);
-  ctx.strokeStyle = color;
-  ctx.setLineDash(dash || []);
-  ctx.stroke();
-  ctx.setLineDash([]);
 }
 
 function arrowHead(

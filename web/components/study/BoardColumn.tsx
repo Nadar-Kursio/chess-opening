@@ -152,8 +152,6 @@ export default function BoardColumn({
               <span><i className="move"></i>the move</span>
               <span><i className="attack"></i>attacks</span>
               <span><i className="check"></i>check</span>
-              <span><i className="defend"></i>defends</span>
-              <span><i className="control"></i>controls a key square</span>
             </>
           ) : null}
           {showMine ? <span><i className="mine"></i>your note</span> : null}
