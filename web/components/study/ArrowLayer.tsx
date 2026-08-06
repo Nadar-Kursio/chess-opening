@@ -42,11 +42,13 @@ export default function ArrowLayer({
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
-  /* An arrow bends into an L only for a knight's move BY a knight. The played
-     move's arrow checks the destination — its knight has already arrived —
-     while every other arrow leaves from a square its piece still stands on.
-     An arrow out of an empty square is somebody's idea, not a path: straight. */
+  /* When an arrow may bend into the knight's L. The engine's arrows bend only
+     for an actual knight — the played move checks its destination, where the
+     knight has already arrived. A DRAWN arrow bends for any piece making the
+     jump: the author is saying "this piece goes there", whatever it is. Only
+     an arrow out of an empty square is pure idea, and stays straight. */
   const knightAt = (sq: string) => pieceAt(fen, sq).toLowerCase() === "n";
+  const pieceOn = (sq: string) => pieceAt(fen, sq) !== "";
 
   useEffect(() => {
     const draw = () => {
@@ -71,7 +73,7 @@ export default function ArrowLayer({
       if (rejected) {
         drawArrowBetween(ctx, rejected.from, rejected.to,
           REJECTED_COLORS[rejected.kind], square * 0.11, square, flipped,
-          knightAt(rejected.from));
+          pieceOn(rejected.from));
       }
 
       if (showArrows) {
@@ -99,14 +101,14 @@ export default function ArrowLayer({
           (mine.spots || []).forEach((sq) => drawRing(ctx, sq, ARROW_COLORS.mine, square, flipped));
           (mine.arrows || []).forEach((a) => {
             drawArrowBetween(ctx, a.f, a.t, ARROW_COLORS.mine, square * 0.12, square, flipped,
-              knightAt(a.f));
+              pieceOn(a.f));
           });
         }
         /* The mark being made: a rubber band under the finger, and the tail of
            a two-tap arrow waiting for its second square. */
         if (drawing && drawing.to !== drawing.from) {
           drawArrowBetween(ctx, drawing.from, drawing.to, ARROW_COLORS.live,
-            square * 0.12, square, flipped, knightAt(drawing.from));
+            square * 0.12, square, flipped, pieceOn(drawing.from));
         } else if (drawing) {
           drawRing(ctx, drawing.from, ARROW_COLORS.live, square, flipped);
         }
