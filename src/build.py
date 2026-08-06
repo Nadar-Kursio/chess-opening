@@ -1,24 +1,17 @@
-"""Build the course: validate every line, generate move intel, emit the app.
+"""Compile the course: validate every line, generate move intel, emit the JSON.
 
 Run from the repo root:
 
-    python3 src/build.py            write docs/
-    python3 src/build.py --check    fail if docs/ is stale, write nothing
-    python3 src/build.py --serve    preview on localhost, write nothing
-    python3 src/build.py --emit     write web/content/ for the app under web/
+    python3 src/build.py --emit     validate everything, write web/content/
 
 Every move in every line is replayed on a real board. An illegal move fails the
-build loudly, naming the opening, line and ply.
+build loudly, naming the opening, line and ply. The site under web/ consumes
+what this writes; nothing else does.
 """
-import contextlib
-import http.server
-import io
 import json
 import os
 import re
 import shutil
-import sys
-import time
 from html import escape
 
 try:
@@ -48,28 +41,15 @@ from engine.intel import move_data
 from engine.notes import parse_notes
 
 SRC = os.path.dirname(os.path.abspath(__file__))
-APP = os.path.join(SRC, "app")
 NOTES = os.path.join(SRC, "content", "notes")
 EVALS = os.path.join(SRC, "content", "evals")
-DOCS = os.path.join(os.path.dirname(SRC), "docs")
+PRIMER = os.path.join(SRC, "content", "primer.html")
 WEB_CONTENT = os.path.join(os.path.dirname(SRC), "web", "content")
 
 # The openings the app under web/ ships. --emit writes only these; validation
 # still covers the whole catalogue, so an opening joins the new site by giving
 # its lines slugs and adding its id here — nothing else changes.
 PORTED = ["ruylopez", "scholarsmate", "friedliver"]
-
-# Concatenation order. CSS cascades and the scripts share a top-level scope, so
-# both are order-dependent: responsive.css must land last, boot.js must run last.
-# HEAD_SCRIPTS go in <head> ahead of the styles, which is the point of them:
-# theme.js has to set the theme before the first paint, not after it.
-HEAD_SCRIPTS = ["shim", "theme"]
-STYLES = ["tokens", "base", "controls", "shell", "page", "board", "notation",
-          "record", "coach", "eval", "notes", "deviation", "study", "strategy",
-          "path", "structures", "primer", "progress", "responsive"]
-SCRIPTS = ["state", "store", "appbar", "nav", "eval", "board", "arrows", "move",
-           "drill", "deviation", "notepad", "plan", "structure", "render",
-           "primer", "progress", "boot"]
 
 OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
                 "is the whole reason opening theory exists.")
@@ -630,7 +610,7 @@ def build_openings(games, evals):
         # Every error is printed before stopping, so one run shows an author every
         # problem rather than one per rebuild. Stopping matters: build_line breaks
         # out of a bad line, so continuing would write a silently truncated line
-        # into docs/ that --check would then report as up to date.
+        # out as though it were the whole of it.
         print("=== CONTENT ERRORS ===")
         for e in errors:
             print(" ", e)
@@ -743,90 +723,6 @@ def build_structures(openings, errors):
     return out
 
 
-def read(*parts):
-    with open(os.path.join(APP, *parts), encoding="utf-8") as f:
-        return f.read()
-
-
-def assemble(data_str, structures_str, games_str, engine_str):
-    """Inline every asset into one self-contained page.
-
-    Plain concatenation, deliberately: the output has to keep working from a
-    file:// URL with no server, which rules out ES modules and any external
-    reference.
-    """
-    page = read("page.html")
-    parts = {
-        "__HEAD_SCRIPTS__": "\n".join(read("scripts", f"{n}.js") for n in HEAD_SCRIPTS),
-        "__STYLES__": "\n".join(read("styles", f"{n}.css") for n in STYLES),
-        "__PRIMER__": read("primer.html"),
-        "__SCRIPTS__": "\n".join(read("scripts", f"{n}.js") for n in SCRIPTS),
-    }
-    for placeholder, text in parts.items():
-        if placeholder not in page:
-            raise SystemExit(f"page.html is missing the {placeholder} placeholder")
-        page = page.replace(placeholder, text)
-
-    # These three live inside state.js, so they only exist in the page after the
-    # loop above has inlined the scripts. __DATA__ goes last: it is by far the
-    # largest string and there is no reason to rescan it.
-    for placeholder, text in (("__SECTIONS__", json.dumps(SECTIONS)),
-                              ("__STRUCTURES__", structures_str),
-                              ("__GAMES__", games_str),
-                              ("__ENGINE__", engine_str),
-                              ("__DATA__", data_str)):
-        if placeholder not in page:
-            raise SystemExit(f"assembled page is missing the {placeholder} placeholder")
-        page = page.replace(placeholder, text)
-    return page
-
-
-def outputs():
-    """Everything the build produces, as {filename: text}.
-
-    .nojekyll turns off the Jekyll pass GitHub Pages runs by default. This page
-    is already built; letting Jekyll near it only risks it rewriting or dropping
-    files, and skipping it makes deploys faster.
-    """
-    games = []
-    errors = []
-    evals = EvalIndex(errors)
-    openings = build_openings(games, evals)
-    structures = build_structures(openings, errors)
-    if errors:
-        print("=== CONTENT ERRORS ===")
-        for e in errors:
-            print(" ", e)
-        raise SystemExit(f"{len(errors)} content error(s) — nothing written")
-
-    compact = lambda o: json.dumps(o, separators=(",", ":"))
-    return {
-        "chess-opening-course.html": assemble(compact(openings), compact(structures),
-                                              compact(games),
-                                              compact({"name": evals.engine,
-                                                       "depth": evals.depth,
-                                                       "generated": evals.generated})),
-        "index.html": read("index.html"),
-        ".nojekyll": "",
-    }
-
-
-def check():
-    """Fail if docs/ no longer matches the sources, without writing anything."""
-    stale = []
-    for name, text in outputs().items():
-        try:
-            with open(os.path.join(DOCS, name), encoding="utf-8") as f:
-                current = f.read()
-        except FileNotFoundError:
-            current = None
-        if current != text:
-            stale.append(name)
-    if stale:
-        raise SystemExit("docs/ is stale, run: python3 src/build.py\n  " + "\n  ".join(stale))
-    print("docs/ is up to date.")
-
-
 def feedback_level(line):
     """How sharp the drill's feedback can be for this built line, 0..2.
 
@@ -845,9 +741,8 @@ def feedback_level(line):
 def emit_files():
     """Everything --emit produces, as {relative path: text}.
 
-    The JSON the app under web/ reads at build time. Every record is exactly the
-    object the single-file page inlines — one build, a second doorway — filtered
-    to PORTED, so the new site ships an opening only once its lines have slugs.
+    The JSON the app under web/ reads at build time, filtered to PORTED, so
+    the site ships an opening only once its lines have slugs.
 
     catalog.json exists so the nav, home page and sitemap never load a full
     opening: it carries the summaries, the section list and the engine meta, and
@@ -895,10 +790,11 @@ def emit_files():
     }
 
     compact = lambda o: json.dumps(o, separators=(",", ":"))
+    with open(PRIMER, encoding="utf-8") as f:
+        primer = f.read()
     files = {"catalog.json": compact(catalog),
-             # The front page's prose, single-sourced from src/app/primer.html
-             # so the two sites cannot drift while both are shipping.
-             "primer.html": read("primer.html")}
+             # The front page's prose, authored as HTML in src/content/.
+             "primer.html": primer}
     for op in ported:
         files[f"openings/{op['id']}.json"] = compact(op)
     # Structures are shared reference content, so all of them ship — but the
@@ -929,147 +825,8 @@ def emit(outdir):
         print(f"wrote {os.path.join('web', 'content', name)}", len(text) // 1024, "KB")
 
 
-CONTENT_TYPES = {".html": "text/html; charset=utf-8"}
-
-
-def reload_content():
-    """Drop the cached content modules so an edit is picked up on the next build.
-
-    import_module hands back whatever is already in sys.modules, so without this
-    the server would serve the very first build forever while you edited an
-    opening and wondered why nothing moved. The styles and scripts were never
-    affected -- read() goes to disk every time -- which is exactly what makes
-    this the kind of bug you find late.
-
-    Only used by --serve. A one-shot build imports everything once anyway.
-    """
-    global COMMON, SECTIONS, STRUCTURES, load
-    for name in [n for n in sys.modules if n == "content" or n.startswith("content.")]:
-        del sys.modules[name]
-    from content.common import COMMON
-    from content.openings import load
-    from content.sections import SECTIONS
-    from content.structures import STRUCTURES
-
-
-def serve(host, port):
-    """Rebuild on every request and serve the result from memory.
-
-    Nothing is written to docs/. A preview should not leave the repo half-built
-    or produce a diff you did not ask for, and building per request means the
-    page is always the one the sources currently describe -- the stale-build
-    mistake that --check exists to catch in CI cannot happen here at all.
-
-    A build is well under a second, which is what makes this affordable: edit a
-    module, refresh, see it.
-    """
-    class Handler(http.server.BaseHTTPRequestHandler):
-        def do_GET(self):
-            self.respond(send_body=True)
-
-        def do_HEAD(self):
-            self.respond(send_body=False)
-
-        def respond(self, send_body):
-            name = self.path.split("?")[0].lstrip("/") or "index.html"
-            started = time.time()
-            chatter = io.StringIO()
-            try:
-                # The build narrates to stdout on every run, which per request is
-                # just noise -- so it is held and only shown when it explains a
-                # failure.
-                with contextlib.redirect_stdout(chatter):
-                    reload_content()
-                    files = outputs()
-            except SystemExit as e:
-                self.fail(f"{chatter.getvalue()}\n{e}")
-                return
-            except Exception as e:
-                self.fail(f"{chatter.getvalue()}\n{type(e).__name__}: {e}")
-                return
-
-            if name not in files:
-                self.send_error(404, f"the build produces no file called {name!r}")
-                return
-
-            body = files[name].encode("utf-8")
-            ms = int((time.time() - started) * 1000)
-            print(f"  200  {name}  {len(body) // 1024} KB  rebuilt in {ms} ms", flush=True)
-            self.send_response(200)
-            self.send_header("Content-Type",
-                             CONTENT_TYPES.get(os.path.splitext(name)[1], "text/plain"))
-            self.send_header("Content-Length", str(len(body)))
-            # The file changes on every build, so a cached copy is always wrong.
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            if send_body:
-                self.wfile.write(body)
-
-        def fail(self, message):
-            message = message.strip()
-            print("\n=== BUILD FAILED ===", flush=True)
-            print(message, flush=True)
-            body = (f"<!doctype html><meta charset=utf-8>"
-                    f"<title>Build failed</title>"
-                    f"<body style='background:#191715;color:#EFEAE2;font:14px/1.6 ui-monospace,monospace;padding:32px'>"
-                    f"<h1 style='color:#CC6A62;font-size:18px'>Build failed</h1>"
-                    f"<pre style='white-space:pre-wrap'>{escape(message)}</pre>"
-                    f"<p style='color:#A29A8F'>Fix it and refresh.</p>").encode("utf-8")
-            self.send_response(500)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(body)
-
-        def log_message(self, *args):
-            pass        # the 200 line above already says everything useful
-
-    try:
-        server = http.server.HTTPServer((host, port), Handler)
-    except OSError as e:
-        raise SystemExit(f"cannot listen on {host}:{port} — {e}\n"
-                         f"  something else is on that port. Either stop it:\n"
-                         f"    kill $(lsof -ti :{port})\n"
-                         f"  or pick another:\n"
-                         f"    python3 src/build.py --serve --port {port + 1}")
-    print(f"serving http://{host}:{port}/  — rebuilds on every request, writes nothing",
-          flush=True)
-    if host != "127.0.0.1":
-        print(f"reachable from other machines on {host}; stop with ctrl-c", flush=True)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nstopped", flush=True)
-
-
-def arg(name, default):
-    """Read `--name value` out of argv, in keeping with the flags above it."""
-    if name in sys.argv:
-        i = sys.argv.index(name)
-        if i + 1 < len(sys.argv):
-            return sys.argv[i + 1]
-        raise SystemExit(f"{name} needs a value")
-    return default
-
-
 def main():
-    if "--check" in sys.argv:
-        check()
-        return
-    if "--emit" in sys.argv:
-        emit(WEB_CONTENT)
-        return
-    if "--serve" in sys.argv:
-        # Loopback unless asked otherwise: exposing the port to the network
-        # should be something you typed, not something you got.
-        serve(arg("--host", "127.0.0.1"), int(arg("--port", "8000")))
-        return
-    os.makedirs(DOCS, exist_ok=True)
-    for name, text in outputs().items():
-        with open(os.path.join(DOCS, name), "w", encoding="utf-8") as f:
-            f.write(text)
-        print(f"wrote docs/{name}", len(text) // 1024, "KB")
+    emit(WEB_CONTENT)
 
 
 if __name__ == "__main__":
