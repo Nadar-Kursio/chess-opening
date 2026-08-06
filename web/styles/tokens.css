@@ -23,6 +23,12 @@
   /* Your own marks, in a hue no engine arrow uses. Its canvas twin lives in
      ARROW_COLORS in arrows.js with the other five, so change both. */
   --mine:#A874D0;
+  /* The move-mark discs worn on the board, chess.com's hues by mark. Painted
+     on the fixed board, so fixed like every colour above; their text-grade
+     twins are the --sev-* aliases below. */
+  --mark-brilliant:#1FA98D; --mark-great:#4E8AC0;
+  --mark-inaccuracy:#D9A43B; --mark-blunder:#CC5A4E;
+  --on-mark:#FFFDF8;
 
   --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   --font-body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -74,8 +80,9 @@
 
   /* ---- stacking ---- */
   /* Board cues sit under the pieces so a piece is never hidden by the cue
-     pointing at it; arrows sit over both. */
-  --z-cue:1; --z-piece:2; --z-coord:3; --z-arrows:5;
+     pointing at it; arrows sit over both. The mark disc rides its piece's
+     corner, so it clears the piece and stays under the arrows. */
+  --z-cue:1; --z-piece:2; --z-coord:3; --z-mark:4; --z-arrows:5;
   --z-sticky:20; --z-appbar:40; --z-scrim:50; --z-drawer:60;
 }
 
@@ -96,6 +103,8 @@
 
   --warn:#DDA94A; --danger:#D5837C;
   --info:#6E9CD5; --neutral:#929AA5;
+  /* The brilliant-move teal, in text grade: 6.1:1 on --layer-3. */
+  --brilliant:#5BC4A8;
   /* Lifted off --mine, which is a board colour and too dark to read as text. */
   --mine-text:#C79BE8;
 
@@ -117,6 +126,7 @@
 
   --warn:#855E10; --danger:#B23A31;
   --info:#2D65AE; --neutral:#5D6673;
+  --brilliant:#0C7260;
   --mine-text:#6B3A96;
 
   --shadow:0 1px 0 rgba(255,255,255,.9), 0 12px 30px -20px rgba(58,48,33,.45);
@@ -131,4 +141,9 @@
   --sev-blunder:var(--danger);
   --sev-inaccuracy:var(--warn);
   --sev-playable:var(--info);
+  /* The derived move marks speak the same vocabulary where they overlap it.
+     Great borrows the info blue — the glyph and the word do the telling, never
+     the colour alone — and brilliant is the one hue the palette had no word for. */
+  --sev-great:var(--info);
+  --sev-brilliant:var(--brilliant);
 }

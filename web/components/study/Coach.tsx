@@ -2,7 +2,7 @@
 
 import type { Ply } from "@/lib/content/types";
 import { tacticsHTML } from "@/lib/chess/read";
-import { EvalMove } from "./Eval";
+import { EvalMove, MarkChip } from "./Eval";
 
 /* The read-mode coach card and its companions, from render.js. Authored prose
    ships as (trusted, build-escaped) HTML, so it renders via
@@ -30,6 +30,7 @@ export function CoachNote({ ply, index, prev }: { ply: Ply; index: number; prev:
     <article className="coach">
       <header className="coach__head">
         <span className="coach__move">{index === 0 ? "Start" : ply.num}</span>
+        {ply.mark ? <MarkChip mark={ply.mark} /> : null}
         <span className="label">
           {index === 0 ? "Before the first move" : ply.turn === "w" ? "White to have moved" : "Black to have moved"}
         </span>

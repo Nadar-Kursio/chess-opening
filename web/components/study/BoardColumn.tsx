@@ -79,6 +79,7 @@ export default function BoardColumn({
             fen={ply.fen}
             from={ply.from}
             to={ply.to}
+            mark={ply.mark}
             checkSide={ply.check ? (ply.turn === "w" ? "b" : "w") : null}
             flipped={flipped}
             live={live}

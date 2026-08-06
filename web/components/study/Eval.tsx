@@ -1,8 +1,8 @@
 "use client";
 
-import type { Ply } from "@/lib/content/types";
+import type { Mark, Ply } from "@/lib/content/types";
 import {
-  EVAL_WORTH_SAYING, evalOf, evalSeverity, evalShare, evalSwing, evalText, evalWords,
+  EVAL_WORTH_SAYING, MARKS, evalOf, evalSeverity, evalShare, evalSwing, evalText, evalWords,
 } from "@/lib/study/eval";
 
 /* The bar under the board and the swing row in the coach card, ported from
@@ -28,6 +28,26 @@ export function EvalBar({ ply, depth }: { ply: Ply | null; depth: number | null 
       </span>
       <b className="evalbar__score">{text}</b>
     </div>
+  );
+}
+
+/* The mark's glyph alone, for the move tape and the board — decoration beside
+   a move whose accessible name already carries the word. */
+export function MarkBadge({ mark }: { mark: Mark }) {
+  return (
+    <i className={`movemark movemark--${mark}`} aria-hidden="true">{MARKS[mark].glyph}</i>
+  );
+}
+
+/* Glyph and word together, the same shape SeverityChip gives an authored
+   deviation — a derived mark is never carried by colour alone either. */
+export function MarkChip({ mark }: { mark: Mark }) {
+  const m = MARKS[mark];
+  return (
+    <span className={`severity severity--${mark}`}>
+      <b className="severity__mark" aria-hidden="true">{m.glyph}</b>
+      <span className="severity__word">{m.word}</span>
+    </span>
   );
 }
 

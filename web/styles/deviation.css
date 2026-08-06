@@ -12,6 +12,10 @@
 .severity--blunder{color:var(--sev-blunder)}
 .severity--inaccuracy{color:var(--sev-inaccuracy)}
 .severity--playable{color:var(--sev-playable)}
+/* The derived move marks wear the same chip -- !! and ! are the two glyphs
+   the authored vocabulary never needed. */
+.severity--brilliant{color:var(--sev-brilliant)}
+.severity--great{color:var(--sev-great)}
 
 /* ---------- the picker ---------- */
 .deviation-picker{

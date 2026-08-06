@@ -47,3 +47,35 @@
 .evalmove--inaccuracy{border-left-color:var(--sev-inaccuracy)}
 .evalmove--blunder{border-left-color:var(--sev-blunder)}
 .evalmove b{font-family:var(--font-mono)}
+
+/* ---------- the move marks ---------- */
+/* The glyph beside a move on the tape. An <i> for the annotator's voice, not
+   italics; the word it abbreviates rides the button's aria-label, and the
+   coach card spells it out for the move on screen. */
+.movemark{
+  font-family:var(--font-mono);font-style:normal;font-weight:700;
+  margin-left:4px;
+}
+.movemark--brilliant{color:var(--sev-brilliant)}
+.movemark--great{color:var(--sev-great)}
+.movemark--inaccuracy{color:var(--sev-inaccuracy)}
+.movemark--blunder{color:var(--sev-blunder)}
+/* On the current move's accent fill, the mark keeps the button's ink — a
+   coloured glyph on the accent would fail contrast in both themes. */
+.move.current .movemark{color:inherit}
+
+/* The disc on the square the move landed on, chess.com's badge. Sized in em
+   because the board's font-size IS the square: the glyph is decoration (the
+   tape and the coach card carry the word), so the fixed board palette is fine
+   for it. */
+.sqmark{
+  position:absolute;top:3%;right:3%;z-index:var(--z-mark);
+  min-width:34%;height:34%;padding:0 .04em;border-radius:var(--radius-pill);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-weight:700;font-size:.3em;
+  color:var(--on-mark);
+}
+.sqmark--brilliant{background:var(--mark-brilliant)}
+.sqmark--great{background:var(--mark-great)}
+.sqmark--inaccuracy{background:var(--mark-inaccuracy)}
+.sqmark--blunder{background:var(--mark-blunder)}

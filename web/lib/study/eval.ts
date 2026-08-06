@@ -1,4 +1,4 @@
-import type { Ply, Severity } from "@/lib/content/types";
+import type { Mark, Ply, Severity } from "@/lib/content/types";
 
 /* The engine's score, ported 1:1 from src/app/scripts/eval.js. Nothing is
    computed in the browser: position-evals.py searched every position with
@@ -9,9 +9,17 @@ export function evalOf(ply: Ply | null | undefined): Ply | null {
   return ply && ply.ev !== undefined ? ply : null;
 }
 
+/* Mate 0 is checkmate ON the board, and its distance carries no sign — the
+   winner is read off the centipawn score, which the generator saturates to
+   ±10000 at a delivered mate. */
+function mateSign(ply: Ply): number {
+  return ply.mate ? Math.sign(ply.mate) : (ply.ev ?? 0) >= 0 ? 1 : -1;
+}
+
 /* Centipawns from White's point of view — which side is winning is a fact about
    the position, not about who is reading it. */
 export function evalText(ply: Ply): string {
+  if (ply.mate === 0) return "#";
   if (ply.mate !== undefined) return (ply.mate > 0 ? "M" : "−M") + Math.abs(ply.mate);
   const ev = ply.ev ?? 0;
   return (ev > 0 ? "+" : ev < 0 ? "−" : "") + Math.abs(ev / 100).toFixed(2);
@@ -21,7 +29,7 @@ export function evalText(ply: Ply): string {
    gap between +8 and +12 is not, which is the right way round for something
    read at a glance. */
 export function evalShare(ply: Ply): number {
-  if (ply.mate !== undefined) return ply.mate > 0 ? 100 : 0;
+  if (ply.mate !== undefined) return mateSign(ply) > 0 ? 100 : 0;
   const ev = ply.ev ?? 0;
   return 100 / (1 + Math.exp(-0.00368208 * Math.max(-1500, Math.min(1500, ev))));
 }
@@ -30,7 +38,9 @@ export function evalShare(ply: Ply): number {
    not already know. */
 export function evalWords(ply: Ply): string {
   if (ply.mate !== undefined) {
-    return `mate in ${Math.abs(ply.mate)} for ${ply.mate > 0 ? "White" : "Black"}`;
+    const who = mateSign(ply) > 0 ? "White" : "Black";
+    if (ply.mate === 0) return `checkmate for ${who}`;
+    return `mate in ${Math.abs(ply.mate)} for ${who}`;
   }
   const ev = ply.ev ?? 0;
   const cp = Math.abs(ev);
@@ -45,7 +55,7 @@ export function evalWords(ply: Ply): string {
 /* A score as one comparable number, so a mate sorts above every centipawn eval. */
 export function evalScalar(ply: Ply): number {
   return ply.mate !== undefined
-    ? Math.sign(ply.mate) * (10000 - Math.abs(ply.mate))
+    ? mateSign(ply) * (10000 - Math.abs(ply.mate))
     : ply.ev ?? 0;
 }
 
@@ -64,3 +74,13 @@ export function evalSeverity(cost: number): Severity {
    floor, so the sentence appears exactly when the same bands would give the
    move a label. */
 export const EVAL_WORTH_SAYING = 50;
+
+/* The move marks engine/marks.py derives, chess.com's iconography in the
+   glyphs a player already reads. The word is never dropped: it rides the
+   button's label on the tape and stands beside the glyph in the coach card. */
+export const MARKS: Record<Mark, { glyph: string; word: string }> = {
+  brilliant: { glyph: "!!", word: "Brilliant" },
+  great: { glyph: "!", word: "Great move" },
+  inaccuracy: { glyph: "?!", word: "Inaccuracy" },
+  blunder: { glyph: "??", word: "Blunder" },
+};

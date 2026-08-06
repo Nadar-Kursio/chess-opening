@@ -3,8 +3,9 @@
 import Link from "next/link";
 import type { Branch, Catalog, Line, Severity } from "@/lib/content/types";
 import type { Deviation } from "@/lib/study/useStudy";
+import { MARKS } from "@/lib/study/eval";
 import { TacticsLine } from "./Coach";
-import { EvalMove } from "./Eval";
+import { EvalMove, MarkBadge, MarkChip } from "./Eval";
 
 /* "They played something else" — the picker and the panel, from deviation.js.
    Three buckets, and only one of them is a mistake; the word is what makes the
@@ -132,13 +133,18 @@ export function DevPanel({
               return (
                 <span key={i}>
                   {num}
-                  <button className={cls} onClick={() => onAt(i)}>{q.san}</button>
+                  <button className={cls} onClick={() => onAt(i)}
+                    aria-label={q.mark ? `${q.san} — ${MARKS[q.mark].word}` : undefined}>
+                    {q.san}
+                    {q.mark ? <MarkBadge mark={q.mark} /> : null}
+                  </button>
                 </span>
               );
             })}
           </div>
           <header className="coach__head coach__head--plain">
             <span className="coach__move">{ply.num}</span>
+            {ply.mark ? <MarkChip mark={ply.mark} /> : null}
             <span className="label">{ply.turn === "w" ? "White to have moved" : "Black to have moved"}</span>
           </header>
           {ply.tactics ? <TacticsLine tactics={ply.tactics} /> : null}

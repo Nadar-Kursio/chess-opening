@@ -39,6 +39,7 @@ from content.structures import STRUCTURES
 from engine.board import board_array
 from engine.intel import move_data
 from engine.lesson import build_lesson
+from engine.marks import classify, sacrifice
 from engine.notes import parse_notes
 
 SRC = os.path.dirname(os.path.abspath(__file__))
@@ -243,7 +244,7 @@ def build_branches(op_id, where, board, entries, ply, errors, notes, evals):
             errors.append(f"{where} branch '{san}': {e}")
             continue
 
-        plies, num = [], ply
+        plies, sacs, num = [], [], ply
         for i, step in enumerate([san] + br.get("line", "").split()):
             try:
                 played = work.parse_san(step)
@@ -255,6 +256,7 @@ def build_branches(op_id, where, board, entries, ply, errors, notes, evals):
                 errors.append(f"{where} branch '{san}' / continuation {i} '{step}': {claim}")
             mover = "w" if work.turn == chess.WHITE else "b"
             arrows, tactics = move_data(work, played)
+            sacs.append(sacrifice(work, played))
             work.push(played)
             plies.append({
                 "san": step, "fen": board_array(work),
@@ -268,6 +270,7 @@ def build_branches(op_id, where, board, entries, ply, errors, notes, evals):
             evals.attach(op_id, work, plies[-1], f"{where} branch '{san}' / {step}")
             num += 1
 
+        classify(plies, sacs, before=evals.context(op_id, board))
         record = {"san": san, "sev": br["severity"], "why": br["why"], "plies": plies}
         for key in ("tier", "name", "see"):
             if br.get(key):
@@ -352,6 +355,24 @@ class EvalIndex:
         ply["ev"] = score["v"]
         if score.get("n") is not None:
             ply["mate"] = score["n"]
+
+    def context(self, op_id, board):
+        """This position's score as a bare pseudo-ply, or None.
+
+        For classifying a branch: its first move is played FROM a line position
+        whose ply record is not at hand, and the move's cost needs the number
+        that was there. Same coverage gate as attach, so a transposition into a
+        scored opening cannot conjure marks for one that has no file.
+        """
+        if op_id not in self.covered:
+            return None
+        score = self.scores.get(board.epd())
+        if score is None:
+            return None
+        out = {"ev": score["v"]}
+        if score.get("n") is not None:
+            out["mate"] = score["n"]
+        return out
 
     def report(self):
         if not self.scores:
@@ -519,6 +540,7 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
         "san": "", "fen": board_array(board), "from": None, "to": None,
         "note": OPENING_NOTE, "num": "", "turn": "w",
     }]
+    sacs = [False]
     where = f"{op_id} / line {index} '{line['name']}'"
     if evals is not None:
         evals.attach(op_id, board, plies[0], f"{where} / the starting position")
@@ -543,6 +565,7 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
             errors.append(f"{op_id} / line {index} '{line['name']}' / ply {i+1} '{san}': {claim}")
         mover = "w" if board.turn == chess.WHITE else "b"
         arrows, tactics = move_data(board, move)   # board is the position BEFORE the move
+        sacs.append(sacrifice(board, move))
         board.push(move)
 
         ply = i + 1
@@ -563,6 +586,7 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
             evals.attach(op_id, board, plies[-1], f"{where} / ply {ply} {san}")
 
     plies[-1]["legal"] = packed_legal(board)
+    classify(plies, sacs)
 
     if line.get("record"):
         errors.extend(record_errors(f"{op_id} / line {index} '{line['name']}'",
@@ -648,6 +672,7 @@ def build_game(op_id, index, game, errors, evals):
         "san": "", "fen": board_array(board), "from": None, "to": None,
         "note": game.get("note", ""), "num": "", "turn": "w",
     }]
+    sacs = [False]
     where = f"{op_id} / game '{game['id']}'"
     evals.attach(op_id, board, plies[0], f"{where} / the starting position", game["id"])
     for i, san in enumerate(game["moves"].split()):
@@ -660,6 +685,7 @@ def build_game(op_id, index, game, errors, evals):
         if claim:
             errors.append(f"{op_id} / game {index} '{game['id']}' / ply {i + 1} '{san}': {claim}")
         mover = "w" if board.turn == chess.WHITE else "b"
+        sacs.append(sacrifice(board, move))
         board.push(move)
         ply = i + 1
         plies.append({
@@ -671,6 +697,7 @@ def build_game(op_id, index, game, errors, evals):
             "turn": mover, "check": board.is_check(),
         })
         evals.attach(op_id, board, plies[-1], f"{where} / ply {ply} {san}", game["id"])
+    classify(plies, sacs)
     record = {k: game[k] for k in ("id", "name", "tier", "note") if k in game}
     record["op"] = op_id
     record["plies"] = plies
