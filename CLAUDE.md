@@ -3,11 +3,11 @@
 An interactive opening course. Everything under `src/` is source; the build emits
 one self-contained HTML file into `docs/`. See README.md for the layout.
 
-The course is being re-platformed: `web/` holds a Next.js app (static export)
-fed by the same build via `--emit`, currently carrying the openings named in
-`PORTED` in `src/build.py`. It deploys to the `chesslab-next` Pages project;
-chesslab.dev stays on the single-file site until the new app reaches parity.
-The wiki's Architecture page describes the target state.
+The course is re-platformed: chesslab.dev serves the Next.js app under `web/`
+(static export), fed by the same build via `--emit` and currently carrying the
+openings named in `PORTED` in `src/build.py` — the rest return as slugs are
+authored. The single-file build still runs in CI as the rollback path until
+demolition. The wiki's Architecture page describes the setup.
 
 ## Commands
 
