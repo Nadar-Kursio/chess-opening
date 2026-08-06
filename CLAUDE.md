@@ -6,18 +6,14 @@ verification, derivation — and `web/` is the Next.js site (static export) that
 consumes the JSON it emits. The wiki's Architecture page explains the moving
 pieces.
 
-`src/app/` is the retired single-file client. It is frozen: CI keeps it green
-as the rollback path until demolition, but new work happens in `web/`.
-
 ## Commands
 
 `build.py` writes relative to the current directory, so in a worktree you must
 `cd` into it first or you will rebuild `main` instead of your branch.
 
 ```
-.venv/bin/python3 src/build.py --emit           # write web/content/ for the site
-.venv/bin/python3 -m unittest discover tests    # content + emit contract (+ legacy smoke)
-.venv/bin/python3 src/build.py                  # legacy single-file build into docs/
+.venv/bin/python3 src/build.py --emit           # validate everything, write web/content/
+.venv/bin/python3 -m unittest discover tests    # content + emit contract
 ```
 
 The site, from `web/` (after `--emit`):
@@ -29,12 +25,11 @@ npm run build     # static export into web/out/
 npm test          # jsdom smoke driving the exported pages in web/out/
 ```
 
-System `python3` has no `python-chess`; use the venv. The legacy smoke needs
-jsdom at the repo root (`npm install jsdom` once); `node_modules/` is gitignored.
+System `python3` has no `python-chess`; use the venv.
 
 ## Rules
 
-- Generated, never edited, never committed: `docs/`, `web/content/`, `web/out/`.
+- Generated, never edited, never committed: `web/content/`, `web/out/`.
 - Every claim about a position comes from the engine, never from memory —
   severities from `.engine/stockfish`, game scores and win bars (`record`) from
   pgnmentor. The `opening-research` skill has the procedure. The browser is
@@ -64,6 +59,6 @@ jsdom at the repo root (`npm install jsdom` once); `node_modules/` is gitignored
 
 ## Deploying
 
-Push to `main`; CI tests both halves, builds, and ships `web/out` to
+Push to `main`; CI runs the tests, builds, and ships `web/out` to
 https://chesslab.dev. Every pull request gets the whole site at
 `https://<branch>.chesslab.pages.dev`, posted as a comment on the PR.

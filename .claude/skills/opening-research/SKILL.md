@@ -295,38 +295,19 @@ Five failure modes worth naming, all of them seen in practice:
   reader plays it from the wrong position. The build never parses prose;
   `verify-prose.py` does.
 
-## 4. Rebuild and check the page
+## 4. Rebuild and check the site
 
 ```bash
-.venv/bin/python3 -m unittest discover tests
-.venv/bin/python3 src/build.py
-.venv/bin/python3 src/build.py --check                    # docs/ matches the sources
-npm i -g jsdom                                            # once per box
-node .claude/skills/opening-research/scripts/smoke.js [opening-id …]
+.venv/bin/python3 -m unittest discover tests             # content + emit contract
+.venv/bin/python3 src/build.py --emit                    # validate + write web/content/
+cd web && npm run build && npm test                      # export the site, smoke it in jsdom
 ```
 
-The repo ships no `package.json` on purpose — the page has to work from a
-`file://` URL — so `smoke.js` looks jsdom up globally. If the global install is
-not writable, `npm i jsdom` anywhere and point `NODE_PATH` at that
-`node_modules` instead.
-
-**Read the build's own report, not just its exit code.** `N moves, M without
-commentary` must end in `0`: a ply with no note and no `common.py` entry renders
-the literal string `null` on the page, and the build only warns. Same for
-`structure 'x': no line points here yet` — that structure is shipping as
-reference material nobody can reach from a line.
-
-**If you may not write `docs/`** — someone else is mid-rebuild, or you are one of
-several agents in one checkout — `--check` still runs the whole validating build
-in memory and prints its report; the closing `docs/ is stale` line is then
-expected and not yours to fix. Smoke-test against a served copy instead of the
-committed page:
-
-```bash
-.venv/bin/python3 src/build.py --serve --port 8611 &     # builds per request, writes nothing
-curl -s http://127.0.0.1:8611/chess-opening-course.html > /tmp/page.html
-PAGE=/tmp/page.html node .claude/skills/opening-research/scripts/smoke.js scotch
-```
+All three must pass. **Read the build's own report, not just its exit code.**
+`N moves, M without commentary` must end in `0`: a ply with no note and no
+`common.py` entry renders nothing where the coach card should be, and the build
+only warns. Same for `structure 'x': no line points here yet` — that structure
+is shipping as reference material nobody can reach from a line.
 
 These stop the build with nothing written, and are worth knowing before you hit
 them:
@@ -351,18 +332,17 @@ inherits line 0's** (`with_deep_line` in `src/build.py`). A deep dive that ends
 somewhere else therefore ships line 0's plan card describing a position fifteen
 plies back. Give it its own.
 
-Authored prose is interpolated into HTML inside an inline `<script>` with no
-escaping, so write `&amp;` and `&lt;` in text, and never let the sequence
-`</script>` into a string — the build will not notice and the page will be dead.
+Authored prose renders as HTML, so write `&amp;` and `&lt;` in text rather
+than the bare characters.
 
 ## What the page does with the rest
 
-- **`see` is a link.** `brSee` in `src/app/scripts/branch.js` resolves
-  `"opening"`, `"opening#slug"` and `"structure#id"`, matching the slug loosely
-  against line names first and game ids second — so `fourknights#rubinstein`
-  finds the variation and `fourknights#spielmann-rubinstein` finds the game. A
-  slug that matches nothing renders no link at all and `smoke.js` reports it, so
-  a renamed line cannot quietly break a cross-reference.
+- **`see` is a link.** `devTarget` in `web/components/study/Deviation.tsx`
+  resolves `"opening"` and `"opening#slug"`, matching the slug loosely against
+  line names. A slug that matches nothing — or a target the site does not carry
+  yet (an unported opening, a structure, a game) — renders no card at all, so a
+  renamed line cannot quietly break a cross-reference, and nothing links into a
+  404.
 
   Two consequences of "line names first, loosely". `scotch#gambit` in an opening
   with both a Scotch Gambit and a Göring Gambit lands on whichever line comes
@@ -377,12 +357,9 @@ One key still does less than the authoring vocabulary suggests:
   an opening renders at every setting. A `Mastery` line is a label, not a gate,
   so do not write text that treats it as one.
 
-The smoke test opens every deviation panel, every plan card, every game and every
-structure card in jsdom and fails on an empty panel or a console error. **The
-build never parses the JavaScript**, so this is the only thing standing between a
-data shape it does not like and a dead page.
-
-Then `git status` should show `docs/` rebuilt — committing that is the deploy.
+`web/tests/smoke.mjs` drives the exported pages in jsdom and fails on a console
+error or a leaked `undefined`; open the PR's preview link to see the content
+itself. Pushing to `main` is the deploy.
 
 ## Scope of a single pass
 

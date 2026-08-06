@@ -93,9 +93,9 @@ Both must pass. Then, depending on what you touched:
 - **Content**: the verification scripts under
   `.claude/skills/opening-research/scripts/`. Their output is the evidence that
   goes in the pull request body.
-- **Anything under `src/app/scripts/`**: the build concatenates JavaScript without
-  parsing it, so a syntax error ships a dead page and the build still reports
-  success. A green build is not evidence the page works — load it.
+- **Anything under `web/`**: `npm run build && npm test` from `web/` — the
+  artifact smoke drives the exported pages in jsdom, and a green Python build
+  says nothing about the site.
 
 ## 6. Open the pull request
 

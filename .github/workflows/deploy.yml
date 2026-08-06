@@ -32,19 +32,8 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # The build concatenates the app's JavaScript without parsing it, so
-      # tests/test_smoke.py loads the built page in a DOM and drives it. jsdom is
-      # all it needs, the version is pinned, and nothing from node_modules is
-      # committed or published -- only docs/ is uploaded below.
-      - run: npm install --no-save jsdom@30.0.1
-
       - run: python3 -m unittest discover tests
 
-      - run: python3 src/build.py
-
-      # The site under web/, fed by the same validated build via --emit. The
-      # single-file build above still runs as the rollback path: a previous
-      # docs deployment can be restored from the Cloudflare dashboard.
       - run: python3 src/build.py --emit
 
       - run: npm ci --prefix web
