@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import type { Line } from "@/lib/content/types";
+import { MARKS } from "@/lib/study/eval";
+import { MarkBadge } from "./Eval";
 
 /* The move tape and the win bar, from render.js. In drill the tape is the
    answer sheet, so everything ahead of the cursor is masked. */
@@ -48,7 +50,11 @@ export function Scoresheet({
         return (
           <span key={idx}>
             {num}
-            <button className={cls} data-ply={idx} onClick={() => onJump(idx)}>{q.san}</button>
+            <button className={cls} data-ply={idx} onClick={() => onJump(idx)}
+              aria-label={q.mark ? `${q.san} — ${MARKS[q.mark].word}` : undefined}>
+              {q.san}
+              {q.mark ? <MarkBadge mark={q.mark} /> : null}
+            </button>
           </span>
         );
       })}

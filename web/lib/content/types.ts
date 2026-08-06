@@ -6,6 +6,7 @@
 export type Colour = "white" | "black";
 export type Turn = "w" | "b";
 export type Severity = "blunder" | "inaccuracy" | "playable";
+export type Mark = "brilliant" | "great" | "inaccuracy" | "blunder";
 export type Tier = "Foundation" | "Structure" | "Plans" | "Mastery";
 
 export interface Arrow {
@@ -33,6 +34,8 @@ export interface Ply {
   /** Stockfish centipawns (White's view) and mate distance, where scored. */
   ev?: number;
   mate?: number;
+  /** The engine's verdict on the move, derived by engine/marks.py at build. */
+  mark?: Mark;
   /** The author's own note for this position, shipped from src/content/notes/. */
   mine?: { text?: string; arrows?: { f: string; t: string }[]; spots?: string[] };
 }

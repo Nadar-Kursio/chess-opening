@@ -17,6 +17,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 from build import EVALS, PORTED, emit_files
+from engine.marks import MARKS
 from content.openings import ORDER
 from content.sections import SECTIONS
 
@@ -134,6 +135,44 @@ class TestEmit(unittest.TestCase):
                         self.assertIsInstance(p["ev"], int, op["id"])
             if os.path.exists(os.path.join(EVALS, f"{op['id']}.json")):
                 self.assertTrue(scored, f"{op['id']} has an evals file and no ev landed")
+
+    # ---- the move marks: derived from the scores, never beyond them ----
+
+    def _every_plyline(self):
+        """Every (where, plies) the renderer walks — lines, branches, games."""
+        for summary in self.catalog["openings"]:
+            op = self.files[f"openings/{summary['id']}.json"]
+            for line in op["lines"]:
+                yield f"{op['id']} / {line['slug']}", line["plies"]
+            for si, branchset in enumerate(op.get("branchsets", [])):
+                for br in branchset:
+                    yield f"{op['id']} / branchset {si} / {br['san']}", br["plies"]
+        for name in self.files:
+            if name.startswith("games/"):
+                yield name, self.files[name]["plies"]
+
+    def test_marks_speak_the_vocabulary_and_sit_on_scored_plies(self):
+        """A mark is a subtraction between two shipped scores, so it can only
+        exist where both exist — and never on a first ply, which is either the
+        starting position or a branch move that owns an authored severity."""
+        for where, plies in self._every_plyline():
+            for i, p in enumerate(plies):
+                if "mark" not in p:
+                    continue
+                self.assertIn(p["mark"], MARKS, where)
+                self.assertGreater(i, 0, where)
+                self.assertIn("ev", p, where)
+                self.assertIn("ev", plies[i - 1], where)
+
+    def test_the_fried_liver_earns_its_exclamations(self):
+        """The marks the openings are famous for: 6.Nxf7 is the Fried Liver,
+        and 5...Bxf2+ is the Traxler. If either stops reading brilliant, the
+        classifier regressed (or the evals moved — look before retuning)."""
+        op = self.files["openings/friedliver.json"]
+        marks = {p["num"]: p.get("mark")
+                 for line in op["lines"] for p in line["plies"]}
+        self.assertEqual(marks.get("6.Nxf7"), "brilliant")
+        self.assertEqual(marks.get("5...Bxf2+"), "brilliant")
 
     def test_structures_only_point_back_at_ported_openings(self):
         for s in self.files["structures.json"]:

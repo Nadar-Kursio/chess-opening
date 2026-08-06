@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { Mark } from "@/lib/content/types";
 import type { Rejected } from "@/lib/study/useStudy";
 import { FILES, PIECE_GLYPH } from "@/lib/chess/read";
+import { MARKS } from "@/lib/study/eval";
 
 /* Pure HTML/CSS: an 8x8 grid of divs inside a square wrapper, ported from
    board.js. Selection, targets and the refused attempt arrive as props and
@@ -13,6 +15,8 @@ interface Props {
   fen: string;
   from: string | null;
   to: string | null;
+  /** The shown move's engine mark, worn on its arrival square. */
+  mark?: Mark | null;
   checkSide: "w" | "b" | null;
   flipped: boolean;
   /** The board accepts moves: pointer cursors, pick-up and target cues. */
@@ -34,7 +38,7 @@ interface Props {
 }
 
 export default function Board({
-  fen, from, to, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, noted, notedLive, rejected, animate, pieceAt,
+  fen, from, to, mark, checkSide, flipped, live, gridNav, grabSide, selected, cursor, targets, noted, notedLive, rejected, animate, pieceAt,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -129,6 +133,11 @@ export default function Board({
             {row === 7 ? <span className="coord coord--file">{FILES[file]}</span> : null}
             {col === 0 ? <span className="coord coord--rank">{rank + 1}</span> : null}
             {piece}
+            {/* chess.com's badge: the mark rides the square the move landed on.
+                Decoration here — the word lives on the tape and the coach card. */}
+            {mark && name === to ? (
+              <span className={`sqmark sqmark--${mark}`} aria-hidden="true">{MARKS[mark].glyph}</span>
+            ) : null}
           </div>
         );
       })}

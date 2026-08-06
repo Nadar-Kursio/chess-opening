@@ -139,6 +139,36 @@ step("read: the engine's score, on every ply of the line", async () => {
   window.close();
 });
 
+step("read: the move marks — tape badge, square disc, and the word", async () => {
+  const { window, document } = await loadPage("openings/friedliver", { expectIsland: true });
+  const plies = lab(window).plies;
+  const at = plies.findIndex((p) => p.mark === "brilliant");
+  ok(at > 0, "a brilliant move in the Fried Liver's main line");
+  const btn = document.querySelector(`.scoresheet.scroller .move[data-ply="${at}"]`);
+  ok(btn?.querySelector(".movemark--brilliant"), "the glyph beside the move on the tape");
+  ok(/Brilliant/.test(btn.getAttribute("aria-label") || ""), "the word in the button's name");
+  await act(window, (a) => a.jump(at));
+  const disc = document.querySelector(".study .board .sqmark--brilliant");
+  ok(disc, "the disc on the board");
+  ok(disc.closest("[data-sq]")?.dataset.sq === plies[at].to, "riding the arrival square");
+  ok([...document.querySelectorAll(".coach .severity__word")].some((el) => el.textContent === "Brilliant"),
+    "the coach card spelling the word out");
+  checkLeaks(document, "move marks");
+  window.close();
+
+  // The four-move mate ends on a blunder punished by mate — and the delivered
+  // mate must read as White's checkmate, never as "−M0" with a black bar.
+  const mate = await loadPage("openings/scholarsmate/four-move-mate", { expectIsland: true });
+  await act(mate.window, (a) => a.toEnd());
+  ok([...mate.document.querySelectorAll(".scoresheet.scroller .move")]
+    .some((b) => b.querySelector(".movemark--blunder")), "the blunder marked on the tape");
+  ok(mate.document.querySelector(".study .board .sqmark--great"), "the mating move wearing its mark");
+  ok(mate.document.querySelector(".evalbar__score")?.textContent === "#", "the bar reading checkmate");
+  ok(/checkmate for White/.test(mate.document.querySelector(".evalbar")?.getAttribute("aria-label") || ""),
+    "the label saying whose mate it is");
+  mate.window.close();
+});
+
 step("read: variations are links, and a trap line names its chair", async () => {
   const { window, document } = await loadPage("openings/ruylopez", { expectIsland: true });
   const rows = [...document.querySelectorAll(".variation")];
