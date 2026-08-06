@@ -262,7 +262,7 @@ step("lesson: the moves in the theory are buttons that drive their card's board"
   await tick(window, 40);
   const atFirst = pieces();
   ok(current() === chips[0], "the pressed move goes current");
-  ok(card.querySelector(".lesson-card__num")?.textContent.includes(
+  ok(card.querySelector(".demo__num")?.textContent.includes(
     chips[0].textContent.replace(/[!?]+$/, "")), "the caption naming the position");
   ok(card.querySelectorAll(".board .sq.played").length === 2, "the move marked on the board");
 
@@ -270,7 +270,7 @@ step("lesson: the moves in the theory are buttons that drive their card's board"
   back.click();
   await tick(window, 40);
   ok(!current(), "stepping behind the first move leaves no chip current");
-  ok(/^Before /.test(card.querySelector(".lesson-card__num")?.textContent || ""),
+  ok(/^Before /.test(card.querySelector(".demo__num")?.textContent || ""),
     "the caption saying which move comes next");
   const fwd = card.querySelector('[aria-label="Forward one move in this sequence"]');
   fwd.click();
@@ -290,7 +290,7 @@ step("lesson: a trap is its own card, and the structure card shows its diagram",
   const structure = [...document.querySelectorAll(".lesson-card")]
     .find((c) => /pawn structure/i.test(c.querySelector(".lesson-card__head")?.textContent || ""));
   ok(structure.querySelectorAll(".board [data-sq]").length === 64, "the structure card's diagram");
-  ok((structure.querySelector(".lesson-card__num")?.textContent || "").length > 0,
+  ok((structure.querySelector(".demo__num")?.textContent || "").length > 0,
     "the diagram named for the structure it draws");
   window.close();
 });

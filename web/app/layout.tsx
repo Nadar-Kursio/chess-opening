@@ -19,6 +19,7 @@ import "@/styles/notes.css";
 import "@/styles/deviation.css";
 import "@/styles/study.css";
 import "@/styles/strategy.css";
+import "@/styles/demo.css";
 import "@/styles/lesson.css";
 import "@/styles/path.css";
 import "@/styles/structures.css";

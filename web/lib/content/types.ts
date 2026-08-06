@@ -77,12 +77,14 @@ export interface Branch {
   see?: string;
 }
 
-/** A lesson text cut around its moves: prose, or a move that has a board. */
+/** A demo text cut around its moves: prose, or a move that has a board.
+    The shape any illustrated surface ships — engine/illustrate.py writes it,
+    components/demo/Demo.tsx renders it. */
 export type Seg = string | { b: number; t: string };
 
-/** One position a lesson run reaches. `p`/`n` walk the run it belongs to;
+/** One position a demo run reaches. `p`/`n` walk the run it belongs to;
     an anchor — the position the run starts from — has `num: ""`. */
-export interface LessonBoard {
+export interface DemoBoard {
   fen: string;
   from: string | null;
   to: string | null;
@@ -93,9 +95,9 @@ export interface LessonBoard {
   n?: number;
 }
 
-export interface LessonCard {
+export interface DemoCard {
   seg: Seg[];
-  boards?: LessonBoard[];
+  boards?: DemoBoard[];
   hero?: number;
   /** Traps only: the colon-stopped name the author gave it. */
   name?: string;
@@ -104,17 +106,17 @@ export interface LessonCard {
 export interface LessonPlans {
   white: Seg[][];
   black: Seg[][];
-  boards?: LessonBoard[];
+  boards?: DemoBoard[];
   hero?: number;
 }
 
 /** The theory, cut around the moves it names — derived by engine/lesson.py,
     every board replayed from a position the opening's lines reach. */
 export interface Lesson {
-  idea: LessonCard;
-  structure: LessonCard;
+  idea: DemoCard;
+  structure: DemoCard;
   plans: LessonPlans;
-  traps: LessonCard[];
+  traps: DemoCard[];
 }
 
 export interface Theory {
