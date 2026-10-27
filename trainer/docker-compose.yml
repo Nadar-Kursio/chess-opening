@@ -1,0 +1,19 @@
+# Dev database only. Production is the `chesslab` database on the shared Kursio RDS instance.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: chesslab-db
+    environment:
+      POSTGRES_USER: chesslab
+      POSTGRES_PASSWORD: chesslab
+      POSTGRES_DB: chesslab
+    ports:
+      - '5520:5432'
+    volumes:
+      - chesslab-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U chesslab']
+      interval: 2s
+      retries: 20
+volumes:
+  chesslab-db:

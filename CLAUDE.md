@@ -57,6 +57,14 @@ System `python3` has no `python-chess`; use the venv.
 - Changes under `.github/workflows/` can read repository secrets. Review them
   as security changes, not as config.
 
+## The trainer
+
+`trainer/` is a third piece: the account-backed course app at https://new.chesslab.dev (Next.js
+server, Better Auth, Postgres on the shared Kursio RDS). It reads the same emitted JSON, copied in
+by `npm run content`. `trainer/README.md` has the commands and the production layout; the rules
+above (no chess computed client-side, data-only openings, tokens for every colour and size —
+`trainer/src/app/tokens.css`) apply to it too.
+
 ## Deploying
 
 Push to `main`; CI runs the tests, builds, and ships `web/out` to

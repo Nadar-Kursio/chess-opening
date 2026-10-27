@@ -1,0 +1,12 @@
+# The public face of new.chesslab.dev: a Worker on the custom domain that proxies to the origin
+# the `chesslab` tunnel serves. It exists because the tunnel's certificate covers kursio.dev only,
+# so new.chesslab.dev can't point at the tunnel directly. Deploy: `npx wrangler deploy` here.
+name = "chesslab-trainer-edge"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+routes = [{ pattern = "new.chesslab.dev", custom_domain = true }]
+
+[vars]
+ORIGIN = "https://chesslab-origin.kursio.dev"
+# EDGE_SECRET is a wrangler secret, also in Secrets Manager chesslab/app-secrets.

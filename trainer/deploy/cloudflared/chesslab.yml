@@ -1,0 +1,11 @@
+# ChessLab trainer (~/chess-opening/trainer). Separate from kursio-dev, whose config.yml kursio-preview regenerates.
+tunnel: cf33a50b-d4e2-4e36-8c1f-52d008a0165a
+credentials-file: /home/ec2-user/.cloudflared/cf33a50b-d4e2-4e36-8c1f-52d008a0165a.json
+no-autoupdate: true
+
+ingress:
+  # Production: `next start` on 3020 (systemd chesslab-trainer). Reached through the Worker on
+  # new.chesslab.dev, which adds the edge header the app requires.
+  - hostname: chesslab-origin.kursio.dev
+    service: http://localhost:3020
+  - service: http_status:404

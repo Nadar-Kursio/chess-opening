@@ -1,0 +1,128 @@
+/* The design system. Nothing outside this file names a raw colour or a raw size: add a token. */
+
+:root {
+  --font-display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
+  --font-body: var(--font-nunito), 'Nunito', system-ui, sans-serif;
+
+  --bg: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --surface-3: #e4e9f1;
+  --line: #e2e7ef;
+  --line-strong: #cdd5e1;
+  --ink: #1b2333;
+  --ink-soft: #46526a;
+  --muted: #76829a;
+
+  --green: #2e9e5b;
+  --green-deep: #217a45;
+  --green-soft: #e2f5e9;
+  --green-ink: #1f7a44;
+  --red: #e5484d;
+  --red-deep: #b5333a;
+  --red-soft: #fdecec;
+  --red-ink: #b42c33;
+  --gold: #f5b83d;
+  --gold-deep: #d0901a;
+  --gold-soft: #fff3d9;
+  --gold-ink: #9a6408;
+  --blue: #3d8bfd;
+  --blue-deep: #2563c9;
+  --blue-soft: #e5efff;
+  --blue-ink: #1d58b8;
+  --purple: #8b5cf6;
+  --purple-soft: #efe9ff;
+
+  --sq-light: #eeeed2;
+  --sq-dark: #769656;
+  --sq-last: rgba(246, 230, 80, 0.55);
+  --sq-pick: rgba(20, 85, 30, 0.5);
+  --sq-good: rgba(46, 158, 91, 0.75);
+  --sq-bad: rgba(229, 72, 77, 0.7);
+  --sq-dot: rgba(20, 30, 20, 0.22);
+  --sq-check: rgba(229, 72, 77, 0.85);
+  --arrow-hint: rgba(61, 139, 253, 0.85);
+  --arrow-good: rgba(46, 158, 91, 0.9);
+  --arrow-bad: rgba(229, 72, 77, 0.85);
+  --board-shadow: 0 10px 30px rgba(27, 35, 51, 0.18);
+  --card-shadow: 0 1px 2px rgba(27, 35, 51, 0.06);
+
+  --white-piece-chip: #ffffff;
+  --black-piece-chip: #1b2333;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 44px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  --press: 4px;
+  --border: 2px;
+  --ring: 3px;
+  --bar: 14px;
+  --bar-thin: 8px;
+  --node: 44px;
+  --icon: 20px;
+  --icon-sm: 16px;
+  --tap: 44px;
+  --header: 64px;
+  --content: 1180px;
+  --narrow: 460px;
+  --board-max: 600px;
+  --side: 340px;
+  --coach-avatar: 44px;
+  --gutter: 16px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 120ms;
+  --mid: 220ms;
+  --slow: 450ms;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f1420;
+    --surface: #171e2d;
+    --surface-2: #1e2738;
+    --surface-3: #263145;
+    --line: #2a3448;
+    --line-strong: #3a4660;
+    --ink: #e9edf5;
+    --ink-soft: #b7c0d3;
+    --muted: #8590a8;
+    --green-soft: #183527;
+    --green-ink: #6fd69b;
+    --red-soft: #3a1c22;
+    --red-ink: #ff8f93;
+    --gold-soft: #3a2f16;
+    --gold-ink: #ffcf6b;
+    --blue-soft: #19294a;
+    --blue-ink: #8fb8ff;
+    --purple-soft: #2a2148;
+    --board-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --card-shadow: none;
+    --black-piece-chip: #0b0f18;
+    color-scheme: dark;
+  }
+}
