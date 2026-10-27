@@ -4,8 +4,11 @@ credentials-file: /home/ec2-user/.cloudflared/cf33a50b-d4e2-4e36-8c1f-52d008a016
 no-autoupdate: true
 
 ingress:
-  # Production: `next start` on 3020 (systemd chesslab-trainer). Reached through the Worker on
-  # new.chesslab.dev, which adds the edge header the app requires.
+  # Production: `next start` on 3020 (systemd chesslab-trainer). new.chesslab.dev is a proxied
+  # CNAME to this tunnel.
+  - hostname: new.chesslab.dev
+    service: http://localhost:3020
+  # The Worker's origin, while that route still exists; the app requires its edge header here.
   - hostname: chesslab-origin.kursio.dev
     service: http://localhost:3020
   - service: http_status:404
