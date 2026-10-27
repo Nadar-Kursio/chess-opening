@@ -266,6 +266,10 @@ def build_branches(op_id, where, board, entries, ply, errors, notes, evals):
                 "turn": mover, "check": work.is_check(),
                 "arrows": arrows, "tactics": tactics,
             })
+            # Each branch position ships its legal moves too: the trainer quizzes
+            # the reply to a deviation and plays branches out in free practice,
+            # so the board is an input surface here exactly as on a line.
+            plies[-1]["legal"] = packed_legal(work)
             notes.attach(work, plies[-1])
             evals.attach(op_id, work, plies[-1], f"{where} branch '{san}' / {step}")
             num += 1
