@@ -154,7 +154,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
         <aside className="sidebar">
           <div className="card side-card">
             <h3>
-              <Flame size={18} className="gold" /> {pulse.streak}-day streak
+              <Flame size={18} className="gold" /> {pulse.streak ? `${pulse.streak}-day streak` : 'Start a streak today'}
             </h3>
             <div className="bar bar--thin bar--gold">
               <span style={{ width: `${Math.min(100, (pulse.today / pulse.goal) * 100)}%` }} />

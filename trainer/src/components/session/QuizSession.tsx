@@ -43,13 +43,16 @@ function Run({
   lineSlug,
   title,
   side,
-  questions,
+  questions: shipped,
   closeHref,
   next,
   sound,
   coordinates,
   restart,
 }: Props & { restart: () => void }) {
+  // Saving a result revalidates the page, and the server shuffles again: hold the order this run
+  // started with, or the question under the learner's hand changes mid-quiz.
+  const [questions] = useState(shipped);
   const make = useMessages();
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState<'before' | 'position'>('before');
@@ -105,12 +108,10 @@ function Run({
       play('good', sound);
       setMsgs((list) => [
         ...list,
-        make({
-          kind: 'yours',
-          title: `${q.answer.num} ✓`,
-          html: q.kind === 'deviation' ? q.why : q.explain,
-        }),
-        ...(q.kind === 'deviation' && q.explain ? [make({ kind: 'info', html: q.explain })] : []),
+        make({ kind: 'yours', title: `${q.answer.num} ✓`, html: q.explain }),
+        ...(q.kind === 'deviation' && q.why
+          ? [make({ kind: 'info', title: `About ${q.position.num}`, html: q.why })]
+          : []),
       ]);
       return;
     }

@@ -515,18 +515,15 @@ a.card:hover {
 .goal__count {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-display);
   color: var(--muted);
 }
 .goal__count b {
   color: var(--ink);
   font-size: var(--text-2xl);
-}
-.goal__count {
-  grid-auto-flow: column;
-  align-content: center;
 }
 .week {
   display: flex;
@@ -634,7 +631,7 @@ a.card:hover {
   text-align: right;
 }
 .course-card--compact .course-card__board {
-  width: 25%;
+  width: 34%;
 }
 .grid-cards {
   display: grid;
@@ -1337,6 +1334,9 @@ a.card:hover {
   width: 72%;
   height: 72%;
 }
+.session__side > .chip {
+  align-self: flex-start;
+}
 .coach__name {
   font-family: var(--font-display);
   font-weight: 700;
@@ -1705,6 +1705,9 @@ a.card:hover {
   }
   .foot__actions {
     width: 100%;
+  }
+  .session__body {
+    padding-bottom: calc(var(--foot) + var(--tap) + var(--space-6));
   }
   .foot__actions .btn {
     flex: 1;

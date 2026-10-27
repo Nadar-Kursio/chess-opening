@@ -189,7 +189,8 @@ export default function Board({
     const sq = squareName(i);
     const { col, row } = cell(sq, orientation);
     const ch = fen[i] === '.' ? '' : fen[i];
-    const light = (FILES.indexOf(sq[0]) + Number(sq[1])) % 2 === 1;
+    // a1 is dark: file index 0 plus rank 1 is odd.
+    const light = (FILES.indexOf(sq[0]) + Number(sq[1])) % 2 === 0;
     const cls = ['sq', light ? 'sq--light' : 'sq--dark'];
     if (last && (sq === last.from || sq === last.to)) cls.push('sq--last');
     if (sq === selected) cls.push('sq--picked');

@@ -46,7 +46,9 @@ const values: Record<string, string> =
         DATABASE_URL: secret('chesslab/db-credentials').url,
         // The RDS instance is shared with Kursio; keep this process's share small.
         DB_POOL_MAX: '5',
-        BETTER_AUTH_SECRET: secret('chesslab/app-secrets').BETTER_AUTH_SECRET,
+        ...(({ BETTER_AUTH_SECRET, EDGE_SECRET }) => ({ BETTER_AUTH_SECRET, EDGE_SECRET }))(
+          secret('chesslab/app-secrets'),
+        ),
       }
     : {
         DATABASE_URL: 'postgres://chesslab:chesslab@localhost:5520/chesslab',

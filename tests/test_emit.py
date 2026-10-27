@@ -108,6 +108,18 @@ class TestEmit(unittest.TestCase):
                     self.assertIn("legal", p, where)
                     self.assertEqual(len(p["legal"]) % 4, 0, where)
 
+    def test_every_branch_position_carries_its_legal_moves(self):
+        """The trainer quizzes the reply to a deviation and plays branches out in
+        free practice, so a branch position is an input surface too."""
+        for summary in self.catalog["openings"]:
+            op = self.files[f"openings/{summary['id']}.json"]
+            for s, branches in enumerate(op.get("branchsets") or []):
+                for br in branches:
+                    for i, p in enumerate(br["plies"]):
+                        where = f"{op['id']} / set {s} '{br['san']}' / ply {i}"
+                        self.assertIn("legal", p, where)
+                        self.assertEqual(len(p["legal"]) % 4, 0, where)
+
     def test_the_primer_ships_alongside_the_catalog(self):
         self.assertIn('class="primer"', self.files["primer.html"])
 
