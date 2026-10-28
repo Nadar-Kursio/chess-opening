@@ -7,19 +7,19 @@ OPENING = {
     "tagline": "Hit e4 on move one, take back with the queen, and park her on a5. The one defence where you choose the structure before White does.",
     "level": "Beginner → Master",
     "theory": {
-        "big_idea": "1...d5 attacks e4 before White has built anything around it. After 2.exd5 Qxd5 3.Nc3 the queen has to move again, and that lost tempo is the whole price of the opening: in return you know the position you are getting before the game starts. 3...Qa5 takes the queen off the d-file, and from a5 she pins the knight on c3 the moment White plays d4. Then ...Nf6, ...c6, ...Bf5 and ...e6 — the light-squared bishop gets out before the e-pawn locks it in, which is the Caro-Kann's idea with the queen already in play.",
+        "big_idea": "1...d5 attacks e4 before White has built anything around it. After 2.exd5 Qxd5 3.Nc3 the queen has to move again, and that lost tempo is the whole price of the opening: in return you know the position you are getting before the game starts. 3...Qa5 takes the queen off the d-file, and from a5 she pins the knight on c3 the moment White plays 4.d4. Then 4...Nf6 5.Nf3 c6 6.Bc4 Bf5 7.Bd2 e6 — the light-squared bishop gets out before the e-pawn locks it in, which is the Caro-Kann's idea with the queen already in play.",
         "structure": "After 2.exd5 Qxd5 the centre is lopsided from the start: White keeps a d-pawn and has no e-pawn, you keep an e-pawn and have no d-pawn. With ...c6 and ...e6 your pawns sit on c6 and e6, both guarding d5, against White's lone pawn on d4. White has more space and the half-open e-file; you have no weaknesses at all and a d5-square that is yours whenever you want it. The fight is over whether White's lead in development turns into an attack before you finish castling.",
         "white_plans": [
-            "Bd2 to break the pin, then Qe2 and O-O-O — the main line. With the bishop on d2, every knight jump from c3 is a discovered attack on your queen.",
-            "Ne5 and the pawn storm g4 and h4 against the bishop on f5 — the sharpest try, and the reason ...e6 has to come in time.",
-            "Nd5 at the right moment, trading the knight for yours on f6 and changing your structure before you have castled.",
+            "Bd2 to break the pin, then Qe2 and O-O-O — the main line, 7.Bd2 e6 8.Qe2 Bb4 9.O-O-O. With the bishop on d2, every knight jump from c3 is a discovered attack on your queen.",
+            "Ne5 and the pawn storm g4 and h4 against the bishop on f5 — 7.Ne5 e6 8.g4 Bg6 9.h4, the sharpest try, and the reason ...e6 has to come in time.",
+            "Nd5 at the right moment, trading the knight for yours on f6 and changing your structure before you have castled: 5.Bd2 c6 6.Bc4 Bf5 7.Nd5 Qd8 8.Nxf6+ exf6.",
             "Sidestep the main lines: 2.e5, 2.Nc3 or 3.Nf3, aiming for a position where the queen's early trip to the centre is simply a wasted move.",
         ],
         "black_plans": [
-            "Finish the set-up before anything else: ...Nf6, ...c6, ...Bf5, ...e6, then ...Bb4 and ...Nbd7. Nearly every line below reaches some version of it.",
-            "Trade the knight that lands on e5. It is White's best piece in this structure and the one that hunts your bishop; ...Nbd7 is there to challenge it.",
+            "Finish the set-up before anything else: 4.d4 Nf6 5.Nf3 c6 6.Bc4 Bf5 7.Bd2 e6, then 8.Qe2 Bb4 9.O-O-O Nbd7. Nearly every line below reaches some version of it.",
+            "Trade the knight that lands on e5. It is White's best piece in this structure and the one that hunts your bishop; ...Nbd7 is there to challenge it, as in 7.Ne5 e6 8.g4 Bg6 9.h4 Nbd7 10.Nxd7 Nxd7.",
             "Use d5 as an outpost. Both of your pawns guard it and White's d-pawn can never attack it — only a c2–c4 push can challenge a knight that lands there.",
-            "Choose your king's wing late. When White castles long and starts pushing the g-pawn, castling short walks into the storm — the main line castles long instead.",
+            "Choose your king's wing late. When White castles long and starts pushing the g-pawn, castling short walks into the storm — the main line castles long instead: 12.Ne5 Nxe5 13.dxe5 Nd5 14.Bd2 O-O-O.",
         ],
         "traps": [
             "The Nd5 trick: after 6.Bc4 Bf5 7.Bd2 e6 8.Nd5, the knight is offered and cannot be taken. 8...cxd5?? or 8...exd5?? opens the d2–a5 diagonal and 9.Bxa5 wins the queen. Play 8...Qd8 and the trade on f6 is all White gets.",
