@@ -52,7 +52,9 @@ export default async function TrapsPage() {
                 const lp = byLine.get(line.slug);
                 const side = lineSide(op, line);
                 const end = line.plies[line.plies.length - 1];
-                const nextStep = STEP_KINDS.find((k) => !stepDone(lp, k)) ?? 'drill';
+                const gap = STEP_KINDS.find((k) => !stepDone(lp, k));
+                // A finished trap stays worth rehearsing: straight to Recall.
+                const nextStep = gap ?? 'recall';
                 return (
                   <article key={line.slug} className="card trap-card">
                     <Link href={`/openings/${op.id}/${line.slug}/${nextStep}`} className="trap-card__board" aria-label={line.name}>
@@ -77,7 +79,7 @@ export default async function TrapsPage() {
                           </Link>
                         ))}
                         <Link href={`/openings/${op.id}/${line.slug}/${nextStep}`} className="btn btn--primary btn--sm">
-                          {STEP_INFO[nextStep].label}
+                          {gap ? STEP_INFO[gap].label : 'Practise'}
                         </Link>
                       </div>
                     </div>
