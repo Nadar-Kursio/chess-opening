@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { colourName, positionKey } from '@/lib/course';
-import { play } from '@/lib/sound';
+import { play, type SoundSet } from '@/lib/sound';
 import type { Line, Severity, Turn } from '@/lib/types';
 import { useFlip } from './useFlip';
-import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
+import { Bubble, Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone, type Voice } from './Frame';
+import { useNarration, type NarrationProps } from './useNarration';
 
 /* Learn, Drill and Recall: one line, played from the learner's chair. The opponent's moves play
    themselves; the learner's are asked. What changes between the three is how much help there is:
@@ -34,10 +35,12 @@ interface Props {
   alternatives: Record<number, Alternative[]>;
   closeHref: string;
   next: { href: string; label: string } | null;
-  sound: boolean;
+  sound: SoundSet;
   coordinates: boolean;
   /** Opening moves shared with an earlier chapter, which the learner may skip. */
   shared: { plies: number; chapter: string } | null;
+  /** Learn only: the recorded coach, when this line has been narrated. */
+  narration: NarrationProps | null;
 }
 
 const SEV_WORD: Record<Severity, string> = {
@@ -65,6 +68,7 @@ function Run({
   sound,
   coordinates,
   shared,
+  narration,
   restart,
 }: Props & { restart: () => void }) {
   const plies = line.plies;
@@ -78,7 +82,7 @@ function Run({
   const { orientation, flip } = useFlip(side);
   const [ply, setPly] = useState(0);
   const [msgs, setMsgs] = useState<Msg[]>(() => [
-    make({ kind: 'intro', title: line.name, html: line.note }),
+    make({ kind: 'intro', title: line.name, html: line.note, clip: 'intro' }),
     ...(line.record
       ? [
           make({
@@ -111,6 +115,32 @@ function Run({
   const yourTurn = ply < last && mine[ply + 1];
   const expected = plies[ply + 1];
 
+  const narrator = useNarration(narration);
+  const { speak, speaking } = narrator;
+  const voice = useMemo<Voice | undefined>(
+    () =>
+      narrator.available
+        ? {
+            on: narrator.on,
+            speaking: narrator.speaking,
+            blocked: narrator.blocked,
+            toggle: narrator.toggle,
+            replay: (clip) => narrator.speak(clip, true),
+            resume: narrator.resume,
+          }
+        : undefined,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [narrator.available, narrator.on, narrator.speaking, narrator.blocked],
+  );
+
+  useEffect(() => speak('intro'), [speak]);
+
+  // Learn reads the reason for your move as it's asked.
+  useEffect(() => {
+    if (yourTurn && !done) speak(`p${ply + 1}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ply]);
+
   const finish = useCallback(
     async (final: typeof stats) => {
       setDone({ passed: null });
@@ -138,9 +168,10 @@ function Run({
     [openingId, line.slug, mode, sound],
   );
 
-  // The opponent's moves play themselves; the end of the line ends the session.
+  // The opponent's moves play themselves, once the coach has finished speaking; the end of the
+  // line ends the session.
   useEffect(() => {
-    if (done) return;
+    if (done || speaking) return;
     if (ply === last) {
       if (mode === 'recall') {
         setMsgs((list) => [
@@ -155,7 +186,8 @@ function Run({
         const plan = line.plan;
         const next = plan.next?.length ? `<ul>${plan.next.map((n) => `<li>${n}</li>`).join('')}</ul>` : '';
         const endgame = plan.endgame ? `<p><b>If the queens come off:</b> ${plan.endgame}</p>` : '';
-        say({ kind: 'done', title: 'Where this leaves you', html: `${plan.point}${next}${endgame}` });
+        say({ kind: 'done', title: 'Where this leaves you', html: `${plan.point}${next}${endgame}`, clip: 'plan' });
+        speak('plan');
       }
       void finish(stats);
       return;
@@ -171,16 +203,19 @@ function Run({
         kind: 'theirs',
         title: `${opponent} plays ${move.num}`,
         html: mode === 'recall' ? null : move.note,
+        clip: `p${ply + 1}`,
       });
+      speak(`p${ply + 1}`);
     }, ply === 0 ? 700 : OPPONENT_DELAY[mode]);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ply, done]);
+  }, [ply, done, speaking]);
 
   const onMove = (from: string, to: string) => {
     if (!yourTurn || done) return;
     if (from === expected.from && to === expected.to) {
       const clean = wrongHere === 0 && !hinted;
+      narrator.stop();
       positions.current.set(positionKey(plies[ply]), clean);
       const nextStats = { ...stats, correct: stats.correct + 1 };
       setStats(nextStats);
@@ -262,7 +297,7 @@ function Run({
   // Learn reveals the coming move's reason before it's played: that's the lesson.
   const prompt =
     mode === 'learn' && yourTurn
-      ? { title: `Your move: ${expected.num}`, html: expected.note }
+      ? { title: `Your move: ${expected.num}`, html: expected.note, clip: `p${ply + 1}` }
       : null;
 
   usePrimaryKey(done && done.passed !== null ? () => (window.location.href = done.passed && next ? next.href : closeHref) : null);
@@ -332,13 +367,12 @@ function Run({
       }
       side={
         <>
-          <CoachAvatar />
-          <Coach msgs={msgs}>
+          <CoachAvatar voice={voice} />
+          <Coach msgs={msgs} voice={voice}>
             {prompt ? (
-              <div className="bubble bubble--prompt">
-                <div className="bubble__title">{prompt.title}</div>
+              <Bubble kind="prompt" title={prompt.title} clip={prompt.clip} voice={voice}>
                 {prompt.html ? <p className="bubble__text" dangerouslySetInnerHTML={{ __html: prompt.html }} /> : null}
-              </div>
+              </Bubble>
             ) : null}
           </Coach>
           <MoveTape plies={plies} upTo={ply} />

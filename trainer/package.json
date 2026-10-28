@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
     "content": "scripts/content.sh",
+    "narrate": "tsx scripts/narrate.ts",
     "db:up": "docker compose up -d --wait",
     "db:migrate": "tsx --conditions=react-server --env-file=.env.development.local scripts/migrate.ts",
     "db:migrate:prod": "tsx --conditions=react-server --env-file=.env.production.local scripts/migrate.ts",

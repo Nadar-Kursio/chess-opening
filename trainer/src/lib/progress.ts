@@ -2,6 +2,8 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { query, queryOne, transaction } from './db';
 import { stepColumn, type LineProgress, type StepKind } from './course';
+import type { SoundSet } from './sound';
+import type { SPEECH_RATES, Voice } from './speech';
 
 export type Mode = StepKind | 'free' | 'review';
 
@@ -70,16 +72,30 @@ export async function lastOpening(userId: string) {
 
 export interface Settings {
   daily_goal: number;
-  sound: boolean;
+  sound: SoundSet;
   coordinates: boolean;
+  narration: boolean;
+  voice: Voice;
+  /** Percent of normal speaking speed. */
+  speech_rate: (typeof SPEECH_RATES)[number];
 }
+
+const DEFAULT_SETTINGS: Settings = {
+  daily_goal: 30,
+  sound: 'wood',
+  coordinates: true,
+  narration: true,
+  voice: 'brian',
+  speech_rate: 100,
+};
 
 export async function getSettings(userId: string): Promise<Settings> {
   const row = await queryOne<Settings>(
-    'select daily_goal, sound, coordinates from user_settings where user_id = $1',
+    `select daily_goal, sound, coordinates, narration, voice, speech_rate
+       from user_settings where user_id = $1`,
     [userId],
   );
-  return row ?? { daily_goal: 30, sound: true, coordinates: true };
+  return row ?? DEFAULT_SETTINGS;
 }
 
 export interface Pulse {
@@ -234,11 +250,19 @@ export async function recordSession(userId: string, r: SessionResult) {
 
 export async function saveSettings(userId: string, s: Settings) {
   await query(
-    `insert into user_settings (user_id, daily_goal, sound, coordinates) values ($1, $2, $3, $4)
+    `insert into user_settings (user_id, daily_goal, sound, coordinates, narration, voice, speech_rate)
+     values ($1, $2, $3, $4, $5, $6, $7)
      on conflict (user_id) do update set daily_goal = excluded.daily_goal, sound = excluded.sound,
-       coordinates = excluded.coordinates, updated_at = now()`,
-    [userId, s.daily_goal, s.sound, s.coordinates],
+       coordinates = excluded.coordinates, narration = excluded.narration, voice = excluded.voice,
+       speech_rate = excluded.speech_rate, updated_at = now()`,
+    [userId, s.daily_goal, s.sound, s.coordinates, s.narration, s.voice, s.speech_rate],
   );
+}
+
+/** The coach's mute button in a Learn session. */
+export async function saveNarration(userId: string, on: boolean) {
+  const s = { ...(await getSettings(userId)), narration: on };
+  await saveSettings(userId, s);
 }
 
 export async function resetOpening(userId: string, openingId: string) {

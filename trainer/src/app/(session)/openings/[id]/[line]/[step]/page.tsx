@@ -3,6 +3,7 @@ import LineSession, { type Alternative } from '@/components/session/LineSession'
 import QuizSession from '@/components/session/QuizSession';
 import { getOpening, hasOpening } from '@/lib/content';
 import { STEP_INFO, STEP_KINDS, alternativesAt, lineBySlug, lineSide, quizFor, sharedStart, toMove, turnOf, type StepKind } from '@/lib/course';
+import { lineClips } from '@/lib/narration';
 import { getSettings } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import { nextAfter, shuffled } from '@/lib/steps';
@@ -56,6 +57,7 @@ export default async function StepPage({ params }: Params) {
     if (alts.length) alternatives[i] = alts;
   });
 
+  const clips = found.step === 'learn' ? lineClips(line, lineSide(op, line), settings.voice) : {};
   return (
     <LineSession
       {...common}
@@ -63,6 +65,7 @@ export default async function StepPage({ params }: Params) {
       line={line}
       alternatives={alternatives}
       shared={found.step === 'learn' ? null : sharedStart(op, line)}
+      narration={Object.keys(clips).length ? { clips, on: settings.narration, rate: settings.speech_rate } : null}
     />
   );
 }

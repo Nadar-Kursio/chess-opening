@@ -4,8 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getOpening, hasOpening } from '@/lib/content';
 import { lineBySlug } from '@/lib/course';
-import { recordSession, resetOpening, saveSettings } from '@/lib/progress';
+import { recordSession, resetOpening, saveNarration, saveSettings } from '@/lib/progress';
 import { requireUser } from '@/lib/session';
+import { SOUND_SETS } from '@/lib/sound';
+import { SPEECH_RATES, VOICES, type Voice } from '@/lib/speech';
 
 const Count = z.number().int().min(0).max(10_000);
 
@@ -37,14 +39,22 @@ export async function finishSession(input: z.input<typeof SessionInput>) {
 
 const SettingsInput = z.object({
   daily_goal: z.number().int().min(5).max(500),
-  sound: z.boolean(),
+  sound: z.enum(SOUND_SETS),
   coordinates: z.boolean(),
+  narration: z.boolean(),
+  voice: z.enum(Object.keys(VOICES) as [Voice, ...Voice[]]),
+  speech_rate: z.union(SPEECH_RATES.map((r) => z.literal(r))),
 });
 
 export async function updateSettings(input: z.input<typeof SettingsInput>) {
   const user = await requireUser();
   await saveSettings(user.id, SettingsInput.parse(input));
   revalidatePath('/', 'layout');
+}
+
+export async function setNarration(on: boolean) {
+  const user = await requireUser();
+  await saveNarration(user.id, z.boolean().parse(on));
 }
 
 export async function resetCourse(openingId: string) {
