@@ -27,7 +27,9 @@ export function SessionFrame({
   side,
   footer,
   tone,
+  onFlip,
 }: {
+  onFlip: () => void;
   closeHref: string;
   title: string;
   progress: number;
@@ -37,6 +39,15 @@ export function SessionFrame({
   footer: ReactNode;
   tone: Tone;
 }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'f' || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.target as HTMLElement | null)?.tagName === 'INPUT') return;
+      onFlip();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onFlip]);
   return (
     <div className="session">
       <header className="session__top">
@@ -56,6 +67,11 @@ export function SessionFrame({
           <span style={{ width: `${Math.max(2, progress * 100)}%` }} />
         </div>
         {counter ? <span className="session__counter">{counter}</span> : null}
+        <button type="button" className="icon-btn" onClick={onFlip} aria-label="Flip the board" title="Flip the board (F)">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M7 4v14M7 18l-3-3M7 18l3-3M17 20V6M17 6l-3 3M17 6l3 3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </header>
       <main className="session__body">
         <div className="session__board">{board}</div>
@@ -79,7 +95,7 @@ export function Coach({ msgs, children }: { msgs: Msg[]; children?: ReactNode })
         {msgs.map((m) => (
           <div key={m.id} className={`bubble bubble--${m.kind}`}>
             {m.title ? <div className="bubble__title">{m.title}</div> : null}
-            {m.html ? <p className="bubble__text" dangerouslySetInnerHTML={{ __html: m.html }} /> : null}
+            {m.html ? <div className="bubble__text" dangerouslySetInnerHTML={{ __html: m.html }} /> : null}
             {m.text ? <p className="bubble__text">{m.text}</p> : null}
           </div>
         ))}

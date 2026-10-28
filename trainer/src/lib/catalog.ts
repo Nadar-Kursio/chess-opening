@@ -5,7 +5,7 @@ import type { Colour, OpeningSummary } from './types';
 
 /* Which openings the trainer leads with. Everything else the build ships still appears, after
    these, so adding an opening stays data-only. */
-const FEATURED = ['london', 'scandinavian', 'sicilian', 'friedliver'];
+const FEATURED = ['london', 'scandinavian', 'sicilian'];
 
 export function courses() {
   const all = getCatalog().openings;
@@ -20,8 +20,8 @@ export function isFeatured(id: string) {
   return FEATURED.includes(id);
 }
 
-/** The openings whose lines are traps, taught one trap per chapter: the collection first. */
-const TRAPS_FIRST = ['traps', 'friedliver'];
+/** The trap courses, the Fried Liver first: it's the deepest of them. */
+const TRAPS_FIRST = ['friedliver'];
 
 export function trapCourses() {
   const rank = (id: string) => {

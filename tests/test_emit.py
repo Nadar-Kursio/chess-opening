@@ -120,6 +120,15 @@ class TestEmit(unittest.TestCase):
                         self.assertIn("legal", p, where)
                         self.assertEqual(len(p["legal"]) % 4, 0, where)
 
+    def test_every_game_position_but_the_last_carries_its_legal_moves(self):
+        """Guess-the-move plays the learner's attempt on each position of a game."""
+        for g in self.catalog["games"]:
+            game = self.files[f"games/{g['id']}.json"]
+            for i, p in enumerate(game["plies"][:-1]):
+                where = f"{g['id']} / ply {i}"
+                self.assertIn("legal", p, where)
+                self.assertEqual(len(p["legal"]) % 4, 0, where)
+
     def test_the_primer_ships_alongside_the_catalog(self):
         self.assertIn('class="primer"', self.files["primer.html"])
 

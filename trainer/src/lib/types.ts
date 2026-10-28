@@ -92,6 +92,36 @@ export interface Stage {
   ready: string;
 }
 
+/** Prose cut around the moves it names: a string, or a move with the board it reaches. */
+export type Seg = string | { b: number; t: string };
+
+/** A position a lesson run reaches; `p`/`n` step back and forward along that run. */
+export interface DemoBoard {
+  fen: string;
+  from: string | null;
+  to: string | null;
+  num: string;
+  turn: Turn;
+  check?: boolean;
+  p: number | null;
+  n?: number;
+}
+
+export interface DemoCard {
+  seg: Seg[];
+  boards?: DemoBoard[];
+  hero?: number;
+  name?: string;
+}
+
+/** The theory with its moves made playable — derived by engine/lesson.py at build time. */
+export interface Lesson {
+  idea: DemoCard;
+  structure: DemoCard;
+  plans: { white: Seg[][]; black: Seg[][]; boards?: DemoBoard[]; hero?: number };
+  traps: DemoCard[];
+}
+
 export interface Opening {
   id: string;
   name: string;
@@ -102,6 +132,7 @@ export interface Opening {
   level: string;
   theory: Theory;
   progression: { arc: string; stages: Stage[]; study: string; next: string };
+  lesson?: Lesson;
   lines: Line[];
   branchsets?: Branch[][];
 }
@@ -128,4 +159,15 @@ export interface Catalog {
   sections: Section[];
   engine: { name: string | null; depth: number | null; generated: string | null };
   openings: OpeningSummary[];
+  games: { id: string; name: string; op: string; tier?: Tier }[];
+}
+
+/** An annotated master game: the same ply shape as a line. */
+export interface Game {
+  id: string;
+  name: string;
+  note: string;
+  op: string;
+  tier?: Tier;
+  plies: Ply[];
 }

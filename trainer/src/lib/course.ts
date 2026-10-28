@@ -74,6 +74,24 @@ export function yourMoveIndexes(line: Line, side: Colour) {
   return out;
 }
 
+/**
+ * The longest run of opening moves this line shares with an earlier chapter taught from the same
+ * chair — what Drill and Recall can skip, so practice starts where the line becomes its own.
+ */
+export function sharedStart(op: Opening, line: Line) {
+  const side = lineSide(op, line);
+  let best = { plies: 0, chapter: '' };
+  for (const other of op.lines) {
+    if (other === line) break;
+    if (lineSide(op, other) !== side) continue;
+    let k = 1;
+    while (k < line.plies.length && k < other.plies.length && line.plies[k].san === other.plies[k].san) k++;
+    if (k - 1 > best.plies) best = { plies: k - 1, chapter: other.name };
+  }
+  // Worth offering only when it saves a few moves and leaves a real line to play.
+  return best.plies >= 6 && best.plies <= line.plies.length - 5 ? best : null;
+}
+
 /** The authored alternatives to the move a line plays from ply `i`, minus that move itself. */
 export function alternativesAt(op: Opening, line: Line, i: number): Branch[] {
   const bx = line.plies[i]?.bx;

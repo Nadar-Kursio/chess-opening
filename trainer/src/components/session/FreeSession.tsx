@@ -6,6 +6,7 @@ import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type Tree, type TreeEdge } from '@/lib/course';
 import { play } from '@/lib/sound';
+import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 
 /* Free practice: the opponent picks any reply the course knows — main lines more often, the
@@ -36,6 +37,7 @@ const SEV_WORD = { playable: 'A sideline', inaccuracy: 'An inaccuracy', blunder:
 export default function FreeSession({ openingId, title, tree, closeHref, sound, coordinates }: Props) {
   const make = useMessages();
   const you = tree.side;
+  const { orientation, flip } = useFlip(you);
   const [key, setKey] = useState(tree.root);
   const [games, setGames] = useState(0);
   const [msgs, setMsgs] = useState<Msg[]>(() => [
@@ -145,6 +147,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
 
   return (
     <SessionFrame
+      onFlip={flip}
       closeHref={closeHref}
       title={title}
       progress={over ? 1 : Math.min(0.95, tally.correct / 12)}
@@ -153,7 +156,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
       board={
         <Board
           fen={node.fen}
-          orientation={you}
+          orientation={orientation}
           last={node.from ? { from: node.from, to: node.to } : null}
           legal={node.legal}
           movable={yourTurn && !over ? you : null}

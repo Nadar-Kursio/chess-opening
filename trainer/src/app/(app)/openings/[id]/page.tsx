@@ -14,6 +14,8 @@ import {
 } from '@/lib/course';
 import { countMissed, getProgress, getPulse } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
+import Overview from '@/components/lesson/Overview';
+import WinBar from '@/components/ui/WinBar';
 import ResetCourse from './ResetCourse';
 
 export const dynamic = 'force-dynamic';
@@ -47,6 +49,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const sides = sidesTaught(op);
   const punish = punishQuestions(op, op.orientation).length;
   const misses = missed.get(id) ?? 0;
+  const games = getCatalog().games.filter((g) => g.op === id);
   const nextHref = p.next ? `/openings/${id}/${p.next.slug}/${p.next.step}` : null;
 
   return (
@@ -98,6 +101,10 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
         </div>
       </section>
 
+      <Overview
+        op={{ orientation: op.orientation, theory: op.theory, progression: op.progression, lesson: op.lesson }}
+      />
+
       <div className="course-layout">
         <section className="chapters" aria-label="Chapters">
           <h2 className="section__title">Chapters</h2>
@@ -123,6 +130,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                   </div>
                 </div>
                 <p className="muted clamp-2" dangerouslySetInnerHTML={{ __html: ch.note }} />
+                {op.lines[ch.index].record ? <WinBar record={op.lines[ch.index].record!} /> : null}
                 <ol className="path">
                   {STEP_KINDS.map((k) => {
                     const done = stepDone(lp, k);
@@ -220,41 +228,27 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
             </ul>
           </div>
 
-          <details className="card side-card about" open>
-            <summary>
-              <h3>The big idea</h3>
-            </summary>
-            <p dangerouslySetInnerHTML={{ __html: op.theory.big_idea }} />
-          </details>
-          {op.theory.traps?.length ? (
-            <details className="card side-card about">
-              <summary>
-                <h3>Traps to know ({op.theory.traps.length})</h3>
-              </summary>
-              <ul className="trap-list">
-                {op.theory.traps.map((t, i) => (
-                  <li key={i} dangerouslySetInnerHTML={{ __html: t }} />
+          {games.length ? (
+            <div className="card side-card">
+              <h3>Model games</h3>
+              <p className="muted small">Master games in this opening, annotated. Play along and guess the moves.</p>
+              <ul className="ways">
+                {games.map((g) => (
+                  <li key={g.id}>
+                    <Link href={`/openings/${id}/games/${g.id}`} className="way">
+                      <span className="way__icon way__icon--blue">
+                        <Book size={20} />
+                      </span>
+                      <span>
+                        <b>{g.name.split(' — ')[0]}</b>
+                        {g.name.includes(' — ') ? <span className="muted small">{g.name.split(' — ').slice(1).join(' — ')}</span> : null}
+                      </span>
+                    </Link>
+                  </li>
                 ))}
               </ul>
-            </details>
+            </div>
           ) : null}
-          <details className="card side-card about">
-            <summary>
-              <h3>Plans for both sides</h3>
-            </summary>
-            <h4>White</h4>
-            <ul className="trap-list">
-              {op.theory.white_plans.map((t, i) => (
-                <li key={i} dangerouslySetInnerHTML={{ __html: t }} />
-              ))}
-            </ul>
-            <h4>Black</h4>
-            <ul className="trap-list">
-              {op.theory.black_plans.map((t, i) => (
-                <li key={i} dangerouslySetInnerHTML={{ __html: t }} />
-              ))}
-            </ul>
-          </details>
         </aside>
       </div>
     </main>

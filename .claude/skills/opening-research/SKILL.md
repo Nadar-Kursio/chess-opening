@@ -67,6 +67,20 @@ fifteen of them and about 190k games, which takes three or four minutes to scan.
 It also prints the `record` line a variation ships (see below), which is the only
 way that key should ever be filled in.
 
+**The corpus has holes, and the honest answer is to say so.** pgnmentor's
+per-variation archives follow the ECO split, not your repertoire: there is no
+archive with 1.d4 d5 2.Bf4 games, and the four Scandinavian archives hold only
+3.Nc3 lines, so 3.Nf3, 3.d4 and the move-2 sidelines return zero games. When
+`explorer.py` comes back empty, choose the moves from player archives
+(`fetch-games.py`) plus the engine, leave `record` off rather than inventing
+one, and say in your report that the line is engine-checked only. Named trap
+positions are almost never reached in master play either; trap lines ship
+without a `record` as a rule.
+
+Pass `--fetch` the archives you need rather than scanning everything under
+`.engine/openings/`: after the Sicilian landed it holds about a million games,
+and an unqualified run takes long enough to look hung.
+
 ## 2. Author
 
 Copy the shape of `src/content/openings/italian.py` for a White repertoire and
@@ -301,9 +315,10 @@ Five failure modes worth naming, all of them seen in practice:
 .venv/bin/python3 -m unittest discover tests             # content + emit contract
 .venv/bin/python3 src/build.py --emit                    # validate + write web/content/
 cd web && npm run build && npm test                      # export the site, smoke it in jsdom
+cd trainer && CONTENT_DIR=$PWD/../web/content npm test   # the course app's model on your content
 ```
 
-All three must pass. **Read the build's own report, not just its exit code.**
+All four must pass. **Read the build's own report, not just its exit code.**
 `N moves, M without commentary` must end in `0`: a ply with no note and no
 `common.py` entry renders nothing where the coach card should be, and the build
 only warns. Same for `structure 'x': no line points here yet` — that structure
@@ -334,6 +349,74 @@ plies back. Give it its own.
 
 Authored prose renders as HTML, so write `&amp;` and `&lt;` in text rather
 than the bare characters.
+
+## Writing for the trainer
+
+The course app in `trainer/` (new.chesslab.dev) turns every line into a
+**chapter** the learner works through four times: Learn (each move's note shown
+*before* they play it), Drill (their moves, with hints), Recall (from memory,
+notes held back) and Quiz. Authoring choices land differently there than on a
+page someone reads once.
+
+- **Prefer several focused lines of about 12–24 plies over a few long ones.**
+  A chapter is drilled move by move; a 35-ply line is a chore to recall and
+  hides its point. Put the long continuation in `deep`, and it becomes its own
+  chapter.
+- **Every learner move needs its own note.** Learn shows it as the reason to
+  play the move, before the learner plays it. Shared `common.py` text written
+  for another opening reads as nonsense there.
+- **A quiz question is an opponent deviation with an answer.** The quiz is built
+  from the branch entries at positions where the *opponent* moves, and asks for
+  `line`'s first move. A deviation with no `line` can't become a question, and
+  a `line` whose first move isn't the best practical answer teaches the wrong
+  thing under exam conditions. Your own side's alternatives aren't quizzed:
+  Drill shows their `why` when the learner plays one, so write that text as
+  "playable, but the course plays X because…".
+- **Opponent `blunder` entries feed "Punish the blunder".** Each needs the
+  refutation in its `line`, which the skill already demands.
+- **The plan card is the chapter's ending.** It's shown as "Where this leaves
+  you" when a line finishes; `next` should be things to do on move N+1, not a
+  summary of the line.
+- **Theory prose becomes a board.** `engine/lesson.py` (the machine is
+  `engine/illustrate.py`) turns move runs in `big_idea`, the plans, `structure`
+  and `traps` into tappable chips with a board. A run starts at a numbered move
+  (`3.e3`, `2...h5`); the bare moves after it continue it (`3.e3 Qb6 4.Nc3!`),
+  and it's replayed from a position the opening's lines reach. A list of moves
+  with no number (`d4, Bf4, e3, Nf3`) stays plain text, so write sequences with
+  move numbers wherever seeing the position helps.
+- **No promotion choice.** The board always promotes to a queen, so a line whose
+  point is an underpromotion can't be drilled (the Lasker Trap was dropped for
+  this).
+- **Model games are played in "guess the move" mode,** stopping before each of
+  the learner's moves. Annotate the moments where a guess teaches something, and
+  leave the routine moves bare, because only annotated moves get a coach bubble.
+
+## Trap courses
+
+A trap is an opening module like any other (`section: "traps"`), not a line in
+a collection, so it can grow variations the way `friedliver.py` has.
+
+- **Teach it from the chair that springs it** (`orientation`), ending on the
+  payoff. Give each line a `side` when it's taught from the other chair.
+- **Add a line from the victim's chair where the engine supports one:** the
+  safe move at the moment of the mistake and a sensible continuation. Spring it,
+  then avoid it.
+- **Exact move orders come from the trap's Wikipedia or Wikibooks article**
+  (see `references/sources.md`), then the engine. Where the source and the engine
+  disagree about which move is the real mistake, write what the engine says.
+- **A game attribution needs the game.** Name a game only if `fetch-games.py`
+  finds it in the stated form; otherwise ship the moves without the name.
+
+## Running the engine beside other work
+
+The box is shared, and four engine-heavy agents at once rebooted it once.
+
+- Run with `THREADS=1`. If several agents run at once, cap the hash too:
+  `STOCKFISH=<a wrapper>` whose `sed -u` rewrites the `Hash` option, and which
+  also lets `quit` through (`-e '/^quit$/q'`). Without that, python-chess's
+  `quit()` hangs and a finished `position-evals.py` run stalls at the very end.
+- `/tmp` is wiped on reboot, so keep research notes you'll need in the worktree,
+  not only in the scratchpad.
 
 ## What the page does with the rest
 

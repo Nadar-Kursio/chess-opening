@@ -7,6 +7,7 @@ import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { positionKey, type Question } from '@/lib/course';
 import { play } from '@/lib/sound';
 import type { Severity, Turn } from '@/lib/types';
+import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 
 /* Questions one at a time: the board plays the opponent's move in, the learner answers. Used by a
@@ -54,6 +55,7 @@ function Run({
   // started with, or the question under the learner's hand changes mid-quiz.
   const [questions] = useState(shipped);
   const make = useMessages();
+  const { orientation, flip } = useFlip(side);
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState<'before' | 'position'>('before');
   const [attempts, setAttempts] = useState(0);
@@ -219,6 +221,7 @@ function Run({
 
   return (
     <SessionFrame
+      onFlip={flip}
       closeHref={closeHref}
       title={title}
       progress={(index + (solved ? 1 : 0)) / total}
@@ -227,7 +230,7 @@ function Run({
       board={
         <Board
           fen={solvedBoard.fen}
-          orientation={side}
+          orientation={orientation}
           last={solvedBoard.from ? { from: solvedBoard.from, to: solvedBoard.to } : null}
           legal={q.position.legal}
           movable={!solved && !done && shown === 'position' ? side : null}
