@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { positionKey, type Question } from '@/lib/course';
-import { play } from '@/lib/sound';
+import { play, type SoundSet } from '@/lib/sound';
 import type { Severity, Turn } from '@/lib/types';
 import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
@@ -23,7 +23,7 @@ interface Props {
   questions: (Question & { accept?: string[] })[];
   closeHref: string;
   next: { href: string; label: string } | null;
-  sound: boolean;
+  sound: SoundSet;
   coordinates: boolean;
 }
 

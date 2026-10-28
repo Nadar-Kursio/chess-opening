@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, type ReactNode } from 'react';
+import { Speaker, SpeakerOff } from '@/components/ui/icons';
 
 /* The session screen every mode shares: a top bar with the way out and the progress, the board,
    the coach's running commentary beside it, and a footer that turns green or red with the
@@ -16,6 +17,18 @@ export interface Msg {
   /** Authored course prose: compiled from the repo, already HTML-escaped by the author. */
   html?: string | null;
   text?: string;
+  /** The narration clip that reads this message aloud, by utterance key. */
+  clip?: string;
+}
+
+/** What the coach panel needs from useNarration to show and control the voice. */
+export interface Voice {
+  on: boolean;
+  speaking: string | null;
+  blocked: boolean;
+  toggle: () => void;
+  replay: (clip: string) => void;
+  resume: () => void;
 }
 
 export function SessionFrame({
@@ -84,7 +97,7 @@ export function SessionFrame({
   );
 }
 
-export function Coach({ msgs, children }: { msgs: Msg[]; children?: ReactNode }) {
+export function Coach({ msgs, voice, children }: { msgs: Msg[]; voice?: Voice; children?: ReactNode }) {
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -93,11 +106,10 @@ export function Coach({ msgs, children }: { msgs: Msg[]; children?: ReactNode })
     <section className="coach" aria-label="Coach">
       <div className="coach__feed">
         {msgs.map((m) => (
-          <div key={m.id} className={`bubble bubble--${m.kind}`}>
-            {m.title ? <div className="bubble__title">{m.title}</div> : null}
+          <Bubble key={m.id} kind={m.kind} title={m.title} clip={m.clip} voice={voice}>
             {m.html ? <div className="bubble__text" dangerouslySetInnerHTML={{ __html: m.html }} /> : null}
             {m.text ? <p className="bubble__text">{m.text}</p> : null}
-          </div>
+          </Bubble>
         ))}
         <div ref={end} />
       </div>
@@ -106,13 +118,92 @@ export function Coach({ msgs, children }: { msgs: Msg[]; children?: ReactNode })
   );
 }
 
-export function CoachAvatar() {
+/** A coach message. One that has a recording gets a button to hear it, and lights while it plays. */
+export function Bubble({
+  kind,
+  title,
+  clip,
+  voice,
+  children,
+}: {
+  kind: string;
+  title?: string;
+  clip?: string;
+  voice?: Voice;
+  children?: ReactNode;
+}) {
+  const playing = !!clip && voice?.speaking === clip;
   return (
-    <div className="coach__who">
+    <div className={`bubble bubble--${kind}${playing ? ' bubble--speaking' : ''}`}>
+      {clip && voice ? (
+        <button
+          type="button"
+          className="bubble__play"
+          onClick={() => voice.replay(clip)}
+          aria-label={playing ? 'The coach is reading this' : 'Hear this again'}
+          title={playing ? 'Reading…' : 'Hear this again'}
+        >
+          {playing ? <Wave /> : <Speaker size={16} />}
+        </button>
+      ) : null}
+      {title ? <div className="bubble__title">{title}</div> : null}
+      {children}
+    </div>
+  );
+}
+
+function Wave() {
+  return (
+    <span className="wave" aria-hidden="true">
+      <i />
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+
+/** The coach's name plate. With a voice, the avatar pulses while it speaks and a button mutes it. */
+export function CoachAvatar({ voice }: { voice?: Voice }) {
+  const speaking = !!voice?.speaking;
+  useEffect(() => {
+    if (!voice) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'm' || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.target as HTMLElement | null)?.tagName === 'INPUT') return;
+      voice.toggle();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [voice]);
+  return (
+    <div className={`coach__who${speaking ? ' coach__who--speaking' : ''}`}>
       <span className="coach__avatar" aria-hidden="true">
         <img src="/pieces/wN.svg" alt="" />
       </span>
       <span className="coach__name">Coach</span>
+      {speaking ? (
+        <span className="coach__status" role="status">
+          <Wave /> Speaking
+        </span>
+      ) : null}
+      {voice?.blocked ? (
+        <button type="button" className="btn btn--secondary btn--sm coach__resume" onClick={voice.resume}>
+          <Speaker size={16} /> Tap to hear the coach
+        </button>
+      ) : null}
+      {voice ? (
+        <button
+          type="button"
+          className={`icon-btn coach__mute${voice.on ? '' : ' coach__mute--off'}`}
+          onClick={voice.toggle}
+          aria-pressed={!voice.on}
+          aria-label={voice.on ? 'Mute the coach' : 'Unmute the coach'}
+          title={voice.on ? 'Mute the coach (M)' : 'Unmute the coach (M)'}
+        >
+          {voice.on ? <Speaker /> : <SpeakerOff />}
+        </button>
+      ) : null}
     </div>
   );
 }

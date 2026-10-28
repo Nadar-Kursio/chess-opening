@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
-import { play } from '@/lib/sound';
+import { play, type SoundSet } from '@/lib/sound';
 import type { Game, Turn } from '@/lib/types';
 import { Coach, CoachAvatar, SessionFrame, useMessages, type Msg, type Tone } from './Frame';
 import { useFlip } from './useFlip';
@@ -17,7 +17,7 @@ interface Props {
   game: Game;
   side: Turn;
   closeHref: string;
-  sound: boolean;
+  sound: SoundSet;
   coordinates: boolean;
 }
 

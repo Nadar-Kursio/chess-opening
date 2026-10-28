@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type Tree, type TreeEdge } from '@/lib/course';
-import { play } from '@/lib/sound';
+import { play, type SoundSet } from '@/lib/sound';
 import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 
@@ -18,7 +18,7 @@ interface Props {
   title: string;
   tree: Tree;
   closeHref: string;
-  sound: boolean;
+  sound: SoundSet;
   coordinates: boolean;
 }
 
