@@ -1,7 +1,7 @@
 import 'server-only';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { Catalog, Opening } from './types';
+import type { Catalog, Game, Opening } from './types';
 
 /* The course is the JSON src/build.py emits, copied into CONTENT_DIR by scripts/content.sh.
    Read once per process: a deploy is what changes it. */
@@ -35,4 +35,16 @@ export function getOpening(id: string): Opening {
     openings.set(id, op);
   }
   return op;
+}
+
+const games = new Map<string, Game>();
+
+export function getGame(id: string): Game | null {
+  if (!getCatalog().games.some((g) => g.id === id)) return null;
+  let game = games.get(id);
+  if (!game) {
+    game = JSON.parse(read(path.join('games', `${id}.json`))) as Game;
+    games.set(id, game);
+  }
+  return game;
 }

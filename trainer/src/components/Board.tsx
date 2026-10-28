@@ -17,7 +17,7 @@ export interface BoardArrow {
 
 export interface BoardFlash {
   sq: string;
-  kind: 'good' | 'bad';
+  kind: 'good' | 'bad' | 'hint';
 }
 
 interface Props {
@@ -277,7 +277,7 @@ function Arrows({ arrows, orientation }: { arrows: BoardArrow[]; orientation: Tu
         const f = centre(a.from);
         const t = centre(a.to);
         const len = Math.hypot(t.x - f.x, t.y - f.y);
-        const trim = 4.2;
+        const trim = 3.4;
         const x2 = t.x - ((t.x - f.x) / len) * trim;
         const y2 = t.y - ((t.y - f.y) / len) * trim;
         return (

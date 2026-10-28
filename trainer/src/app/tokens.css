@@ -39,6 +39,7 @@
   --sq-pick: rgba(20, 85, 30, 0.5);
   --sq-good: rgba(46, 158, 91, 0.75);
   --sq-bad: rgba(229, 72, 77, 0.7);
+  --sq-hint: rgba(61, 139, 253, 0.55);
   --sq-dot: rgba(20, 30, 20, 0.22);
   --sq-check: rgba(229, 72, 77, 0.85);
   --arrow-hint: rgba(61, 139, 253, 0.85);
@@ -89,6 +90,7 @@
   --narrow: 460px;
   --board-max: 600px;
   --side: 340px;
+  --lesson-board: 320px;
   --coach-avatar: 44px;
   --gutter: 16px;
 

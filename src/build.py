@@ -688,6 +688,9 @@ def build_game(op_id, index, game, errors, evals):
         claim = san_overclaim(board, move, san)
         if claim:
             errors.append(f"{op_id} / game {index} '{game['id']}' / ply {i + 1} '{san}': {claim}")
+        # The position before the move ships its legal moves: the trainer's
+        # guess-the-move mode takes the learner's attempt on this board.
+        plies[i]["legal"] = packed_legal(board)
         mover = "w" if board.turn == chess.WHITE else "b"
         sacs.append(sacrifice(board, move))
         board.push(move)

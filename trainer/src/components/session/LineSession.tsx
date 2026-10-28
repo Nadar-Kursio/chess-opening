@@ -7,6 +7,7 @@ import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { colourName, positionKey } from '@/lib/course';
 import { play } from '@/lib/sound';
 import type { Line, Severity, Turn } from '@/lib/types';
+import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 
 /* Learn, Drill and Recall: one line, played from the learner's chair. The opponent's moves play
@@ -35,6 +36,8 @@ interface Props {
   next: { href: string; label: string } | null;
   sound: boolean;
   coordinates: boolean;
+  /** Opening moves shared with an earlier chapter, which the learner may skip. */
+  shared: { plies: number; chapter: string } | null;
 }
 
 const SEV_WORD: Record<Severity, string> = {
@@ -61,18 +64,29 @@ function Run({
   next,
   sound,
   coordinates,
+  shared,
   restart,
 }: Props & { restart: () => void }) {
   const plies = line.plies;
   const last = plies.length - 1;
-  const mine = plies.map((p, i) => i > 0 && p.turn === side);
+  const [start, setStart] = useState(0);
+  const mine = plies.map((p, i) => i > start && p.turn === side);
   const asked = mine.filter(Boolean).length;
   const opponent = colourName(side === 'w' ? 'b' : 'w');
 
   const make = useMessages();
+  const { orientation, flip } = useFlip(side);
   const [ply, setPly] = useState(0);
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     make({ kind: 'intro', title: line.name, html: line.note }),
+    ...(line.record
+      ? [
+          make({
+            kind: 'info',
+            text: `In ${line.record.games.toLocaleString('en-GB')} master games that reached ${line.plies[line.record.at]?.num ?? 'this line'}: White won ${line.record.white}%, ${line.record.draw}% were drawn, Black won ${line.record.black}%.`,
+          }),
+        ]
+      : []),
     make({
       kind: 'info',
       text:
@@ -86,7 +100,9 @@ function Run({
   const [tone, setTone] = useState<Tone>('idle');
   const [flash, setFlash] = useState<BoardFlash | null>(null);
   const [wrongHere, setWrongHere] = useState(0);
-  const [hinted, setHinted] = useState(false);
+  // 0 no help, 1 the piece to move is lit, 2 the arrow shows the move.
+  const [hintLevel, setHintLevel] = useState(0);
+  const hinted = hintLevel > 0;
   const [stats, setStats] = useState({ correct: 0, wrong: 0, hints: 0 });
   const [done, setDone] = useState<null | { passed: boolean | null }>(null);
   const positions = useRef(new Map<string, boolean>());
@@ -135,6 +151,12 @@ function Run({
             .map((p) => make({ kind: 'yours', title: p.num, html: p.note })),
         ]);
       }
+      if (line.plan) {
+        const plan = line.plan;
+        const next = plan.next?.length ? `<ul>${plan.next.map((n) => `<li>${n}</li>`).join('')}</ul>` : '';
+        const endgame = plan.endgame ? `<p><b>If the queens come off:</b> ${plan.endgame}</p>` : '';
+        say({ kind: 'done', title: 'Where this leaves you', html: `${plan.point}${next}${endgame}` });
+      }
       void finish(stats);
       return;
     }
@@ -172,7 +194,7 @@ function Run({
         html: mode === 'recall' || mode === 'learn' ? null : expected.note,
       });
       setWrongHere(0);
-      setHinted(false);
+      setHintLevel(0);
       setPly(ply + 1);
       return;
     }
@@ -204,15 +226,34 @@ function Run({
     }
   };
 
+  // Help comes in two steps, the way a coach would give it: which piece, then where it goes.
+  const canSkip = !!shared && start === 0 && stats.correct === 0 && stats.wrong === 0 && ply < shared.plies;
+  const skip = () => {
+    if (!shared) return;
+    setStart(shared.plies);
+    setPly(shared.plies);
+    setFlash(null);
+    setTone('idle');
+    say({
+      kind: 'info',
+      text: `Skipped to ${plies[shared.plies].num} — the moves before it are the same as “${shared.chapter}”.`,
+    });
+  };
+
   const hint = () => {
-    if (!yourTurn || hinted || mode !== 'drill') return;
-    setHinted(true);
-    setStats((s) => ({ ...s, hints: s.hints + 1 }));
-    say({ kind: 'hint', text: 'Here’s the idea — the arrow shows the move.' });
+    if (!yourTurn || hintLevel >= 2 || mode !== 'drill') return;
+    if (hintLevel === 0) {
+      setStats((s) => ({ ...s, hints: s.hints + 1 }));
+      setFlash({ sq: expected.from!, kind: 'hint' });
+      say({ kind: 'hint', text: 'This piece moves. Where to?' });
+    } else {
+      say({ kind: 'hint', text: 'The arrow shows the move.' });
+    }
+    setHintLevel(hintLevel + 1);
   };
 
   const showAnswer =
-    yourTurn && (mode === 'learn' || hinted || (mode === 'drill' && wrongHere >= 2) || (mode === 'recall' && wrongHere > 0));
+    yourTurn && (mode === 'learn' || hintLevel >= 2 || (mode === 'drill' && wrongHere >= 2) || (mode === 'recall' && wrongHere > 0));
   const arrows: BoardArrow[] =
     showAnswer && expected.from && expected.to
       ? [{ from: expected.from, to: expected.to, kind: mode === 'recall' ? 'bad' : 'hint' }]
@@ -254,9 +295,14 @@ function Run({
             : `${youDone} of ${asked} moves`}
         </span>
       </div>
+      {canSkip ? (
+        <button type="button" className="btn btn--secondary" onClick={skip}>
+          Skip to move {plies[shared!.plies + 1]?.num.split('.')[0]}
+        </button>
+      ) : null}
       {mode === 'drill' ? (
-        <button type="button" className="btn btn--ghost" onClick={hint} disabled={!yourTurn || hinted}>
-          Hint
+        <button type="button" className="btn btn--ghost" onClick={hint} disabled={!yourTurn || hintLevel >= 2}>
+          {hintLevel === 1 ? 'Show move' : 'Hint'}
         </button>
       ) : null}
     </>
@@ -264,6 +310,7 @@ function Run({
 
   return (
     <SessionFrame
+      onFlip={flip}
       closeHref={closeHref}
       title={title}
       progress={asked ? youDone / asked : 0}
@@ -272,7 +319,7 @@ function Run({
       board={
         <Board
           fen={current.fen}
-          orientation={side}
+          orientation={orientation}
           last={current.from ? { from: current.from, to: current.to } : null}
           legal={current.legal}
           movable={yourTurn && !done ? side : null}

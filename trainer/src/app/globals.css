@@ -375,6 +375,10 @@ a.card:hover {
   font-size: var(--text-sm);
 }
 .icon-btn {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
   width: var(--tap);
   height: var(--tap);
   display: grid;
@@ -638,27 +642,6 @@ a.card:hover {
   grid-template-columns: repeat(auto-fill, minmax(calc(var(--side) - var(--space-6)), 1fr));
   gap: var(--space-4);
 }
-.trap-banner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  background: linear-gradient(120deg, var(--gold-soft), var(--surface) 70%);
-}
-.trap-banner__icon,
-.traps-hero__icon {
-  width: calc(var(--tap) * 1.4);
-  height: calc(var(--tap) * 1.4);
-  border-radius: var(--radius-lg);
-  background: var(--gold);
-  box-shadow: 0 var(--press) 0 var(--gold-deep);
-  color: var(--ink);
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-.trap-banner > div {
-  flex: 1;
-}
 
 /* ---------- mini board ---------- */
 
@@ -870,8 +853,7 @@ a.card:hover {
   flex-direction: column;
   gap: var(--space-1);
 }
-.way,
-.way-card {
+.way {
   display: flex;
   gap: var(--space-3);
   align-items: center;
@@ -880,8 +862,7 @@ a.card:hover {
   color: inherit;
   text-decoration: none;
 }
-.way > span:last-child,
-.way-card > span:last-child {
+.way > span:last-child {
   display: flex;
   flex-direction: column;
 }
@@ -915,95 +896,216 @@ a.card:hover {
   background: var(--gold-soft);
   color: var(--gold-ink);
 }
-.about summary {
-  cursor: pointer;
-  list-style: none;
-}
-.about summary::-webkit-details-marker {
-  display: none;
-}
-.about summary h3::after {
-  content: '+';
-  margin-left: auto;
-  color: var(--muted);
-}
-.about[open] summary h3::after {
-  content: '–';
-}
-.about p,
-.trap-list {
-  font-size: var(--text-sm);
-  color: var(--ink-soft);
-}
-.trap-list {
-  margin: 0;
-  padding-left: var(--space-5);
+
+/* ---------- the opening overview ---------- */
+
+.overview {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-}
-
-/* ---------- traps ---------- */
-
-.traps-hero {
-  display: flex;
-  gap: var(--space-5);
-  align-items: center;
-}
-.traps-hero > div {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.grid-cards--traps {
-  grid-template-columns: repeat(auto-fill, minmax(calc(var(--side) - var(--space-4)), 1fr));
-}
-.trap-card {
-  display: flex;
   gap: var(--space-4);
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-6) var(--space-6);
 }
-.trap-card__board {
-  width: 36%;
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: var(--border) solid var(--line);
+  margin: 0 calc(var(--space-6) * -1);
+  padding: 0 var(--space-6);
+}
+.tab {
   flex: none;
-  align-self: flex-start;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border: 0;
+  border-bottom: var(--press) solid transparent;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-md);
+  cursor: pointer;
 }
-.trap-card__body {
+.tab:hover {
+  color: var(--ink);
+}
+.tab--on {
+  color: var(--green-ink);
+  border-bottom-color: var(--green);
+}
+.illustrated {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--lesson-board);
+  gap: var(--space-6);
+  align-items: start;
+}
+.illustrated--text {
+  grid-template-columns: minmax(0, 1fr);
+}
+.illustrated__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+.illustrated__card {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  min-width: 0;
-  align-items: flex-start;
 }
-.mini-path {
+.illustrated__card h3 {
+  color: var(--ink);
+}
+.illustrated__board {
+  position: sticky;
+  top: calc(var(--header) + var(--space-4));
   display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
-  margin-top: auto;
+  flex-direction: column;
+  gap: var(--space-2);
 }
-.mini-node {
-  width: calc(var(--icon) + var(--space-2));
-  height: calc(var(--icon) + var(--space-2));
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-xs);
-  background: var(--surface-2);
-  color: var(--muted);
-  text-decoration: none;
+.move-chip {
+  display: inline;
+  padding: 1px var(--space-1);
+  margin: 0 1px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--green-soft);
+  color: var(--green-ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
-.mini-node--done {
+.move-chip:hover {
   background: var(--green);
   color: var(--surface);
 }
-.mini-path .btn {
-  margin-left: var(--space-2);
+.move-chip--on {
+  background: var(--green);
+  color: var(--surface);
 }
-.way-card {
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-xl);
+}
+.stepper__num {
+  min-width: 9ch;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-md);
+}
+.stepper .icon-btn:disabled {
+  opacity: 0.3;
+}
+
+.study {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--side) - var(--space-8)), 1fr));
+  gap: var(--space-4);
+}
+.stage {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-lg);
   padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.stage__head {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.stage__num {
+  width: calc(var(--tap) - var(--space-3));
+  height: calc(var(--tap) - var(--space-3));
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--purple-soft);
+  color: var(--purple);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.stage__body {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.stage__body dt {
+  font-weight: 800;
+  color: var(--ink);
+  margin-top: var(--space-2);
+}
+.stage__body dd {
+  margin: 0;
+}
+.stage__body ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.winbar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.winbar__bar {
+  display: flex;
+  height: var(--bar-thin);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+}
+.winbar__white {
+  background: var(--white-piece-chip);
+}
+.winbar__draw {
+  background: var(--line-strong);
+}
+.winbar__black {
+  background: var(--black-piece-chip);
+}
+
+.segmented {
+  display: flex;
+  padding: var(--space-1);
+  gap: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+}
+.segmented button {
+  flex: 1;
+  min-height: calc(var(--tap) - var(--space-2));
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-weight: 600;
+  cursor: pointer;
+}
+.segmented .segmented__on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--card-shadow);
+}
+.segmented--small button {
+  min-height: calc(var(--tap) - var(--space-4));
+  font-size: var(--text-sm);
 }
 
 /* ---------- profile ---------- */
@@ -1381,6 +1483,14 @@ a.card:hover {
   font-size: var(--text-md);
   color: var(--ink);
 }
+.bubble__text ul {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}
+.bubble__text li + li,
+.bubble__text p {
+  margin-top: var(--space-1);
+}
 .bubble__text + .bubble__text {
   margin-top: var(--space-1);
 }
@@ -1487,6 +1597,18 @@ a.card:hover {
   background: var(--sq-good);
   animation: flash var(--slow) var(--ease) forwards;
 }
+.sq--hint::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--sq-hint);
+  animation: hint-pulse 1.4s var(--ease) infinite;
+}
+@keyframes hint-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
 .sq--bad::after {
   background: var(--sq-bad);
   animation: flash var(--slow) var(--ease) forwards;
@@ -1587,7 +1709,8 @@ a.card:hover {
   pointer-events: none;
 }
 .arrow {
-  stroke-width: 2.4;
+  stroke-width: 1.5;
+  opacity: 0.9;
   stroke-linecap: round;
 }
 .arrow--hint {
@@ -1618,6 +1741,15 @@ a.card:hover {
   }
   .sidebar {
     position: static;
+  }
+  .illustrated {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .illustrated__board {
+    order: -1;
+    position: static;
+    width: min(100%, var(--lesson-board));
+    justify-self: center;
   }
   .rep {
     grid-template-columns: minmax(0, 1fr);
@@ -1711,13 +1843,6 @@ a.card:hover {
   }
   .foot__actions .btn {
     flex: 1;
-  }
-  .trap-card {
-    flex-direction: column;
-  }
-  .trap-card__board {
-    width: 60%;
-    align-self: center;
   }
   .card {
     padding: var(--space-4);

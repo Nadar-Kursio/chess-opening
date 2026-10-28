@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import CourseCard from '@/components/ui/CourseCard';
 import MiniBoard from '@/components/ui/MiniBoard';
-import { Flame, Play, Trap } from '@/components/ui/icons';
+import { Flame, Play } from '@/components/ui/icons';
 import { courseCard, courses, isFeatured, trapCourses } from '@/lib/catalog';
 import { getOpening } from '@/lib/content';
 import { STEP_INFO, lineBySlug } from '@/lib/course';
@@ -21,9 +21,10 @@ export default async function Home() {
   ]);
 
   const cards = courses().map((o) => courseCard(o, progress.get(o.id)));
-  const repertoire = cards.filter((c) => isFeatured(c.summary.id));
-  const others = cards.filter((c) => !isFeatured(c.summary.id) && c.summary.section !== 'traps');
-  const traps = trapCourses();
+  const isTrap = (c: (typeof cards)[number]) => c.summary.section === 'traps';
+  const repertoire = cards.filter((c) => isFeatured(c.summary.id) && !isTrap(c));
+  const others = cards.filter((c) => !isFeatured(c.summary.id) && !isTrap(c));
+  const traps = trapCourses().map((o) => cards.find((c) => c.summary.id === o.id)!);
 
   // Pick up where the learner left off; a newcomer starts at the top of the repertoire.
   const resume =
@@ -116,20 +117,18 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section">
-        <Link href="/traps" className="card trap-banner">
-          <span className="trap-banner__icon">
-            <Trap size={28} />
-          </span>
+      <section className="section" id="traps">
+        <div className="section__head">
           <div>
-            <h2>Opening traps</h2>
-            <p className="muted">
-              {traps.length} trap course{traps.length === 1 ? '' : 's'}, from the Fried Liver to the quick mates. Learn to
-              spring them — and never fall for them.
-            </p>
+            <h2 className="section__title">Traps</h2>
+            <p className="muted">Spring them when your opponent walks in — and recognise them before you do.</p>
           </div>
-          <span className="btn btn--gold">Open</span>
-        </Link>
+        </div>
+        <div className="grid-cards">
+          {traps.map((c) => (
+            <CourseCard key={c.summary.id} card={c} compact />
+          ))}
+        </div>
       </section>
 
       {others.length ? (
