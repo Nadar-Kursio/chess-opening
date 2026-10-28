@@ -12,7 +12,7 @@ from importlib import import_module
 
 ORDER = [
     "italian", "ruylopez", "scotch", "fourknights",
-    "sicilian", "french", "carokann",
+    "sicilian", "french", "carokann", "scandinavian",
     "queensgambit", "slav", "london",
     "catalan", "nimzo", "kid",
     "scholarsmate", "friedliver",
