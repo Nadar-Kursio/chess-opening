@@ -8,9 +8,9 @@ OPENING = {
     "level": "Beginner → Grandmaster",
     "theory": {
         "big_idea": "White plays the same first five or six moves regardless of what Black does: d4, Bf4, e3, Nf3, c3, Bd3 (and often Nbd2, h3, O-O). The bishop gets outside the pawn chain before e3 locks it in — this is the single most important move-order point in the whole system. The result is a solid, flexible position with no weaknesses, from which White plays either Ne5 with a kingside attack or a slow queenside expansion.",
-        "structure": "White pawns on d4, e3, c3 form a small pyramid — extremely hard to attack. The dark-squared bishop sits outside on f4 or g3 controlling the b8–h2 diagonal, which runs at c7 and d6 and not at Black's king. The king is hit from the other diagonal, by the bishop on d3, and the attacking machine is built around that one square: Ne5 held by d4 and the d2-knight, f2–f4 behind it, Bd3 aimed at h7 and the queen taking whichever of f3, g3 and h4 the bishops have left free.",
+        "structure": "White pawns on d4, e3, c3 form a small pyramid — extremely hard to attack. The dark-squared bishop sits outside on f4 or g3 controlling the b8–h2 diagonal, which runs at c7 and d6 and not at Black's king. The king is hit from the other diagonal, by the bishop on d3, and the attacking machine is built around that one square: Ne5 held by the d4-pawn, the d2-knight ready to replace it from f3, f2–f4 behind it, Bd3 aimed at h7 and the queen taking whichever of f3, g3 and h4 the bishops have left free.",
         "white_plans": [
-            "Plant a knight on e5, hold it with d4 and the d2-knight, add f2–f4, and attack h7 with the d3-bishop and the queen.",
+            "Plant a knight on e5, hold it with the d4-pawn, keep the d2-knight ready to replace it from f3, add f2–f4, and attack h7 with the d3-bishop and the queen.",
             "Trade the dark-squared bishops on d6 or let Black trade on g3 — and recapture with the h-pawn, so the h-file opens toward the king Black has just castled next to.",
             "Queenside expansion with a4 and Nd2–b3–c5, especially when Black castles kingside and commits to ...c5.",
             "The Jobava version: Nc3 instead of Nbd2, with Nb5 and e3–e4 ideas and a much sharper game.",
@@ -32,13 +32,15 @@ OPENING = {
     "lines": [
         {
             "name": "Main Line vs ...e6 — The Ne5 Attack",
+            "slug": "ne5-attack",
             "note": "The standard London against Black's most common setup, with the classic kingside attacking scheme.",
             "moves": "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5 c3 Nc6 Nbd2 Bd6 Bg3 O-O Bd3 b6 Ne5 Bb7 Qf3",
             "tier": "Foundation",
             "drill": True,
+            "record": {"at": 17, "games": 156, "white": 47, "draw": 25, "black": 28},
             "plan": {
                 "tier": 'Structure',
-                "point": "Nothing has been traded and nothing is weak. Eight pawns each, three a side on each wing, a pawn on d and e each — the material and the wings are dead symmetrical, and that is fine, because the asymmetry is a piece. The knight on e5 is held twice, by the d4-pawn and the d2-knight, and no black pawn will ever be able to drive it away. Your king is still on e1 and that is fine too: there is not a single open file on the board.",
+                "point": "Nothing has been traded and nothing is weak. Eight pawns each, three a side on each wing, a pawn on d and e each — the material and the wings are dead symmetrical, and that is fine, because the asymmetry is a piece. The knight on e5 is held twice, by the d4-pawn and the g3-bishop, and no black pawn will ever be able to drive it away. Your king is still on e1 and that is fine too: there is not a single open file on the board.",
                 "next": [
                     "If Black plays 10...Qc7, the answer is 11.Nxc6! and the move order is not optional. Play 11.O-O or 11.Bh4 first and Black gets 11...Nxe5 12.dxe5 Bxe5 — with the queen on c7 holding the bishop, the whole liquidation works and the outpost was for nothing.",
                     "Then Bh4, and understand it as a clearance rather than a retreat: it empties g3, and g3 is the square the queen has to cross to reach h3. Qh3 is the only route she has to the h-file.",
@@ -56,23 +58,25 @@ OPENING = {
                 8: "The main challenge. Black hits the base of the pawn chain.",
                 9: "Reinforcing d4, and it does something less obvious as well: it empties c2, so the queen can reach b3 later. That matters, because 5...Qb6 hitting b2 is Black's most annoying idea in this whole structure and 6.Qb3 is the answer to it — see the deviation panel.",
                 10: "Adding a second attacker to d4.",
-                11: "The knight goes to d2, not c3, because the c-pawn is already standing on c3 holding the centre. From d2 it also covers e5, which is the square the whole system is built around.",
+                11: "The knight goes to d2, not c3, because the c-pawn is already standing on c3 holding the centre. From d2 it covers e4 and f3, and f3 is the square it steps to whenever the other knight is traded off e5 — the square the whole system is built around.",
                 12: "Black offers a trade of the important dark-squared bishops. The engine's own first choice here is 6...Nh5, hitting the bishop directly — the deviation panel covers it.",
                 13: "The bishop steps aside rather than be traded, and from g3 it is still looking down the same diagonal at e5, the square the knight is heading for. Be clear which diagonal that is: b8–h2 runs at d6 and c7, not at Black's king. h7 is a different diagonal and a different bishop's job.",
                 14: "King safety.",
                 15: "And here is that other bishop. From d3 the b1–h7 diagonal is completely empty as far as h7 — the single square every London attack ends on. The two bishops are not both pointing at the king; the one on g3 is looking at the black bishop on d6.",
                 16: "Black prepares to fianchetto and challenge the long diagonal.",
-                17: "The signature move of the London System. The knight lands on an outpost held twice, by the d4-pawn and the d2-knight, and no black pawn can ever drive it away: ...f6 would leave e6 and the whole light-square complex hanging. Be honest about the price, though — at depth twenty the engine prefers the immediate 9.e4, and Ne5 gives up about four tenths of a pawn of its edge. What you buy with them is the position every London player recognises.",
+                17: "The signature move of the London System. The knight lands on an outpost held twice, by the d4-pawn and the g3-bishop, and no black pawn can ever drive it away: ...f6 would leave e6 and the whole light-square complex hanging. Be honest about the price, though — at depth twenty the engine prefers the immediate 9.e4, and Ne5 gives up about four tenths of a pawn of its edge. What you buy with them is the position every London player recognises.",
                 18: "Black develops — and notice how little the bishop does from b7. Its own knight on c6 blocks the diagonal, and behind that stands its own pawn on d5.",
-                19: "The attack begins, and it is worth being exact about the queen's route, because the obvious one is not there: Qh3 is illegal while White's own bishop stands on g3. From f3 the queen watches e4, so ...Ne4 is never a free move, and she waits. The moment the dark-squared bishops come off, g3 opens for her and f2–f4 rolls in behind the knight. The deep dive plays exactly that out.",
+                19: "The attack begins, and it is worth being exact about the queen's route, because the obvious one is not there: Qh3 is illegal while White's own bishop stands on g3. From f3 the queen watches e4, so ...Ne4 is never a free move, and she waits. The moment the dark-squared bishops come off, g3 opens for her and f2–f4 rolls in behind the knight. The deep dive plays exactly that out. Know that you are choosing, too: of the 155 master games in the archive that reached this position, 107 played 10.f4 and none played Qf3 — but at depth twenty 10.f4 is about a quarter of a pawn worse, and Qf3 is level with the engine's own 10.O-O. The deviation panel has both.",
             },
         },
         {
             "name": "London vs the King's Indian Setup",
+            "slug": "kings-indian-setup",
             "note": "When Black fianchettoes, the London switches gears: White grabs the centre with c4 and plays a Queen's-Gambit-style game.",
             "moves": "d4 Nf6 Bf4 g6 e3 Bg7 Nf3 O-O Be2 d6 h3 Nbd7 O-O Re8 c4 e5 Bh2 exd4 exd4",
             "tier": "Structure",
             "drill": True,
+            "record": {"at": 7, "games": 10491, "white": 36, "draw": 26, "black": 38},
             "plan": {
                 "tier": 'Plans',
                 "point": "The system has turned into a Queen's Gambit and the counting says exactly how much that is worth: seven pawns each, three a side on each wing, nobody with a majority anywhere, and the engine calls it dead level. What you have is the pawn on c4 against the pawn on c7 — one extra rank of space in the centre — and an e-file with no pawns left on it at all. That file is the only road either army has.",
@@ -99,13 +103,14 @@ OPENING = {
                 14: "Supporting the ...e5 push.",
                 15: "The gear change. With the kingside safe, White stops playing a system and starts playing a Queen's Gambit: pawns on c4 and d4 against a single pawn on d6, and one extra rank of space in the centre. Nothing here is forced and nothing here is winning — it is a normal, slightly more comfortable game.",
                 16: "Black finally breaks.",
-                17: "Stepping the bishop out of the way in advance, onto the square h3 cleared for it seven moves ago. It is not sitting on an open diagonal — Black's pawn on e5 stops it two squares along — but nothing on the board can hit it there, and the moment that pawn moves the diagonal runs all the way to b8.",
+                17: "Stepping the bishop out of the way in advance, onto the square h3 cleared for it three moves ago. It is not sitting on an open diagonal — Black's pawn on e5 blocks it three squares along — but nothing on the board can hit it there, and the moment that pawn moves the diagonal runs all the way to b8.",
                 18: "Black releases the tension.",
                 19: "Recapturing toward the centre. Count what White actually owns: seven pawns each, three a side on each wing, so nobody has a majority anywhere — the whole edge is the pawn on c4 and the space it buys. The e-file is now completely open, which is the one place either side can create something.",
             },
         },
         {
             "name": "London vs the ...c5 Challenge",
+            "slug": "c5-challenge",
             "note": "The most direct test. Black hits d4 at once and White answers by trading and playing on the resulting structure.",
             "moves": "d4 d5 Bf4 c5 e3 cxd4 exd4 Nc6 Nf3 Bg4 Be2 e6 c3 Bd6 Bxd6 Qxd6 O-O Nge7 Nbd2",
             "tier": "Plans",
@@ -132,16 +137,17 @@ OPENING = {
                 12: "Solid.",
                 13: "The familiar pyramid, and the third defender of d4 arrives with it.",
                 14: "Black offers the bishop trade again.",
-                15: "This time White accepts. The point is not the bishop, it is where Black's queen ends up: on d6 she is exposed to Nc4 and to the rook coming to e1, and every tempo White spends improving a piece is a tempo Black spends moving her again.",
+                15: "This time White accepts. With the c-pawns traded there is no pawn chain left for the bishop to stand outside of, so it is worth less here than in the main line — and the trade heads straight for the slow middlegame where your three queenside pawns against two are the long-term asset.",
                 16: "Forced.",
                 17: "King safety — and note whose king is still in the middle. Black's is on e8 with a half-open e-file about to be pointed at it.",
                 18: "The last knight develops, and e7 rather than f6 is a preference rather than a rule: from e7 it goes to f5, adding a second attacker to d4, or to g6, covering e5 and f4, and it leaves f6 clear. The engine cannot separate the two — the deviation panel shows the ...Nf6 version.",
-                19: "The knight has two routes, and neither is the one people expect — Nf1 is impossible with the rook standing on that square. It goes to c4, hitting the queen on d6, or to b3 and then a5. Material is dead level and the pawns are not symmetrical at all: three queenside pawns against two is a long-term asset, and the half-open e-file points at a king that has not moved. A slow game where the better player wins — which is exactly what the London is designed to produce.",
+                19: "The knight has fewer routes than it looks — Nf1 is impossible with the rook standing on that square, and Nc4 simply drops it to ...dxc4, because the pawn on d5 covers c4. It goes to b3, heading for c5 or supporting a4–a5, or it waits on d2 while Re1 and a4 come first. Material is dead level and the pawns are not symmetrical at all: three queenside pawns against two is a long-term asset, and the half-open e-file points at a king that has not moved. A slow game where the better player wins — which is exactly what the London is designed to produce.",
             },
         },
     ],
     "deep": {
         "name": "Deep dive — the main line to move seventeen",
+        "slug": "ne5-attack-deep",
         "note": "What happens when Black defends correctly. The outpost gets traded, the queen finally reaches h3, the h-file opens — and the position is level. That is the honest London, and it is worth more than a fake attack.",
         "moves": "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5 c3 Nc6 Nbd2 Bd6 Bg3 O-O Bd3 b6 Ne5 Bb7 Qf3 Qc7 Nxc6 Bxc6 Bh4 Ne8 Qh3 f5 O-O Nf6 Bg3 Bxg3 hxg3 Rae8 Nf3",
         "tier": "Plans",
@@ -169,7 +175,7 @@ OPENING = {
             29: "Back again. The bishop has done its job on h4 and g3 is where it belongs, and White would be perfectly happy to be left alone with it.",
             30: "Black takes, because the alternative is watching that bishop sit there forever.",
             31: "With the h-pawn, always. The h-file opens straight at a castled king, and the pawn that lands on g3 covers f4 and h4 so that no black knight can ever use them. This is the recapture Carlsen made in the model game below, and it is the most important habit in the whole system.",
-            32: "Black takes the open file first and is completely fine. Nothing here is going to be decided by force.",
+            32: "The rook goes behind the e-pawn. The file is not open — pawns stand on e3 and e6 — so this is preparation rather than occupation, and Black is completely fine. Nothing here is going to be decided by force.",
             33: "The last piece comes back into play, and the position is dead level. Read that as the good news it is: nine system moves against a strong defender, no theory memorised, no risk taken, and a middlegame with a file to work on and no weakness of your own.",
         },
     },
@@ -382,6 +388,16 @@ OPENING = {
              "line": "dxe5 Nd7 Nf3 h6 O-O"},
         ],
 
+        # ── ply 19 · your own tenth move: the queen, or the masters' f-pawn ─────
+        "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5 c3 Nc6 Nbd2 Bd6 Bg3 O-O Bd3 b6 Ne5 Bb7": [
+            {"san": "f4", "severity": "playable", "tier": "Structure",
+             "why": "The masters' move — 107 of the 155 games in the archive that reached this position — and it is the Stonewall version of the attack: a third pawn behind the knight and a kingside storm in mind. The engine likes it less than Qf3. The pawn on f4 stands on the bishop's own diagonal, so the g3-bishop stops guarding e5 and is shut in behind its own pawn, and 10...Ne7, heading for f5, leaves White about a quarter of a pawn worse off than after the queen move.",
+             "line": "Ne7 Qb1 g6 Bf2 a5"},
+            {"san": "O-O", "severity": "playable", "tier": "Foundation",
+             "why": "The engine's own first choice, level with Qf3. Castling first changes one thing: after 10...Qc7 11.Nxc6 Bxc6 12.Bxd6 Qxd6 the dark-squared bishops come off at once, and the game is about f2–f4 and the e5 square rather than the queen's trip to h3.",
+             "line": "Qc7 Nxc6 Bxc6 Bxd6 Qxd6 f4"},
+        ],
+
         # ── ply 20 · after 10.Qf3 — the same fork, one move later ───────────────
         "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5 c3 Nc6 Nbd2 Bd6 Bg3 O-O Bd3 b6 Ne5 Bb7 Qf3": [
             {"san": "Nxe5", "severity": "blunder", "tier": "Foundation",
@@ -550,7 +566,7 @@ OPENING = {
         # ── ply 17 · after 9.O-O ────────────────────────────────────────────────
         "d4 d5 Bf4 c5 e3 cxd4 exd4 Nc6 Nf3 Bg4 Be2 e6 c3 Bd6 Bxd6 Qxd6 O-O": [
             {"san": "Nf6", "severity": "playable", "tier": "Foundation",
-             "why": "The other knight square, and the engine calls it identical to 9...Nge7. From f6 the knight hits d5 and e4 and does not head for f5; from e7 it does. Pick by what you want it doing in ten moves.",
+             "why": "The other knight square, and the engine calls it identical to 9...Nge7. From f6 the knight covers d5 and e4 and does not head for f5; from e7 it does. Pick by what you want it doing in ten moves.",
              "line": "Nbd2 O-O a4 Qc7 Re1"},
             {"san": "Bxf3", "severity": "playable", "tier": "Structure",
              "why": "10.Bxf3 and you have the two bishops against bishop and knight in an open position with a queenside majority. That is the good version of this structure and Black has just handed it over.",
@@ -663,7 +679,7 @@ OPENING = {
                 "when": "Months two to four",
                 "goal": "Turn the solid position into an attack.",
                 "learn": [
-                    "The attacking machine: Ne5 held by d4 and Nd2, f2–f4 behind it, Bd3 on the b1–h7 diagonal, and the queen taking whichever of f3, g3 and h4 is free — the bishop on g3 blocks more of the third rank than people expect.",
+                    "The attacking machine: Ne5 held by the d4-pawn with Nd2 ready to replace it from f3, f2–f4 behind it, Bd3 on the b1–h7 diagonal, and the queen taking whichever of f3, g3 and h4 is free — the bishop on g3 blocks more of the third rank than people expect.",
                     "The trade-on-d6 plan: swap dark-squared bishops, then use the dark squares and the c-file.",
                     "The queenside plan: b4, a4, Nb3–c5 when Black castles kingside and commits to ...c5.",
                 ],
