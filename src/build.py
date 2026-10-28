@@ -51,7 +51,10 @@ WEB_CONTENT = os.path.join(os.path.dirname(SRC), "web", "content")
 # The openings the app under web/ ships. --emit writes only these; validation
 # still covers the whole catalogue, so an opening joins the new site by giving
 # its lines slugs and adding its id here — nothing else changes.
-PORTED = ["ruylopez", "scholarsmate", "friedliver", "london", "sicilian", "scandinavian", "traps"]
+PORTED = ["ruylopez", "scholarsmate", "friedliver", "london", "sicilian", "scandinavian",
+          "londonb2", "londonh5hunt", "portuguesepin", "timmanknight", "legalsmate",
+          "blackburneshilling", "siberiantrap", "magnussmith", "englundtrap", "elephanttrap",
+          "noahsark", "fishingpole"]
 
 OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
                 "is the whole reason opening theory exists.")

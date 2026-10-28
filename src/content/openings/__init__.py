@@ -15,7 +15,10 @@ ORDER = [
     "sicilian", "french", "carokann", "scandinavian",
     "queensgambit", "slav", "london",
     "catalan", "nimzo", "kid",
-    "scholarsmate", "friedliver", "traps",
+    "scholarsmate", "friedliver",
+    "londonb2", "londonh5hunt", "portuguesepin", "timmanknight",
+    "legalsmate", "blackburneshilling", "siberiantrap", "magnussmith",
+    "englundtrap", "elephanttrap", "noahsark", "fishingpole",
 ]
 
 

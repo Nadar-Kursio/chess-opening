@@ -353,26 +353,26 @@ step("drill: a trap line played as Black asks for Black's moves", async () => {
   window.close();
 });
 
-step("traps: one collection, two chairs — each line drills from its own side", async () => {
-  const { window, document } = await loadPage("openings/traps", { expectIsland: true });
+step("traps: one trap, two chairs — each line drills from its own side", async () => {
+  const { window, document } = await loadPage("openings/siberiantrap", { expectIsland: true });
   const chips = [...document.querySelectorAll(".variation__side")].map((el) => el.textContent);
-  ok(chips.includes("as White"), "the chair chip on a White-played trap in a Black-oriented collection");
-  ok(!chips.includes("as Black"), "no chip on lines played from the collection's own chair");
+  ok(chips.includes("as White"), "the chair chip on the White-played sidestep in a Black-oriented trap");
+  ok(!chips.includes("as Black"), "no chip on lines played from the trap's own chair");
   window.close();
 
-  const white = await loadPage("openings/traps/legals-mate", { expectIsland: true });
+  const white = await loadPage("openings/siberiantrap/sidestep-rd1", { expectIsland: true });
   ok(lab(white.window).state.flipped === false, "the board White-side up for a White trap");
   await act(white.window, (a) => a.setMode("drill"));
   const ws = lab(white.window).state;
   ok(lab(white.window).plies[ws.ply + 1].turn === "w", "the first question to be a White move");
   white.window.close();
 
-  const black = await loadPage("openings/traps/siberian-trap", { expectIsland: true });
+  const black = await loadPage("openings/siberiantrap", { expectIsland: true });
   ok(lab(black.window).state.flipped === true, "the board turned around for a Black trap");
   await act(black.window, (a) => a.setMode("drill"));
   const bs = lab(black.window).state;
   ok(lab(black.window).plies[bs.ply + 1].turn === "b", "the first question to be a Black move");
-  checkLeaks(black.document, "traps / siberian-trap");
+  checkLeaks(black.document, "siberiantrap / siberian-trap");
   black.window.close();
 });
 
