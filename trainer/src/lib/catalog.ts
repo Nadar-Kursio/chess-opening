@@ -20,9 +20,17 @@ export function isFeatured(id: string) {
   return FEATURED.includes(id);
 }
 
-/** The openings whose lines are traps, taught one trap per chapter. */
+/** The openings whose lines are traps, taught one trap per chapter: the collection first. */
+const TRAPS_FIRST = ['traps', 'friedliver'];
+
 export function trapCourses() {
-  return getCatalog().openings.filter((o) => o.section === 'traps');
+  const rank = (id: string) => {
+    const i = TRAPS_FIRST.indexOf(id);
+    return i < 0 ? TRAPS_FIRST.length : i;
+  };
+  return getCatalog()
+    .openings.filter((o) => o.section === 'traps')
+    .sort((a, b) => rank(a.id) - rank(b.id));
 }
 
 /** Opening progress for a card: course progress plus the board to show on it. */
