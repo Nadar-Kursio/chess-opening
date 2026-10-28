@@ -7,19 +7,19 @@ OPENING = {
     "tagline": "The most popular and most successful answer to 1.e4. Black plays to win, not to equalise.",
     "level": "Intermediate → World Championship",
     "theory": {
-        "big_idea": "1...c5 refuses symmetry from move one. Black trades a flank pawn (c) for a central pawn (d) and gets, in return: a half-open c-file pointing straight at c2 and White's king if it castles queenside, and a 2-to-1 central pawn majority. The cost is that White gets a lead in development and space, and usually gets to attack first. Every Sicilian is a race — White attacks the kingside, Black attacks the queenside, and whoever is faster wins.",
-        "structure": "After ...cxd4 the defining structure is the 'Sicilian small centre': Black pawns on d6 and e6 or e5 against White's e4, with the c-file half-open. In the Najdorf and Dragon, White typically castles long and storms the kingside with f3, g4, h4; Black storms the queenside with ...b5, ...b4, ...a5 and sacrifices on c3. But the trade only happens if White plays d4 — the Anti-Sicilians keep the d-pawn at home and ask a completely different question.",
+        "big_idea": "1...c5 refuses symmetry from move one. Black trades a flank pawn (c) for a central pawn (d), 2.Nf3 d6 3.d4 cxd4 4.Nxd4, and gets, in return: a half-open c-file pointing straight at c2 and White's king if it castles queenside, and a 2-to-1 central pawn majority. The cost is that White gets a lead in development and space, and usually gets to attack first. Every Sicilian is a race — White attacks the kingside, Black attacks the queenside, and whoever is faster wins.",
+        "structure": "After ...cxd4 the defining structure is the 'Sicilian small centre': Black pawns on d6 and e6 or e5 against White's e4, with the c-file half-open. In the Najdorf and Dragon, White typically castles long and storms the kingside with f3, g4, h4; Black storms the queenside with ...b5, ...b4, ...a5 and sacrifices on c3. In the English Attack the race starts with 10.O-O-O Nbd7 11.g4 b5 12.g5 b4. But the trade only happens if White plays d4 — the Anti-Sicilians keep the d-pawn at home and ask a completely different question.",
         "white_plans": [
-            "English Attack: Be3, f3, Qd2, O-O-O, then g4 and h4 with a direct pawn storm.",
+            "English Attack: Be3, f3, Qd2, O-O-O, then g4 and h4 with a direct pawn storm. In the Najdorf: 6.Be3 e5 7.Nb3 Be6 8.f3 Be7 9.Qd2 O-O 10.O-O-O Nbd7 11.g4.",
             "Yugoslav Attack against the Dragon: Bc4, Be3, Qd2, O-O-O, h4–h5 and Bh6 trading the fianchetto bishop.",
-            "The positional bind: c4 and Be2 (Maroczy Bind), taking away ...b5 and ...d5 and squeezing Black to death.",
-            "Refuse the trade altogether: 2.c3, 2.Nc3 or 3.Bb5, keeping the d-pawn at home so that Black never gets the half-open c-file at all.",
+            "The positional bind: c4 and Be2 (Maroczy Bind — 1.e4 c5 2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 g6 5.c4 Bg7 6.Be3 Nf6 7.Nc3 O-O 8.Be2), taking away ...b5 and ...d5 and squeezing Black to death.",
+            "Refuse the trade altogether: 2.c3, 2.Nc3 or 2.Nf3 Nc6 3.Bb5, keeping the d-pawn at home so that Black never gets the half-open c-file at all.",
         ],
         "black_plans": [
-            "Queenside expansion with ...a6, ...b5, ...b4 hitting the c3-knight, plus ...Rc8 and the exchange sacrifice ...Rxc3!",
+            "Queenside expansion with ...a6, ...b5, ...b4 hitting the c3-knight (11.g4 b5 12.g5 b4 in the English Attack), plus ...Rc8 and the exchange sacrifice ...Rxc3!",
             "Fight for the d5 square — the whole Najdorf is about whether you get in ...d5 in one move.",
             "The Dragon bishop on g7 pointing down the long diagonal at d4 and b2 and White's queenside king.",
-            "Trade off White's dangerous attackers with ...Nxd4 or ...Ne5–c4 — against a space advantage every trade is worth half a tempo.",
+            "Trade off White's dangerous attackers with ...Nxd4 or ...Ne5–c4 (10.Qd2 Nxd4 11.Bxd4 in the Maroczy) — against a space advantage every trade is worth half a tempo.",
         ],
         "traps": [
             "The Siberian Trap in the Smith-Morra, and it is mate: 1.e4 c5 2.d4 cxd4 3.c3 dxc3 4.Nxc3 Nc6 5.Nf3 e6 6.Bc4 Qc7 7.O-O Nf6 8.Qe2 Ng4 9.h3?? Nd4! 10.Nxd4 Qh2#. The queen lands on h2 because White's own pawn has just left it, the knight on g4 defends her there, and the king has nowhere to go: f1 is its own rook, f2 and g2 are its own pawns, and h1 is covered from h2.",
