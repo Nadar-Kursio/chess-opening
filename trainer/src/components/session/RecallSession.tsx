@@ -80,9 +80,10 @@ function opening(run: Queued): Omit<Msg, 'id'> {
   };
 }
 
-export default function RecallSession({ runs, remaining, title, closeHref, againHref, sound, coordinates }: Props) {
+export default function RecallSession({ runs, remaining: left, title, closeHref, againHref, sound, coordinates }: Props) {
   // Saving the round revalidates the page with a fresh one: hold the round this one started with.
   const [queue, setQueue] = useState<Queued[]>(runs);
+  const [remaining] = useState(left);
   const [total] = useState(() => runs.reduce((n, run) => n + run.asks.length, 0));
   const [r, setR] = useState(0);
   const run = queue[r] as Queued | undefined;
