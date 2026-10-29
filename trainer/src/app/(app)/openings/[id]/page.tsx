@@ -12,7 +12,8 @@ import {
   stepDone,
   type StepKind,
 } from '@/lib/course';
-import { countMissed, getProgress, getPulse } from '@/lib/progress';
+import { courseMemory, endOfDay, syncDeck } from '@/lib/cards';
+import { getProgress, getPulse, learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import Overview from '@/components/lesson/Overview';
 import WinBar from '@/components/ui/WinBar';
@@ -38,17 +39,13 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const user = await requirePageUser(`/openings/${id}`);
   const op = getOpening(id);
   const summary = getCatalog().openings.find((o) => o.id === id)!;
-  const [progress, pulse, missed] = await Promise.all([
-    getProgress(user.id, id),
-    getPulse(user.id),
-    countMissed(user.id),
-  ]);
+  const [progress, pulse, tz] = await Promise.all([getProgress(user.id, id), getPulse(user.id), learnerTimezone(), syncDeck(user.id)]);
+  const { due, chapters: memory } = await courseMemory(user.id, id, endOfDay(tz));
   const byLine = progress.get(id) ?? new Map();
   const card = courseCard(summary, byLine);
   const { progress: p, chapters: chs } = card;
   const sides = sidesTaught(op);
   const punish = punishQuestions(op, op.orientation).length;
-  const misses = missed.get(id) ?? 0;
   const games = getCatalog().games.filter((g) => g.op === id);
   const nextHref = p.next ? `/openings/${id}/${p.next.slug}/${p.next.step}` : null;
 
@@ -126,6 +123,11 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                       {ch.tier ? <span className="chip chip--tier">{ch.tier}</span> : null}
                       <span className="muted small">{ch.yourMoves} moves to learn</span>
                       {lp?.clean_runs ? <span className="muted small">· {lp.clean_runs} clean run{lp.clean_runs === 1 ? '' : 's'}</span> : null}
+                      {memory.get(ch.slug)?.mastered ? (
+                        <span className="muted small" title="Moves Recall now asks at gaps of three weeks or more">
+                          · {memory.get(ch.slug)!.mastered}/{memory.get(ch.slug)!.total} in long-term memory
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -200,14 +202,14 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                 </Link>
               </li>
               <li>
-                <Link href={`/openings/${id}/review`} className={`way${misses ? '' : ' way--quiet'}`}>
-                  <span className="way__icon way__icon--red">
+                <Link href={due ? `/recall/session?course=${id}` : '/recall'} className={`way${due ? '' : ' way--quiet'}`}>
+                  <span className="way__icon way__icon--purple">
                     <Retry size={20} />
                   </span>
                   <span>
-                    <b>Review mistakes{misses ? ` (${misses})` : ''}</b>
+                    <b>Recall{due ? ` (${due} due)` : ''}</b>
                     <span className="muted small">
-                      {misses ? 'The positions you’ve missed most, again.' : 'Nothing yet — misses land here.'}
+                      {due ? 'This course’s moves that are fading, before you forget them.' : 'Nothing due — learned moves come back here.'}
                     </span>
                   </span>
                 </Link>

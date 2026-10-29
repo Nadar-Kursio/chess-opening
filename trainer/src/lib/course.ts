@@ -10,7 +10,7 @@ export const STEP_KINDS: StepKind[] = ['learn', 'drill', 'recall', 'quiz'];
 export const STEP_INFO: Record<StepKind, { label: string; blurb: string }> = {
   learn: { label: 'Learn', blurb: 'Play through the line while the coach explains every move.' },
   drill: { label: 'Drill', blurb: 'Play your moves yourself, with hints when you need them.' },
-  recall: { label: 'Recall', blurb: 'The whole line from memory: no hints, no notes until the end.' },
+  recall: { label: 'Test', blurb: 'The whole line from memory: no hints, no notes until the end.' },
   quiz: { label: 'Quiz', blurb: 'Your opponent leaves the book. Find the right answer.' },
 };
 

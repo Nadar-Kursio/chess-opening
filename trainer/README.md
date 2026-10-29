@@ -1,9 +1,10 @@
 # ChessLab trainer — new.chesslab.dev
 
 The account-backed course app: every opening the build ships becomes a course of chapters (one per
-line), and each chapter runs **Learn → Drill → Recall → Quiz**. Beside the path: free practice
-against any line the course covers, drill shuffle, a review of the positions you miss most, and
-"punish the blunder" for the opponent's authored mistakes. A Traps hub collects the trap openings.
+line), and each chapter runs **Learn → Drill → Test → Quiz**. Beside the path: free practice
+against any line the course covers, drill shuffle and "punish the blunder" for the opponent's
+authored mistakes. A Traps hub collects the trap openings. **Recall** keeps it all remembered:
+spaced repetition across every course the learner has studied.
 
 It reads the same JSON `src/build.py --emit` writes for `web/`, so adding an opening is still
 data-only. Nothing about chess is computed here: legality is the packed `legal` strings (lines and,
@@ -16,6 +17,7 @@ since the trainer, branch positions too), scores are the shipped evals.
 | Course model | `src/lib/course.ts` — chapters, steps, quiz questions, the free-practice tree. Pure; `npm test` runs it against the real compiled course. |
 | Progress | `src/lib/progress.ts` + `db/migrations/`. Step completion is decided server-side from the counts a session reports (`stepPassed`). |
 | Sessions | `src/components/session/` — `LineSession` (learn/drill/recall), `QuizSession` (quiz, punish, review), `FreeSession`. |
+| Recall | `src/lib/memory.ts` (FSRS scheduling, grades from behaviour), `src/lib/recall.ts` (cards and the runs that ask them), `src/lib/cards.ts` (the deck in `review_cards`), `RecallSession`. See below. |
 | Narration | `src/lib/speech.ts` turns course prose into what the coach says in Learn ("2.Bf4" → "bishop f4"); `scripts/narrate.ts` records it with Amazon Polly; `useNarration` plays it. See below. |
 | Auth | Better Auth, email + password, open sign-up. Every page requires an account (`src/proxy.ts`, then `requirePageUser`). |
 
@@ -43,6 +45,25 @@ The Worker exists because the tunnel's origin certificate covers `kursio.dev` on
 `new.chesslab.dev` can't be a CNAME to the tunnel without a new `cloudflared tunnel login`. The
 tunnel serves `chesslab-origin.kursio.dev`; the app 404s any request there without the Worker's
 `x-chesslab-edge` secret.
+
+## Recall
+
+A card is a position where the learner has a move to find. Learn adds a chapter's cards to the
+deck; every graded session after that — drill, test, quiz, punish, Recall itself — reschedules the
+positions it asked with FSRS (`ts-fsrs`, 90% target retention, whole days). The learner never
+grades themselves: found first time is Good, found after more than 15 s is Hard, missed or revealed
+is Again, and a miss is due again the next day. Only the first graded attempt of a learner's day
+moves a card, so repeating a line the same afternoon is practice, not evidence.
+
+A round asks up to 20 due cards, most likely forgotten first. Due cards on one line share a
+**run**: the board replays the line from a few moves before the first of them and stops at each,
+so a move is recalled where it's met over the board. Runs from different courses alternate. A miss
+shows the move, makes the learner play it and asks it again two runs later, until it's found. A
+card counts as long-term memory once its stability reaches 21 days.
+
+Lines learned before Recall existed get their cards on the learner's next visit (`syncDeck`),
+seeded from `position_misses`. Every graded attempt is kept in `review_log`, so FSRS's parameters
+can be fitted to these learners later.
 
 ## Narration
 

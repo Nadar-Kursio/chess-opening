@@ -450,7 +450,7 @@ function Summary({
 }
 
 /** The moves so far, as a scoresheet the learner can glance at. */
-function MoveTape({ plies, upTo }: { plies: Line['plies']; upTo: number }) {
+export function MoveTape({ plies, upTo }: { plies: Line['plies']; upTo: number }) {
   return (
     <ol className="tape" aria-label="Moves so far">
       {plies.slice(1, upTo + 1).map((p, i) => (
@@ -463,7 +463,7 @@ function MoveTape({ plies, upTo }: { plies: Line['plies']; upTo: number }) {
   );
 }
 
-function squareIndex(sq: string) {
+export function squareIndex(sq: string) {
   return (8 - Number(sq[1])) * 8 + 'abcdefgh'.indexOf(sq[0]);
 }
 

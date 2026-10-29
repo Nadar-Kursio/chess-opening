@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { Flame } from '@/components/ui/icons';
-import { getPulse } from '@/lib/progress';
+import { countDue, endOfDay } from '@/lib/cards';
+import { getPulse, learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import NavLinks from './NavLinks';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePageUser('/');
-  const pulse = await getPulse(user.id);
+  const tz = await learnerTimezone();
+  const [pulse, due] = await Promise.all([getPulse(user.id), countDue(user.id, endOfDay(tz))]);
   const goalShare = Math.min(1, pulse.today / pulse.goal);
   return (
     <div className="app">
@@ -18,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </span>
             <span className="brand__name">ChessLab</span>
           </Link>
-          <NavLinks />
+          <NavLinks due={due} />
           <div className="topbar__stats">
             <span className={`stat-chip stat-chip--streak${pulse.streak ? '' : ' stat-chip--cold'}`} title="Day streak">
               <Flame size={18} />

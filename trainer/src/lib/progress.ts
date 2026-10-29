@@ -1,7 +1,10 @@
 import 'server-only';
 import { cookies } from 'next/headers';
+import { gradeCards, introduce } from './cards';
+import { getOpening } from './content';
 import { query, queryOne, transaction } from './db';
 import { stepColumn, type LineProgress, type StepKind } from './course';
+import { lineCards } from './recall';
 import type { SoundSet } from './sound';
 import type { SPEECH_RATES, Voice } from './speech';
 
@@ -144,27 +147,6 @@ export async function getPulse(userId: string): Promise<Pulse> {
   };
 }
 
-export async function getMissedKeys(userId: string, openingId: string, limit = 20) {
-  const rows = await query<{ position_key: string; misses: number; hits: number }>(
-    `select position_key, misses, hits
-       from position_misses
-      where user_id = $1 and opening_id = $2 and misses > hits
-      order by misses - hits desc, last_missed_at desc
-      limit $3`,
-    [userId, openingId, limit],
-  );
-  return rows;
-}
-
-export async function countMissed(userId: string) {
-  const rows = await query<{ opening_id: string; n: number }>(
-    `select opening_id, count(*)::int as n from position_misses
-      where user_id = $1 and misses > hits group by opening_id`,
-    [userId],
-  );
-  return new Map(rows.map((r) => [r.opening_id, r.n]));
-}
-
 export async function getTotals(userId: string) {
   return (
     (await queryOne<{ sessions: number; moves: number; days: number; mistakes: number }>(
@@ -244,6 +226,12 @@ export async function recordSession(userId: string, r: SessionResult) {
         [userId, r.openingId, p.key, p.hit ? 0 : 1, p.hit ? 1 : 0],
       );
     }
+    // Learn adds the chapter's moves to the learner's Recall deck; every other session grades them.
+    if (r.mode === 'learn' && r.lineSlug) {
+      await introduce(client, userId, r.openingId, lineCards(getOpening(r.openingId), r.lineSlug));
+    } else {
+      await gradeCards(client, userId, r.openingId, r.positions, day);
+    }
   });
   return { passed };
 }
@@ -272,6 +260,10 @@ export async function resetOpening(userId: string, openingId: string) {
       openingId,
     ]);
     await client.query('delete from position_misses where user_id = $1 and opening_id = $2', [
+      userId,
+      openingId,
+    ]);
+    await client.query('delete from review_cards where user_id = $1 and opening_id = $2', [
       userId,
       openingId,
     ]);

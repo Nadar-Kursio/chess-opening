@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import CourseCard from '@/components/ui/CourseCard';
 import MiniBoard from '@/components/ui/MiniBoard';
-import { Flame, Play } from '@/components/ui/icons';
+import { Flame, Play, Retry } from '@/components/ui/icons';
+import { endOfDay, forecast, syncDeck } from '@/lib/cards';
 import { courseCard, courses, isFeatured, trapCourses } from '@/lib/catalog';
 import { getOpening } from '@/lib/content';
 import { STEP_INFO, lineBySlug } from '@/lib/course';
@@ -18,7 +19,9 @@ export default async function Home() {
     getPulse(user.id),
     lastOpening(user.id),
     learnerTimezone(),
+    syncDeck(user.id),
   ]);
+  const [dueToday, dueTomorrow] = await forecast(user.id, tz, 2);
 
   const cards = courses().map((o) => courseCard(o, progress.get(o.id)));
   const isTrap = (c: (typeof cards)[number]) => c.summary.section === 'traps';
@@ -83,27 +86,30 @@ export default async function Home() {
           </Link>
         ) : null}
 
-        <div className="card goal">
-          <div className="goal__ring">
-            <BigRing share={Math.min(1, pulse.today / pulse.goal)} />
-            <span className="goal__count">
-              <b>{pulse.today}</b>/{pulse.goal}
-            </span>
-          </div>
-          <div>
-            <h3>Today’s goal</h3>
-            <p className="muted">Moves played from memory today.</p>
-            <div className="week" aria-label="This week">
-              {pulse.week.map((d) => (
-                <span
-                  key={d.day}
-                  className={`week__day${d.practised ? ' week__day--on' : ''}${d.today ? ' week__day--today' : ''}`}
-                  title={d.day}
-                >
-                  <span className="week__dot">{d.practised ? <Flame size={14} /> : null}</span>
-                  {d.label}
-                </span>
-              ))}
+        <div className="home-hero__side">
+          <RecallCard due={dueToday} tomorrow={dueTomorrow} />
+          <div className="card goal">
+            <div className="goal__ring">
+              <BigRing share={Math.min(1, pulse.today / pulse.goal)} />
+              <span className="goal__count">
+                <b>{pulse.today}</b>/{pulse.goal}
+              </span>
+            </div>
+            <div>
+              <h3>Today’s goal</h3>
+              <p className="muted">Moves played from memory today.</p>
+              <div className="week" aria-label="This week">
+                {pulse.week.map((d) => (
+                  <span
+                    key={d.day}
+                    className={`week__day${d.practised ? ' week__day--on' : ''}${d.today ? ' week__day--today' : ''}`}
+                    title={d.day}
+                  >
+                    <span className="week__dot">{d.practised ? <Flame size={14} /> : null}</span>
+                    {d.label}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -142,6 +148,43 @@ export default async function Home() {
         </section>
       ) : null}
     </main>
+  );
+}
+
+/** Today's Recall: first thing on Home when moves are due, since reviewing before learning more is what makes it stick. */
+function RecallCard({ due, tomorrow }: { due: number; tomorrow: number }) {
+  if (!due) {
+    return (
+      <Link href="/recall" className="card recall-card recall-card--calm">
+        <span className="recall-card__icon">
+          <Retry size={22} />
+        </span>
+        <span className="recall-card__body">
+          <b>Recall: all caught up</b>
+          <span className="muted small">
+            {tomorrow
+              ? `${tomorrow} move${tomorrow === 1 ? '' : 's'} come back tomorrow.`
+              : 'Learn a chapter and its moves join your deck.'}
+          </span>
+        </span>
+      </Link>
+    );
+  }
+  return (
+    <Link href="/recall/session" className="card recall-card">
+      <span className="recall-card__icon">
+        <Retry size={22} />
+      </span>
+      <span className="recall-card__body">
+        <b>
+          {due} move{due === 1 ? '' : 's'} to recall
+        </b>
+        <span className="muted small">Before you forget them. A round takes a few minutes.</span>
+      </span>
+      <span className="btn btn--primary btn--sm">
+        <Play size={16} /> Start
+      </span>
+    </Link>
   );
 }
 
