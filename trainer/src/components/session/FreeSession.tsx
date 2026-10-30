@@ -44,7 +44,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
     make({
       kind: 'intro',
       title: 'Free practice',
-      text: `You play ${colourName(you)}. Your opponent can choose any move this course covers — including the sidelines. Answer from your repertoire. Nothing is scored.`,
+      text: `You play ${colourName(you)}. Your opponent can choose any move this course covers, sidelines included. Answer from your repertoire. Nothing is scored.`,
     }),
   ]);
   const [tone, setTone] = useState<Tone>('idle');
@@ -135,7 +135,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
     setWrongHere(0);
     setTone('idle');
     setFlash(null);
-    setMsgs([make({ kind: 'intro', title: `Game ${games + 2}`, text: 'New game — a different line this time, maybe.' })]);
+    setMsgs([make({ kind: 'intro', title: `Game ${games + 2}`, text: 'New game. Maybe a different line this time.' })]);
     setKey(tree.root);
   };
 

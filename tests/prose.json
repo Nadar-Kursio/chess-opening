@@ -1,0 +1,45 @@
+{
+  "about": "Habits that make text read as machine-written, banned from everything the apps show. Checked over the emitted content by tests/test_prose.py and over UI strings by tests/prose-ui.mjs. Patterns are case-insensitive and must mean the same in Python and JavaScript (with the u flag).",
+  "rules": [
+    {
+      "id": "em-dash",
+      "pattern": "[^\\s—]\\s*(—|&mdash;|&#8212;)\\s*[^\\s—]",
+      "advice": "Use a full stop, colon, comma or parentheses. Split the sentence if it is doing two things."
+    },
+    {
+      "id": "spaced-en-dash",
+      "pattern": "\\s(–|&ndash;|&#8211;)\\s",
+      "advice": "A spaced en dash is an em dash in disguise; rewrite the sentence. Unspaced en dashes in ranges (b8–h2, 1–0) are fine."
+    },
+    {
+      "id": "double-hyphen",
+      "pattern": "\\s--\\s",
+      "advice": "A spaced double hyphen is an em dash in disguise; rewrite the sentence."
+    },
+    {
+      "id": "vocabulary",
+      "pattern": "\\b(delv(e|es|ed|ing)|tapestry|testament|seamless(ly)?|unleash(es|ed|ing)?|embark(s|ed|ing)?|realm|game[- ]changer|pivotal|robust|leverag(e|es|ed|ing)|foster(s|ed|ing)?|showcas(e|es|ed|ing)|underscor(e|es|ed|ing)|meticulous(ly)?|intricate|vibrant|ever-evolving|crucial(ly)?|unlock(s|ed|ing)?|elevat(e|es|ed|ing)|supercharg(e|es|ed|ing)|harness(es|ed|ing)?)\\b",
+      "advice": "Say the plain thing: important, strong, use, shows, open up."
+    },
+    {
+      "id": "honesty-framing",
+      "pattern": "\\bhonest(ly|y)?\\b",
+      "advice": "Drop the honesty framing and state the fact. Everything here is meant to be true."
+    },
+    {
+      "id": "signposting",
+      "pattern": "\\b(it is|it's|it’s) (worth|important to) (noting|note|mentioning|remembering|saying)\\b|\\bneedless to say\\b|\\bin conclusion\\b|\\bat the end of the day\\b|\\blet’s dive\\b|\\blet's dive\\b",
+      "advice": "Cut the throat-clearing and say the thing."
+    },
+    {
+      "id": "not-just-but",
+      "pattern": "\\bnot (only|just|merely)\\b[^.!?]*\\bbut\\b",
+      "advice": "\"Not just X but Y\" is a tell; say Y, or say both plainly."
+    },
+    {
+      "id": "emoji",
+      "pattern": "[✨🌀-🫿]",
+      "advice": "No emoji in copy."
+    }
+  ]
+}

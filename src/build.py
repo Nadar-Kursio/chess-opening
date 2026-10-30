@@ -56,7 +56,7 @@ PORTED = ["ruylopez", "scholarsmate", "friedliver", "london", "sicilian", "scand
           "blackburneshilling", "siberiantrap", "magnussmith", "englundtrap", "elephanttrap",
           "noahsark", "fishingpole"]
 
-OPENING_NOTE = ("The starting position. White moves first — and that single tempo "
+OPENING_NOTE = ("The starting position. White moves first, and that single tempo "
                 "is the whole reason opening theory exists.")
 
 

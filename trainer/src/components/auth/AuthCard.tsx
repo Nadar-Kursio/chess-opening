@@ -24,7 +24,7 @@ export default function AuthCard({ title, lead, children }: { title: string; lea
           <MiniBoard fen={board.fen} last={board} />
         </div>
         <p className="auth__pitch">
-          Learn your openings the way they stick: a lesson, then drills, then quizzes — and free practice against every
+          Learn your openings the way they stick: a lesson, then drills, then quizzes, and free practice against every
           line the course knows.
         </p>
       </div>

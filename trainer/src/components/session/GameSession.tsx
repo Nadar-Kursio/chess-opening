@@ -93,7 +93,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
     play('bad', sound);
     setFlash({ sq: to, kind: 'bad' });
     setTone('bad');
-    if (tries === 0) say({ kind: 'oops', text: 'Not the master’s move. One more try — then it’s shown.' });
+    if (tries === 0) say({ kind: 'oops', text: 'Not the master’s move. One more try, then it’s shown.' });
   };
 
   const arrows: BoardArrow[] = asking && tries >= 2 && next.from && next.to ? [{ from: next.from, to: next.to, kind: 'hint' }] : [];

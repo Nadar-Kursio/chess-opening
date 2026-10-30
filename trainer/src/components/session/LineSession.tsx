@@ -97,7 +97,7 @@ function Run({
         mode === 'learn'
           ? `You play ${colourName(side)}. Follow the arrows: every move comes with the reason for it.`
           : mode === 'drill'
-            ? `You play ${colourName(side)}. Find each move yourself — tap Hint if you get stuck.`
+            ? `You play ${colourName(side)}. Find each move yourself. Tap Hint if you get stuck.`
             : `You play ${colourName(side)}. The whole line from memory: no hints, and the notes wait until the end.`,
     }),
   ]);
@@ -161,7 +161,7 @@ function Run({
         setDone({ passed });
       } catch {
         setDone({ passed: false });
-        say({ kind: 'oops', text: 'Couldn’t save this run — check your connection and try again.' });
+        say({ kind: 'oops', text: 'Couldn’t save this run. Check your connection and try again.' });
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -256,7 +256,7 @@ function Run({
     } else {
       say({
         kind: 'oops',
-        text: wrongHere >= 1 ? 'Still not it — follow the arrow.' : 'Not the course move. Try again.',
+        text: wrongHere >= 1 ? 'Still not it. Follow the arrow.' : 'Not the course move. Try again.',
       });
     }
   };
@@ -410,7 +410,7 @@ function Summary({
           : 'Drill complete'
         : clean
           ? 'Perfect recall!'
-          : 'Almost — one clean run passes';
+          : 'Almost. One clean run passes';
   const detail =
     mode === 'learn'
       ? `${asked} moves, every one explained. Next, play them yourself.`

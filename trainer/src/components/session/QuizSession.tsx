@@ -30,7 +30,7 @@ interface Props {
 const SEV_LABEL: Record<Severity, string> = {
   playable: 'Playable',
   inaccuracy: 'Inaccuracy',
-  blunder: 'Blunder — punish it',
+  blunder: 'Blunder: punish it',
 };
 
 export default function QuizSession(props: Props) {
@@ -167,7 +167,7 @@ function Run({
     return (
       <div className="empty-state">
         <h1>Nothing to review</h1>
-        <p>No positions here yet — practise a line first.</p>
+        <p>No positions here yet. Practise a line first.</p>
         <Link className="btn btn--primary" href={closeHref}>
           Back
         </Link>
@@ -190,7 +190,7 @@ function Run({
             ? 'Session complete'
             : done.pct >= 80
               ? 'Quiz passed!'
-              : 'Not quite — 80% passes'}
+              : 'Not quite. 80% passes'}
         </strong>
         <span>
           {done.passed === null ? 'Saving…' : `${score.first} of ${total} first time · ${done.pct}%`}

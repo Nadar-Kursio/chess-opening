@@ -11,7 +11,7 @@ type Params = PageProps<'/openings/[id]/games/[game]'>;
 
 export async function generateMetadata({ params }: Params) {
   const { game } = await params;
-  return { title: getGame(game)?.name.split(' — ')[0] ?? 'Model game' };
+  return { title: getGame(game)?.name.split(': ')[0] ?? 'Model game' };
 }
 
 export default async function GamePage({ params }: Params) {

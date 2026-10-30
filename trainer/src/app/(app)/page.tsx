@@ -127,7 +127,7 @@ export default async function Home() {
         <div className="section__head">
           <div>
             <h2 className="section__title">Traps</h2>
-            <p className="muted">Spring them when your opponent walks in — and recognise them before you do.</p>
+            <p className="muted">Spring them when your opponent walks in, and recognise them before you do.</p>
           </div>
         </div>
         <div className="grid-cards">

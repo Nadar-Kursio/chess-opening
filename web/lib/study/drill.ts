@@ -42,7 +42,7 @@ export function movePrinciple(here: Ply, from: string, to: string, ply: number):
   if (kind === "q" && ply < 8) return "Bringing the queen out this early usually costs time once it is attacked.";
   if (kind === "k") return "Moving the king before castling gives up the right to castle.";
   if ((kind === "n" || kind === "b") && home) return "Developing a piece toward the centre is rarely wrong.";
-  if (kind === "p") return "A quiet pawn move is playable — just slower than what this line wants.";
+  if (kind === "p") return "A quiet pawn move is playable, just slower than what this line wants.";
   return "Playable. This line has a specific idea in mind instead.";
 }
 

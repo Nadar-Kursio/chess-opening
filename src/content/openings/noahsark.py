@@ -7,15 +7,15 @@ OPENING = {
     "tagline": "Three black pawns build a box around the Spanish bishop on b3, and the queen that took back on d4 only speeds them along.",
     "level": "Beginner → Intermediate",
     "theory": {
-        "big_idea": "In the Ruy Lopez's Steinitz Defence Deferred, 5.d4 b5 6.Bb3 Nxd4 7.Nxd4 exd4 offers White a pawn in the centre. The natural 8.Qxd4?? is the mistake: 8...c5 9.Qd5 Be6 10.Qc6+ Bd7 11.Qd5 c4 and the b3-bishop is boxed in by the pawns on a6, b5 and c4 — it can only take on c4 and be taken back. Steiner–Capablanca, Budapest 1929, went exactly this way. The cure is to hit b5 before the box is built: 8.a4!, the engine's choice.",
-        "structure": "The ark itself: black pawns on b5 and c4, with a6 behind them, around a white bishop on b3. a4 is covered by the b5-pawn, a2 and c2 are White's own pawns, and c4 is defended. It is a structure worth recognising one move early — a bishop on b3 with black pawns on b5 and c5 is one ...c4 away from being trapped.",
+        "big_idea": "In the Ruy Lopez's Steinitz Defence Deferred, 5.d4 b5 6.Bb3 Nxd4 7.Nxd4 exd4 offers White a pawn in the centre. The natural 8.Qxd4?? is the mistake: 8...c5 9.Qd5 Be6 10.Qc6+ Bd7 11.Qd5 c4 and the b3-bishop is boxed in by the pawns on a6, b5 and c4. It can only take on c4 and be taken back. Steiner–Capablanca, Budapest 1929, went exactly this way. The cure is to hit b5 before the box is built: 8.a4!, the engine's choice.",
+        "structure": "The ark itself: black pawns on b5 and c4, with a6 behind them, around a white bishop on b3. a4 is covered by the b5-pawn, a2 and c2 are White's own pawns, and c4 is defended. It is a structure worth recognising one move early: a bishop on b3 with black pawns on b5 and c5 is one ...c4 away from being trapped.",
         "white_plans": [
             "After 7...exd4, do not take back with the queen. 8.a4! hits b5 first, and the engine calls it level; 8.c3 and 8.Bd5 are also fine.",
             "Trade on b5 and down the a-file, then hit the loose b5-pawn with Qe2 and win the d4-pawn back with c3.",
             "Whenever your bishop stands on b3, count its exits: a4, a2 and c2 should not all be closed at once.",
         ],
         "black_plans": [
-            "Play the ordinary Steinitz Deferred moves — ...a6, ...d6, ...b5 — and trade on d4 when White plays d4: the trap costs nothing to set.",
+            "Play the ordinary Steinitz Deferred moves (...a6, ...d6, ...b5) and trade on d4 when White plays d4: the trap costs nothing to set.",
             "If the queen takes on d4, start the box at once with ...c5, use the bishop checks to gain time, and finish with ...c4.",
             "Against 8.a4, develop with ...Bb7 and give the d4-pawn back: the position is level.",
         ],
@@ -23,7 +23,7 @@ OPENING = {
             "Noah's Ark: 1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 d6 5.d4 b5 6.Bb3 Nxd4 7.Nxd4 exd4 8.Qxd4?? c5 9.Qd5 Be6 10.Qc6+ Bd7 11.Qd5 c4 and the bishop is lost. The cure: 8.a4.",
             "Its cousins where a bishop has no way home: the London ...h5 bishop hunt, and Timman's knight, where it is the g4-bishop that runs out of squares.",
         ],
-        "who": "Ruy Lopez players from both sides. It has caught strong players — Capablanca won a game with it — and every move that sets it is a normal Ruy Lopez move.",
+        "who": "Ruy Lopez players from both sides. It has caught strong players (Capablanca won a game with it), and every move that sets it is a normal Ruy Lopez move.",
     },
     "lines": [
         {
@@ -35,7 +35,7 @@ OPENING = {
             "drill": True,
             "plan": {
                 "tier": "Foundation",
-                "point": "The b3-bishop is lost: it can only take on c4 and be taken back. Steiner–Capablanca, Budapest 1929, went 12.Bxc4 bxc4 13.Qxc4 — two pawns for the bishop — and Black won. The engine gives Black nearly four pawns.",
+                "point": "The b3-bishop is lost: it can only take on c4 and be taken back. Steiner–Capablanca, Budapest 1929, went 12.Bxc4 bxc4 13.Qxc4, two pawns for the bishop, and Black won. The engine gives Black nearly four pawns.",
                 "next": [
                     "From White's chair, do not take on d4 with the queen. 8.a4, the engine's choice, hits b5 first; 8.Bd5 and 8.c3 are also fine. The second chapter plays 8.a4.",
                     "The pattern: a bishop on b3 with black pawns on b5 and c5 is one ...c4 away from being trapped. Make sure it has a way out before the pawns arrive.",
@@ -60,15 +60,15 @@ OPENING = {
                 15: "The natural recapture, and the mistake: the engine's score swings by more than three pawns. 8.a4, 8.Bd5 or 8.c3 was safe.",
                 16: "The c-pawn attacks the queen and heads for c4.",
                 17: "The queen hits the a8-rook, so Black has to answer that first.",
-                18: "Hitting the queen — and with the bishop off c8, the d8-queen now guards a8 along the back rank.",
+                18: "Hitting the queen. And with the bishop off c8, the d8-queen now guards a8 along the back rank.",
                 19: "A check, buying time.",
                 20: "Blocking.",
-                21: "Back to d5, but a8 is guarded now — and the c-pawn is free to advance.",
+                21: "Back to d5, but a8 is guarded now, and the c-pawn is free to advance.",
                 22: "The ark closes. The pawn attacks the b3-bishop, and it has no square: a4 is covered by the b5-pawn, a2 and c2 hold White's own pawns, and taking on c4 gives the bishop for a pawn.",
             },
         },
         {
-            "name": "Sidestepping it — 8.a4",
+            "name": "Sidestepping it: 8.a4",
             "slug": "sidestep-a4",
             "note": "The Ruy Lopez player's chair. Leave the d4-pawn for later and hit b5 at once: the pawns that would have built the box are traded off, and the pawn comes back a few moves later.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 d6 d4 b5 Bb3 Nxd4 Nxd4 exd4 a4 Bb7 axb5 axb5 Rxa8 Bxa8 Qe2 Qd7 c3 d3 Qxd3",
@@ -79,7 +79,7 @@ OPENING = {
                 "tier": "Foundation",
                 "point": "Level, with no trap: material is even, the bishop on b3 can retreat to a2 or c2 whenever it needs to, and the engine calls the position equal.",
                 "next": [
-                    "Castle and finish developing: O-O, Re1 and Na3, when the knight eyes the b5-pawn — the engine's plan.",
+                    "Castle and finish developing: O-O, Re1 and Na3, when the knight eyes the b5-pawn. That is the engine's plan.",
                     "The b5-pawn is Black's loose end: it has no pawn left to guard it.",
                     "The rule from this chapter: when your bishop stands on b3, break up the pawns that could box it in before they arrive.",
                 ],
@@ -94,7 +94,7 @@ OPENING = {
                 7: "Keeping it on the diagonal.",
                 8: "The Steinitz Defence Deferred: e5 gets a pawn guard.",
                 9: "Striking at e5.",
-                10: "Kicking the bishop to b3 — the square the trap closes on.",
+                10: "Kicking the bishop to b3, the square the trap closes on.",
                 11: "The natural retreat.",
                 12: "Black trades knights, so that the e-pawn recaptures and invites the queen in.",
                 13: "Taking back.",
@@ -114,7 +114,7 @@ OPENING = {
         },
     ],
     "deep": {
-        "name": "Deep dive — Capablanca's continuation",
+        "name": "Deep dive: Capablanca's continuation",
         "slug": "noahs-ark-deep",
         "note": "Steiner–Capablanca, Budapest 1929, from the moment the ark closed: White gives the bishop for two pawns, and Black develops and castles a piece up.",
         "moves": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 d6 d4 b5 Bb3 Nxd4 Nxd4 exd4 Qxd4 c5 Qd5 Be6 Qc6+ Bd7 Qd5 c4 Bxc4 bxc4 Qxc4 Nf6 Nc3 Be7 O-O O-O",
@@ -124,12 +124,12 @@ OPENING = {
             "point": "Black has a bishop for two pawns and has castled. The engine gives Black more than three pawns, and Capablanca won the game in thirty-two moves.",
             "next": [
                 "Bring the queen and rooks into play: the d7-bishop and the queen can both look at White's queenside.",
-                "White's two extra pawns are on the queenside — three against one there — so put a piece in front of them before they start to run.",
+                "White's two extra pawns are on the queenside (three against one there), so put a piece in front of them before they start to run.",
                 "Trade when you can. A piece for two pawns is worth more with fewer pawns on the board.",
             ],
         },
         "notes": {
-            23: "White gives up the bishop for two pawns — the only way to get anything for it.",
+            23: "White gives up the bishop for two pawns, the only way to get anything for it.",
             24: "Taking it.",
             25: "And the second pawn. White has two pawns for the bishop.",
             26: "Capablanca develops the knight first.",
@@ -178,7 +178,7 @@ OPENING = {
                 "ready": "You can win the piece-for-two-pawns position against an engine at club strength.",
             },
         ],
-        "study": "Steiner–Capablanca, Budapest 1929 — the game the deep dive follows. Every evaluation here comes from Stockfish at depth twenty.",
+        "study": "Steiner–Capablanca, Budapest 1929, the game the deep dive follows. Every evaluation here comes from Stockfish at depth twenty.",
         "next": "The Ruy Lopez course, for the rest of the Steinitz Deferred.",
     },
 }

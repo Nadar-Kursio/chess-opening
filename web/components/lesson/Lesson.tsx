@@ -34,7 +34,7 @@ export default function Lesson({ opening }: { opening: Opening }) {
     <section className="lesson" id={`ideas-${op.id}`}>
       {interactive ? (
         <p className="lesson__hint">
-          The moves in the text are buttons &mdash; press one and the board
+          The moves in the text are buttons. Press one and the board
           beside it shows the position.
         </p>
       ) : null}

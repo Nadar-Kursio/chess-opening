@@ -4,11 +4,11 @@ OPENING = {
     "eco": "B01",
     "section": "traps",
     "orientation": "black",
-    "tagline": "Give back the pawn and two more to open the e-file — and the natural Be3 walks into a pin it cannot survive.",
+    "tagline": "Give back the pawn and two more to open the e-file, and the natural Be3 walks into a pin it cannot survive.",
     "level": "Intermediate",
     "theory": {
         "big_idea": "In the Portuguese Variation, 1.e4 d5 2.exd5 Nf6 3.d4 Bg4, Black lets White keep the d5-pawn and offers more, to open lines while White's kingside pieces are still at home. After 4.f3 Bf5 5.c4 e6 6.dxe6 Nc6 7.exf7+ Kxf7 White is two pawns up, and the natural 8.Be3 puts an undefended bishop on the e-file in front of its own king: ...Bb4+, ...Re8 and ...Qxd4 collect it. White's way out is 8.Ne2, which keeps a game, or better 5.g4!, which chases the bishop before Black can open anything.",
-        "structure": "No structure to speak of: by move eight the e- and f-files are open and White's king is still on e1. The whole trap is one file — the e-file, with an e8-rook at one end and the white king at the other — and whatever White puts between them.",
+        "structure": "No structure to speak of: by move eight the e- and f-files are open and White's king is still on e1. The whole trap is one file: the e-file, with an e8-rook at one end, the white king at the other, and whatever White puts between them.",
         "white_plans": [
             "Chase the bishop before Black opens lines: 5.g4! Bg6 6.c4, and hold d5 with the c3-knight rather than taking on e6.",
             "If you do take the gambit pawns, develop with 8.Ne2: it covers d4 a second time and puts nothing on the e-file.",
@@ -37,8 +37,8 @@ OPENING = {
                 "tier": "Foundation",
                 "point": "The e3-bishop is pinned to the uncastled king by the e8-rook, the queen that defended it is gone, and the d4-knight threatens ...Nc2+ as well. White is still a pawn up on the board, but the bishop is about to fall and the kingside pieces have not moved: the engine gives Black about three pawns.",
                 "next": [
-                    "From White's chair, 8.Ne2! is the move: it develops, covers d4 a second time and puts nothing on the e-file. The engine still slightly prefers Black — about half a pawn — but that is a game, not a lost bishop.",
-                    "Earlier, 5.g4! — the engine's choice — chases the f5-bishop before Black can open lines, and keeps an edge of about a pawn. The second chapter plays it.",
+                    "From White's chair, 8.Ne2! is the move: it develops, covers d4 a second time and puts nothing on the e-file. The engine still slightly prefers Black (about half a pawn), but that is a game, not a lost bishop.",
+                    "Earlier, 5.g4!, the engine's choice, chases the f5-bishop before Black can open lines, and keeps an edge of about a pawn. The second chapter plays it.",
                     "The rule behind it: with your king still on e1, never put an undefended piece on the e-file when an enemy rook can reach it.",
                 ],
             },
@@ -53,7 +53,7 @@ OPENING = {
                 8: "Keeping the bishop on the b1–h7 diagonal. The engine prefers 4...Bd7, but this is the move that sets up the trap.",
                 9: "Holding the d5-pawn with another pawn. The engine prefers 5.g4!, chasing the bishop first.",
                 10: "The gambit: Black offers a second pawn to open lines while White's kingside pieces are still at home.",
-                11: "Taking — and White is now two pawns up.",
+                11: "Taking, and White is now two pawns up.",
                 12: "The move that makes the gambit work. Taking back on e6 with the bishop is more than a pawn worse; the knight develops and eyes d4 and b4.",
                 13: "A third pawn, with check.",
                 14: "The king takes back and the f-file opens. Black is two pawns down, and the engine still calls it level: every black piece is ready, and White's king and kingside are not.",
@@ -68,7 +68,7 @@ OPENING = {
             },
         },
         {
-            "name": "Sidestepping it — 5.g4",
+            "name": "Sidestepping it: 5.g4",
             "slug": "sidestep-g4",
             "note": "The 1.e4 player's chair. Chase the bishop a second time before Black has the moves to open lines, hold d5 with pieces instead of taking more pawns, and keep the extra one.",
             "moves": "e4 d5 exd5 Nf6 d4 Bg4 f3 Bf5 g4 Bg6 c4 e6 Nc3 c5 Nge2",
@@ -77,9 +77,9 @@ OPENING = {
             "side": "white",
             "plan": {
                 "tier": "Foundation",
-                "point": "White is a pawn up and has kept it: d5 is held by the c4-pawn and the c3-knight, and d4 by the queen and the e2-knight. The pawns on f3 and g4 are the price — they have loosened the kingside — and the engine still gives White about a pawn.",
+                "point": "White is a pawn up and has kept it: d5 is held by the c4-pawn and the c3-knight, and d4 by the queen and the e2-knight. The pawns on f3 and g4 are the price (they have loosened the kingside), and the engine still gives White about a pawn.",
                 "next": [
-                    "Finish developing: the f1-bishop to g2 and castle short — the engine's own plan.",
+                    "Finish developing: the f1-bishop to g2 and castle short. That is the engine's own plan.",
                     "Keep d5. It is the extra pawn, and Black's whole game from here is about winning it back.",
                     "The rule from this chapter: when a bishop is harassing you and your opponent is offering pawns, chase the bishop before you take the pawns.",
                 ],
@@ -92,30 +92,30 @@ OPENING = {
                 5: "Taking the centre, and holding the extra pawn for now.",
                 6: "The Portuguese Variation: the bishop hits the queen on d1.",
                 7: "Hitting the bishop and covering e4.",
-                8: "Keeping the bishop on the b1–h7 diagonal — the set-up for the gambit that follows.",
+                8: "Keeping the bishop on the b1–h7 diagonal, setting up the gambit that follows.",
                 9: "The antidote, and the engine's choice: chase the bishop again before Black has time for ...e6 and ...Nc6.",
                 10: "The most active retreat, staying on the diagonal.",
                 11: "Holding d5 with a pawn.",
                 12: "The same gambit idea: Black offers a pawn to open lines.",
                 13: "Not taking. The knight develops and guards d5 a second time, and the e-file stays shut.",
                 14: "Black hits d4 instead.",
-                15: "Guarding d4 a second time — the queen is the first — and another piece is developed. White keeps the extra pawn.",
+                15: "Guarding d4 a second time (the queen is the first), and another piece is developed. White keeps the extra pawn.",
             },
         },
     ],
     "deep": {
-        "name": "Deep dive — collecting the bishop",
+        "name": "Deep dive: collecting the bishop",
         "slug": "portuguese-e-file-pin-deep",
         "note": "The pin six plies further: White castles long to get the king off the e-file, and Black takes the bishop anyway.",
         "moves": "e4 d5 exd5 Nf6 d4 Bg4 f3 Bf5 c4 e6 dxe6 Nc6 exf7+ Kxf7 Be3 Bb4+ Nc3 Re8 Qd2 Qxd4 Qxd4 Nxd4 O-O-O Rxe3 Rxd4 Bxc3 bxc3 Rae8",
         "tier": "Structure",
         "plan": {
             "tier": "Structure",
-            "point": "Count it and the pieces are level — White even has a pawn more. But both black rooks stand on the open e-file, White's f1-bishop, g1-knight and h1-rook have never moved, and the c-pawns are split. The engine gives Black nearly three pawns, and the c3-pawn is the first to go.",
+            "point": "Count it and the pieces are level; White even has a pawn more. But both black rooks stand on the open e-file, White's f1-bishop, g1-knight and h1-rook have never moved, and the c-pawns are split. The engine gives Black nearly three pawns, and the c3-pawn is the first to go.",
             "next": [
                 "Double rooks on the e-file and go for the first rank: ...Re1+ is the engine's next idea.",
                 "The c3- and c4-pawns are split and on the same file: they are targets for a rook.",
-                "With the queens off, bring the king toward the centre — it is safe there now.",
+                "With the queens off, bring the king toward the centre. It is safe there now.",
             ],
         },
         "notes": {
@@ -131,13 +131,13 @@ OPENING = {
         # White's 5th
         "e4 d5 exd5 Nf6 d4 Bg4 f3 Bf5": [
             {"san": "g4", "severity": "playable", "tier": "Foundation",
-             "why": "The engine's choice, and the end of the trap: the bishop is chased again before Black can open lines. Retreat to g6 and play on a pawn down — White keeps an edge of about a pawn.",
+             "why": "The engine's choice, and the end of the trap: the bishop is chased again before Black can open lines. Retreat to g6 and play on a pawn down. White keeps an edge of about a pawn.",
              "line": "Bg6 c4 e6"},
         ],
         # White's 8th
         "e4 d5 exd5 Nf6 d4 Bg4 f3 Bf5 c4 e6 dxe6 Nc6 exf7+ Kxf7": [
             {"san": "Ne2", "severity": "playable", "tier": "Foundation",
-             "why": "The antidote: develop the knight first, covering d4 a second time and leaving nothing on the e-file. White keeps the two extra pawns, and the engine still slightly prefers Black — about half a pawn — but that is a game, instead of the three-pawn deficit 8.Be3 leads to.",
+             "why": "The antidote: develop the knight first, covering d4 a second time and leaving nothing on the e-file. White keeps the two extra pawns, and the engine still slightly prefers Black (about half a pawn), but that is a game, instead of the three-pawn deficit 8.Be3 leads to.",
              "line": "Nb4 Ng3"},
         ],
     },
@@ -149,7 +149,7 @@ OPENING = {
                 "when": "One sitting",
                 "goal": "Know the gambit's move order and the one move that ruins it.",
                 "learn": [
-                    "Black's order: ...Bf5, ...e6, ...Nc6, and ...Kxf7 — every move develops or opens a line.",
+                    "Black's order: ...Bf5, ...e6, ...Nc6, and ...Kxf7. Every move develops or opens a line.",
                     "The trap: 8.Be3? Bb4+ 9.Nc3 Re8 10.Qd2 Qxd4!",
                     "From White's chair: 5.g4! first, and 8.Ne2 if you have already taken the pawns.",
                 ],
@@ -162,7 +162,7 @@ OPENING = {
                 "when": "After the Scandinavian chapter",
                 "goal": "Play the endgame the trap leaves you.",
                 "learn": [
-                    "The deep dive: White castles long, and ...Rxe3 takes the bishop anyway — and why the engine prefers Black although the pawns are even.",
+                    "The deep dive: White castles long, ...Rxe3 takes the bishop anyway, and the reason the engine prefers Black although the pawns are even.",
                     "Doubling rooks on the open e-file, and the split c-pawns as targets.",
                 ],
                 "drill": "Play the deep-dive position against an engine from Black's side until the rooks' activity turns into won material.",
@@ -171,6 +171,6 @@ OPENING = {
             },
         ],
         "study": "The Scandinavian chapter on this site covers 2...Nf6 and the Portuguese in full. Every evaluation here comes from Stockfish at depth twenty.",
-        "next": "The Scandinavian Defence course, and Timman's knight — the trap White sets against the same defence.",
+        "next": "The Scandinavian Defence course, and Timman's knight, the trap White sets against the same defence.",
     },
 }

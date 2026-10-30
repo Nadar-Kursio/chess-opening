@@ -86,7 +86,7 @@ def move_data(board_before, move):
         # fall back to a principle-based description
         ptype = piece.piece_type
         if ptype == chess.KING and abs(move.from_square % 8 - move.to_square % 8) == 2:
-            tactics = "castles — tucks the king to safety and connects the rooks"
+            tactics = "castles, tucking the king to safety and connecting the rooks"
         elif ptype in (chess.KNIGHT, chess.BISHOP):
             tactics = "develops a piece toward the centre"
         elif ptype == chess.PAWN:

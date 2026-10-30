@@ -88,6 +88,12 @@ Copy the shape of `src/content/openings/italian.py` for a White repertoire and
 the second one shows what the inversion below actually looks like on the page.
 `README.md` ("The optional keys") is the reference for what each key does.
 
+- **Write like a coach, not a chatbot.** No em dashes, no "the honest
+  evaluation", no "it is worth noting", no "not just X but Y", nothing from the
+  word list in `tests/prose.json`. `tests/test_prose.py` fails on any of them in
+  shipped text. Fix the sentence rather than the symbol: a full stop where the
+  dash joined two thoughts, a colon where it introduced an explanation,
+  parentheses for an aside. Swapping every dash for a comma is its own tell.
 - **`branches`** are keyed by the SAN prefix that reaches a position, so one set
   fires in every line of that opening passing through it. Author at the positions
   where a real opponent actually deviates: move 3 and 4 alternatives, your own
@@ -354,10 +360,15 @@ than the bare characters.
 
 The course app in `trainer/` (new.chesslab.dev) turns every line into a
 **chapter** the learner works through four times: Learn (each move's note shown
-*before* they play it), Drill (their moves, with hints), Recall (from memory,
-notes held back) and Quiz. Authoring choices land differently there than on a
-page someone reads once.
+*before* they play it), Drill (their moves, with hints), Test (from memory,
+notes held back) and Quiz, and afterwards Recall asks every move again on a
+spaced schedule. Authoring choices land differently there than on a page
+someone reads once.
 
+- **Narrated openings cost money to reword.** Learn in the openings listed in
+  `trainer/scripts/narrate.ts` is read aloud from recordings named by the words
+  spoken. A punctuation fix keeps its clip; changing a word in a line's name,
+  note, per-move notes or plan means paying to record it again in every voice.
 - **Prefer several focused lines of about 12–24 plies over a few long ones.**
   A chapter is drilled move by move; a 35-ply line is a chore to recall and
   hides its point. Put the long continuation in `deep`, and it becomes its own
