@@ -229,7 +229,7 @@ export default function Shell({ sections, openings, children }: Props) {
                     <b className={`nav__feedback nav__feedback--${lv}`}>{FEEDBACK_LEVELS[lv].tag}</b>
                   ) : undefined;
                 const title =
-                  `${FEEDBACK_LEVELS[lv].tag} — ${FEEDBACK_LEVELS[lv].blurb}` +
+                  `${FEEDBACK_LEVELS[lv].tag}: ${FEEDBACK_LEVELS[lv].blurb}` +
                   (o.deviations ? `, with ${o.deviations} deviations written` : "");
                 return navItem(`/openings/${o.id}/`, o.name, o.eco, isOp(o.id), { tag, title });
               });

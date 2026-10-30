@@ -35,7 +35,7 @@ function Score({ line, drill, side, ply }: { line: Line; drill: DrillState; side
         <span className="coach__turn">
           {drill.phase === "done"
             ? "Line complete"
-            : <>Your move &mdash; <b>{moverSide(line.plies, ply) === "w" ? "White" : "Black"}</b></>}
+            : <>Your move as <b>{moverSide(line.plies, ply) === "w" ? "White" : "Black"}</b></>}
         </span>
         <span className="coach__tally">
           <b>{right}</b> of <b>{asked}</b> first try <span className="sep">·</span> streak <b>{drill.streak}</b>

@@ -73,7 +73,7 @@ export default async function Home() {
               <span className="eyebrow">Continue · {resume.summary.name}</span>
               <h2>{resume.progress.next.name}</h2>
               <p className="muted">
-                Next step: <b>{STEP_INFO[resume.progress.next.step].label}</b> —{' '}
+                Next step: <b>{STEP_INFO[resume.progress.next.step].label}</b>.{' '}
                 {STEP_INFO[resume.progress.next.step].blurb}
               </p>
               <div className="bar">

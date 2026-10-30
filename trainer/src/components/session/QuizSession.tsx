@@ -126,7 +126,7 @@ function Run({
       ...list,
       make({
         kind: 'oops',
-        text: attempts === 0 ? 'Not that one. Have another look.' : `The answer is ${q.answer.num} — play it to continue.`,
+        text: attempts === 0 ? 'Not that one. Have another look.' : `The answer is ${q.answer.num}. Play it to continue.`,
       }),
     ]);
   };

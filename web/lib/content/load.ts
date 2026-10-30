@@ -50,7 +50,7 @@ export function getOpening(id: string): Opening {
   if (!op) {
     op = JSON.parse(read(join("openings", `${id}.json`))) as Opening;
     if (op.id !== id || !op.lines?.length) {
-      throw new Error(`web/content/openings/${id}.json does not describe ${id} — re-run --emit`);
+      throw new Error(`web/content/openings/${id}.json does not describe ${id}. Re-run --emit`);
     }
     openings.set(id, op);
   }

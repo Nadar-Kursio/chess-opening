@@ -51,7 +51,7 @@ export function Scoresheet({
           <span key={idx}>
             {num}
             <button className={cls} data-ply={idx} onClick={() => onJump(idx)}
-              aria-label={q.mark ? `${q.san} — ${MARKS[q.mark].word}` : undefined}>
+              aria-label={q.mark ? `${q.san}, ${MARKS[q.mark].word}` : undefined}>
               {q.san}
               {q.mark ? <MarkBadge mark={q.mark} /> : null}
             </button>

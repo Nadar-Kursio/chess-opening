@@ -204,7 +204,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
         : alt
           ? {
               kind: 'oops',
-              title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` — ${alt.name}` : ''}`,
+              title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` (${alt.name})` : ''}`,
               html: `${alt.why} <em>The course plays ${expected.num}: play it.</em>`,
             }
           : { kind: 'oops', title: 'Not this time', text: `The move here is ${expected.num}. Play it to carry on.` },

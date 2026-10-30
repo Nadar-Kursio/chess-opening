@@ -97,7 +97,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
         kind: 'theirs',
         title: `${colourName(otherTurn(you))} plays ${e.num}`,
         html: e.sev
-          ? `<b>${SEV_WORD[e.sev]}${e.name ? ` — ${e.name}` : ''}.</b> ${e.why ?? ''}`
+          ? `<b>${SEV_WORD[e.sev]}${e.name ? ` (${e.name})` : ''}.</b> ${e.why ?? ''}`
           : tree.nodes[e.next].note,
       });
     }, key === tree.root ? 700 : 650);

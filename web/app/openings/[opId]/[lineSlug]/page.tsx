@@ -17,7 +17,7 @@ export async function generateMetadata(
   const op = getOpening(opId);
   const line = op.lines.find((l) => l.slug === lineSlug)!;
   return {
-    title: `${op.name} — ${line.name}`,
+    title: `${op.name}: ${line.name}`,
     description: line.note,
   };
 }

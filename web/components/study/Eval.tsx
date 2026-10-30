@@ -20,7 +20,7 @@ export function EvalBar({ ply, depth }: { ply: Ply | null; depth: number | null 
     <div
       className="evalbar"
       role="img"
-      aria-label={`Stockfish at depth ${depth} scores this ${text} — ${words}.`}
+      aria-label={`Stockfish at depth ${depth} scores this ${text}: ${words}.`}
     >
       <span className="evalbar__label label">Stockfish</span>
       <span className="evalbar__track">
@@ -65,7 +65,7 @@ export function EvalMove({ before, after }: { before: Ply | null; after: Ply | n
       <span className="label">Stockfish</span>
       <span>
         {after.san} {swing < 0 ? "gives up" : "wins back"} <b>{Math.abs(swing / 100).toFixed(2)}</b>{" "}
-        for {who} &mdash; the score goes from <b>{evalText(a)}</b> to <b>{evalText(b)}</b>.
+        for {who}. The score goes from <b>{evalText(a)}</b> to <b>{evalText(b)}</b>.
       </span>
     </div>
   );

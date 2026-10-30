@@ -350,7 +350,7 @@ export default function StudyPanel({ opening, lineIndex, catalog }: Props) {
     : note;
 
   const readout = inDeviation ? (
-    <>Deviation &mdash; <b>{index + 1}</b> of {plies.length}</>
+    <>Deviation <b>{index + 1}</b> of {plies.length}</>
   ) : (
     <>Move <b>{state.ply}</b> of {line.plies.length - 1} &middot; {state.flipped ? "Black" : "White"} up</>
   );
