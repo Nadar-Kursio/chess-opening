@@ -95,6 +95,11 @@
   --bubble-play: 28px;
   --wave-bar: 3px;
   --wave-height: 14px;
+  --nav-badge: 20px;
+  --strength-bar: 10px;
+  --strength-swatch: 12px;
+  --forecast: 96px;
+  --recall-icon: 48px;
   --gutter: 16px;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);

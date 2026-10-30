@@ -19,6 +19,8 @@ export interface Msg {
   text?: string;
   /** The narration clip that reads this message aloud, by utterance key. */
   clip?: string;
+  /** A short tag beside the title, e.g. when Recall will ask this move again. */
+  badge?: string;
 }
 
 /** What the coach panel needs from useNarration to show and control the voice. */
@@ -106,7 +108,7 @@ export function Coach({ msgs, voice, children }: { msgs: Msg[]; voice?: Voice; c
     <section className="coach" aria-label="Coach">
       <div className="coach__feed">
         {msgs.map((m) => (
-          <Bubble key={m.id} kind={m.kind} title={m.title} clip={m.clip} voice={voice}>
+          <Bubble key={m.id} kind={m.kind} title={m.title} badge={m.badge} clip={m.clip} voice={voice}>
             {m.html ? <div className="bubble__text" dangerouslySetInnerHTML={{ __html: m.html }} /> : null}
             {m.text ? <p className="bubble__text">{m.text}</p> : null}
           </Bubble>
@@ -122,12 +124,14 @@ export function Coach({ msgs, voice, children }: { msgs: Msg[]; voice?: Voice; c
 export function Bubble({
   kind,
   title,
+  badge,
   clip,
   voice,
   children,
 }: {
   kind: string;
   title?: string;
+  badge?: string;
   clip?: string;
   voice?: Voice;
   children?: ReactNode;
@@ -146,7 +150,12 @@ export function Bubble({
           {playing ? <Wave /> : <Speaker size={16} />}
         </button>
       ) : null}
-      {title ? <div className="bubble__title">{title}</div> : null}
+      {title ? (
+        <div className="bubble__title">
+          {title}
+          {badge ? <span className="bubble__badge">{badge}</span> : null}
+        </div>
+      ) : null}
       {children}
     </div>
   );

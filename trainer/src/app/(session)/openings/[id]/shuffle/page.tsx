@@ -3,7 +3,7 @@ import { getOpening, hasOpening } from '@/lib/content';
 
 export const dynamic = 'force-dynamic';
 
-/** Drill shuffle: a random chapter, straight into Recall. */
+/** Drill shuffle: a random chapter, straight into its Test. */
 export default async function ShufflePage({ params }: PageProps<'/openings/[id]/shuffle'>) {
   const { id } = await params;
   if (!hasOpening(id)) notFound();
