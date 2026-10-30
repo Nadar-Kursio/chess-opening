@@ -24,7 +24,7 @@ export default async function RecallSessionPage({ searchParams }: PageProps<'/re
     return (
       <div className="empty-state">
         <h1>All caught up</h1>
-        <p className="muted">Nothing is due{courseId ? ` in the ${getOpening(courseId).name}` : ''} today. Come back tomorrow — or learn a new chapter.</p>
+        <p className="muted">Nothing is due{courseId ? ` in the ${getOpening(courseId).name}` : ''} today. Come back tomorrow, or learn a new chapter.</p>
         <Link className="btn btn--primary" href="/recall">
           Back to Recall
         </Link>

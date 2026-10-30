@@ -38,6 +38,8 @@ jobs:
 
       - run: npm ci --prefix web
 
+      - run: node tests/prose-ui.mjs
+
       - run: npm run build --prefix web
 
       # The artifact smoke drives the exported pages in jsdom -- a red run

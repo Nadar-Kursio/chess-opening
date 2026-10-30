@@ -14,7 +14,7 @@ function read(name: string): string {
     return readFileSync(join(ROOT, name), "utf-8");
   } catch {
     throw new Error(
-      `web/content/${name} is missing — run: .venv/bin/python3 src/build.py --emit`
+      `web/content/${name} is missing. Run: .venv/bin/python3 src/build.py --emit`
     );
   }
 }
@@ -26,7 +26,7 @@ export function getCatalog(): Catalog {
   if (!catalog) {
     catalog = JSON.parse(read("catalog.json")) as Catalog;
     if (!catalog.sections?.length || !catalog.openings) {
-      throw new Error("web/content/catalog.json has no catalogue in it — re-run --emit");
+      throw new Error("web/content/catalog.json has no catalogue in it. Re-run --emit");
     }
   }
   return catalog;

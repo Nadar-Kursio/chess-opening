@@ -435,7 +435,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
             ...s, selected: null,
             drill: {
               ...d, tone: "flat", rejected: { from, to, kind: "wrong" },
-              verdict: `<b>${moveName(here.fen, from, to)}</b> isn't the reply this line plays &mdash; it goes <b>${answer.san}</b>.`,
+              verdict: `<b>${moveName(here.fen, from, to)}</b> isn't the reply this line plays. It goes <b>${answer.san}</b>.`,
             },
           });
           announce("Not the reply. The line plays " + answer.san + ".");
@@ -502,7 +502,7 @@ export function useStudy(opening: Opening, lineIndex: number) {
             ...d, tries: d.tries + 1, streak: 0, seen, phase: "wrong",
             tone: level >= 1 ? "flat" : "warn",
             verdict: level >= 1
-              ? `<b>${name}</b> is legal — it just isn't the move this line teaches. ${movePrinciple(here, from, to, s.ply)}`
+              ? `<b>${name}</b> is legal, but it isn't the move this line teaches. ${movePrinciple(here, from, to, s.ply)}`
               : `<b>${name}</b> is not the move this line plays. Try another, or take a hint.`,
             rejected: { from, to, kind: "wrong" },
           },

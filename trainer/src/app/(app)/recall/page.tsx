@@ -162,7 +162,7 @@ export default async function RecallPage() {
               <ol className="how">
                 <li>Every move you learn joins your deck.</li>
                 <li>Recall asks it again just before you’d forget it, in the line where it’s played.</li>
-                <li>Find it and the next gap grows — days, then weeks, then months. Miss it and it’s back tomorrow.</li>
+                <li>Find it and the next gap grows: days, then weeks, then months. Miss it and it’s back tomorrow.</li>
               </ol>
             </div>
           </aside>

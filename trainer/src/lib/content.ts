@@ -12,7 +12,7 @@ function read(name: string) {
   try {
     return readFileSync(path.join(ROOT, name), 'utf8');
   } catch {
-    throw new Error(`${path.join(ROOT, name)} is missing — run: npm run content`);
+    throw new Error(`${path.join(ROOT, name)} is missing. Run: npm run content`);
   }
 }
 

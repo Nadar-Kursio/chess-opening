@@ -4,7 +4,7 @@ import path from 'node:path';
 import { utterances, VOICES, SAMPLE, type Voice } from './speech';
 import type { Colour, Line } from './types';
 
-/* Recorded narration: one mp3 per (voice, text), named by a hash of both, in NARRATION_DIR/<voice>/.
+/* Recorded narration: one mp3 per (voice, words), named by a hash of both, in NARRATION_DIR/<voice>/.
    scripts/narrate.ts records what is missing; the server offers a session only the clips that
    exist, so an opening nobody has recorded simply plays silent. Generated, never committed. */
 
@@ -12,8 +12,10 @@ export const ENGINE = 'neural';
 
 export const NARRATION_DIR = process.env.NARRATION_DIR ?? path.join(process.cwd(), 'narration');
 
+/** Named by the words alone, so an edit that only changes punctuation keeps its recording. */
 export function clipName(voice: Voice, text: string) {
-  return `${createHash('sha256').update(`${ENGINE}|${VOICES[voice].polly}|${text}`).digest('hex').slice(0, 24)}.mp3`;
+  const words = text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  return `${createHash('sha256').update(`${ENGINE}|${VOICES[voice].polly}|${words}`).digest('hex').slice(0, 24)}.mp3`;
 }
 
 export const CLIP = /^[0-9a-f]{24}\.mp3$/;

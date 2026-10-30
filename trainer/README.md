@@ -70,8 +70,8 @@ can be fitted to these learners later.
 Learn is read aloud by a recorded coach, in the voice and speed the learner picks in Settings.
 `npm run narrate` records every clip that isn't on disk yet for the openings listed in
 `scripts/narrate.ts` (`NARRATED`), in all three voices, with Polly's neural engine through the
-machine's AWS credentials. Clips are named by a hash of voice and text, so a run after a content
-edit records only the sentences that changed, and the server offers a session only the clips that
+machine's AWS credentials. Clips are named by a hash of voice and the words spoken (not the
+punctuation), so a run after a content edit records only the sentences whose words changed, and the server offers a session only the clips that
 exist — an unrecorded line plays silent. Spending is capped: `narration/ledger.json` keeps the
 running total and a run that would pass `NARRATION_BUDGET_USD` (default $5) records nothing.
 `--dry-run` prints the count and the cost. Clips live in `narration/` (or `NARRATION_DIR`), are

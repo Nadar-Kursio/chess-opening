@@ -7,23 +7,23 @@ OPENING = {
     "tagline": "The knight on g4 is the bait, the h-pawn is the hook, and the h-file it opens is the line.",
     "level": "Beginner",
     "theory": {
-        "big_idea": "In the Berlin, after 4.O-O, the move 4...Ng4?! puts a knight where it does nothing — it is bait. After 5.h3 h5! it is left hanging, and taking it, 6.hxg4? hxg4, opens the h-file in front of White's own castled king: the f3-knight is attacked, and after 7.Nh2 Qh4 Black threatens mate on h2 with the h8-rook behind the queen. Objectively 4...Ng4 is more than a pawn worse than 4...Nxe4; the cure is simply to leave the knight alone — 6.c3! or 6.d4 — and the engine gives White close to two pawns.",
-        "structure": "No pawn structure — one file. The trap is the h-file in front of White's king: the h-pawn is what keeps it closed, and the whole trick is persuading White to use that pawn to capture a knight.",
+        "big_idea": "In the Berlin, after 4.O-O, the move 4...Ng4?! puts a knight where it does nothing. It is bait. After 5.h3 h5! it is left hanging, and taking it, 6.hxg4? hxg4, opens the h-file in front of White's own castled king: the f3-knight is attacked, and after 7.Nh2 Qh4 Black threatens mate on h2 with the h8-rook behind the queen. Objectively 4...Ng4 is more than a pawn worse than 4...Nxe4; the cure is simply to leave the knight alone with 6.c3! or 6.d4, and the engine gives White close to two pawns.",
+        "structure": "No pawn structure, just one file. The trap is the h-file in front of White's king: the h-pawn is what keeps it closed, and the whole trick is persuading White to use that pawn to capture a knight.",
         "white_plans": [
-            "Kick the knight with 5.h3 — still the best move — and then leave it on g4: 6.c3! and d4, or 6.d4 at once.",
+            "Kick the knight with 5.h3 (still the best move), and then leave it on g4: 6.c3! and d4, or 6.d4 at once.",
             "Take on g4 only when the h-file cannot be used against you: count the black pieces that can reach it first.",
             "Win the centre while the g4-knight is out of play: Qa4 and Bxc6+ collect the e4-pawn back with interest.",
         ],
         "black_plans": [
             "Know the price: 4...Ng4 is objectively poor. It is a trap for fast games against players who take everything.",
-            "After 5.h3, play 5...h5 — the hook — and leave the knight hanging.",
+            "After 5.h3, play 5...h5, the hook, and leave the knight hanging.",
             "After 6.hxg4 hxg4, the f3-knight is attacked; after 7.Nh2 Qh4 the queen threatens mate with the rook behind her.",
         ],
         "traps": [
             "The Fishing Pole: 1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Ng4 5.h3 h5 6.hxg4? hxg4 7.Nh2 Qh4 and ...Qxh2 mate is threatened. The cure: 6.c3 or 6.d4.",
             "Its cousin: the Siberian Trap, the other knight-on-g4 trick aimed at h2.",
         ],
-        "who": "Ruy Lopez players, who meet the Berlin all the time and should know why the knight on g4 is not a free piece. And Black players who want a blitz trick — knowing that against a calm reply it is a bad position.",
+        "who": "Ruy Lopez players, who meet the Berlin all the time and should know why the knight on g4 is not a free piece. And Black players who want a blitz trick, knowing that against a calm reply it is a bad position.",
     },
     "lines": [
         {
@@ -38,7 +38,7 @@ OPENING = {
                 "point": "The threat is ...Qxh2 mate. The queen takes the h2-knight with the h8-rook behind her down the open file, and the king has nowhere to go: f1 is its own rook, f2 and g2 its own pawns. White can only make room, and the engine's score is worse than a queen down.",
                 "next": [
                     "From White's chair, do not take the knight: 6.c3, 6.d4 or 6.Nc3 leaves it offside on g4, and the engine gives White close to two pawns. The second chapter plays 6.c3.",
-                    "Opening the h-file in front of your own castled king is the real mistake — the knight was only bait.",
+                    "Opening the h-file in front of your own castled king is the real mistake. The knight was only bait.",
                     "From Black's chair, know the price: 4...Ng4 is objectively poor, more than a pawn worse than 4...Nxe4. It is a trap for fast games against players who take everything.",
                 ],
             },
@@ -49,18 +49,18 @@ OPENING = {
                 4: "Defending it.",
                 5: "The Ruy Lopez: the bishop pressures the knight that defends e5.",
                 6: "The Berlin, counterattacking e4.",
-                7: "Castling — and the castled king is what the trap is aimed at.",
+                7: "Castling. The castled king is what the trap is aimed at.",
                 8: "The bait. The knight hops to g4, where it does nothing useful; the engine calls it more than a pawn worse than 4...Nxe4. It is there to be kicked.",
                 9: "The natural kick, and still White's best move.",
                 10: "The hook: the knight is left hanging, and the h-pawn is ready to recapture on g4 and open the h-file.",
-                11: "Taking the bait — the real mistake. The h-file opens in front of White's own king, and the engine's score swings from about two pawns for White to nearly four for Black.",
+                11: "Taking the bait, and this is the real mistake. The h-file opens in front of White's own king, and the engine's score swings from about two pawns for White to nearly four for Black.",
                 12: "Recapturing, and now the f3-knight is attacked and the h8-rook looks straight down the open file at h2.",
                 13: "The knight runs, and blocks h2 with a piece the queen can take. 7.c3, giving the knight back, was the least bad.",
                 14: "The threat is ...Qxh2 mate: the h8-rook guards the queen on h2, and the king's other squares are taken by its own rook and pawns.",
             },
         },
         {
-            "name": "Sidestepping it — 6.c3",
+            "name": "Sidestepping it: 6.c3",
             "slug": "sidestep-c3",
             "note": "The Ruy Lopez player's chair. Leave the knight on g4, where it does nothing, and win the centre instead: the h-file stays shut and White comes out a pawn up.",
             "moves": "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Ng4 h3 h5 c3 d5 Qa4 dxe4 Bxc6+ bxc6 Qxc6+ Bd7 Qxe4",
@@ -71,7 +71,7 @@ OPENING = {
                 "tier": "Foundation",
                 "point": "White is a pawn up, the queen is centralised, and the h-file is still closed. The g4-knight is still offside, and the engine gives White about a pawn and a half.",
                 "next": [
-                    "Develop with d4 and Re1, and bring the queenside pieces out — the engine's plan.",
+                    "Develop with d4 and Re1, and bring the queenside pieces out. That is the engine's plan.",
                     "Take the g4-knight only when the h-file cannot be used against you: count the black pieces that can reach it first.",
                     "The rule from this chapter: a piece that is doing nothing is not a gift. Leave it where it is and play in the centre.",
                 ],
@@ -100,7 +100,7 @@ OPENING = {
         },
     ],
     "deep": {
-        "name": "Deep dive — White makes room",
+        "name": "Deep dive: White makes room",
         "slug": "fishing-pole-deep",
         "note": "Two plies further: White opens f2 for the king, and Black takes that square away again with check.",
         "moves": "e4 e5 Nf3 Nc6 Bb5 Nf6 O-O Ng4 h3 h5 hxg4 hxg4 Nh2 Qh4 f4 Bc5+",
@@ -116,7 +116,7 @@ OPENING = {
         },
         "notes": {
             15: "Making room: the king can now run to f2.",
-            16: "Check on the diagonal that f4 just opened — and the king's new square is covered.",
+            16: "Check on the diagonal that f4 just opened, and the king's new square is covered.",
         },
     },
     "branches": {
@@ -148,6 +148,6 @@ OPENING = {
             },
         ],
         "study": "The Ruy Lopez chapter on this site covers the Berlin properly. Every evaluation here comes from Stockfish at depth twenty.",
-        "next": "The Ruy Lopez course, and the Siberian Trap — another knight on g4 aimed at h2.",
+        "next": "The Ruy Lopez course, and the Siberian Trap, another knight on g4 aimed at h2.",
     },
 }

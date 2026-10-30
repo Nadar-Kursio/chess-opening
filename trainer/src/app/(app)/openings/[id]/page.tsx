@@ -209,7 +209,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                   <span>
                     <b>Recall{due ? ` (${due} due)` : ''}</b>
                     <span className="muted small">
-                      {due ? 'This course’s moves that are fading, before you forget them.' : 'Nothing due — learned moves come back here.'}
+                      {due ? 'This course’s moves that are fading, before you forget them.' : 'Nothing due. Learned moves come back here.'}
                     </span>
                   </span>
                 </Link>
@@ -242,8 +242,8 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                         <Book size={20} />
                       </span>
                       <span>
-                        <b>{g.name.split(' — ')[0]}</b>
-                        {g.name.includes(' — ') ? <span className="muted small">{g.name.split(' — ').slice(1).join(' — ')}</span> : null}
+                        <b>{g.name.split(': ')[0]}</b>
+                        {g.name.includes(': ') ? <span className="muted small">{g.name.slice(g.name.indexOf(': ') + 2)}</span> : null}
                       </span>
                     </Link>
                   </li>

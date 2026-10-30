@@ -47,7 +47,7 @@ export function PlanFor({ op, line, structures }: {
       <p className="label">You&rsquo;re on your own from here</p>
       <p className="plan__point">
         {line.name} ends here. There is no move {Math.ceil(line.plies.length / 2) + 1} written
-        down &mdash; from this position you are playing on the ideas, not the moves.
+        down. From this position you are playing on the ideas, not the moves.
       </p>
       <p className="label plan__sub">What you are trying to do in this opening</p>
       <ul className="plan__next">

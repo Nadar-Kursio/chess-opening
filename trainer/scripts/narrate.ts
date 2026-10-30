@@ -43,7 +43,7 @@ async function main() {
     mkdirSync(path.join(NARRATION_DIR, voice), { recursive: true });
     for (const text of texts()) {
       const file = path.join(NARRATION_DIR, voice, clipName(voice, text));
-      if (!existsSync(file)) jobs.push({ voice, text, file });
+      if (!existsSync(file) && !jobs.some((j) => j.file === file)) jobs.push({ voice, text, file });
     }
   }
   const chars = jobs.reduce((n, j) => n + j.text.length, 0);

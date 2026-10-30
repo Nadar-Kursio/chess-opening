@@ -31,7 +31,7 @@ export default function Home() {
         <h1 className="hero__title">The opening, <em>explained move by move</em></h1>
         <p className="hero__lede">
           Every move on this page comes with a reason. Step through a line, read why
-          the move was played, then answer it back on the board — and when your
+          the move was played, then answer it back on the board. When your
           opponent plays something else, the course answers <em>that</em> move too.
         </p>
       </header>

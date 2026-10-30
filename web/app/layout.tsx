@@ -30,12 +30,12 @@ import "@/styles/responsive.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://chesslab.dev"),
   title: {
-    default: "Opening Lab — the opening, explained move by move",
-    template: "%s — Opening Lab",
+    default: "Opening Lab: the opening, explained move by move",
+    template: "%s | Opening Lab",
   },
   description:
     "An interactive chess opening course. Every move comes with a reason, " +
-    "every claim checked by an engine — step through a line, drill it, and " +
+    "every claim checked by an engine. Step through a line, drill it, and " +
     "get an answer when your opponent deviates.",
 };
 

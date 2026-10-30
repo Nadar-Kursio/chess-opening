@@ -54,6 +54,12 @@ System `python3` has no `python-chess`; use the venv.
   the real export in `web/out/` — add a step for anything new, selecting by
   class or ARIA, not element ids. jsdom has no layout engine, so after a
   styles change, look at the page on a phone width as well as a desktop one.
+- Everything the apps show reads like a person wrote it: no em dashes, no
+  "honest evaluation", no "it is worth noting", no "not just X but Y", no
+  chatbot vocabulary. The rules are `tests/prose.json`. `tests/test_prose.py`
+  checks the course text and `node tests/prose-ui.mjs` (after `npm ci` in
+  `web/`) checks UI strings in `web/` and `trainer/src/`. Comments and docs are
+  exempt; personal notes are the reader's own words and are never checked.
 - Changes under `.github/workflows/` can read repository secrets. Review them
   as security changes, not as config.
 
