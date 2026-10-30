@@ -51,7 +51,7 @@ export default function Home() {
                 ) : null}
                 <p>
                   <Link href={`/openings/${o.id}/`}><b>{o.name}</b></Link>{" "}
-                  <span className="mono">{o.eco}</span> — {o.tagline}{" "}
+                  <span className="mono">{o.eco}</span>. {o.tagline}{" "}
                   <span dangerouslySetInnerHTML={{ __html: shortIdea(op.theory.big_idea) }} />
                 </p>
               </div>

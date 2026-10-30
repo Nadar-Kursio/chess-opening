@@ -134,7 +134,7 @@ export function DevPanel({
                 <span key={i}>
                   {num}
                   <button className={cls} onClick={() => onAt(i)}
-                    aria-label={q.mark ? `${q.san} — ${MARKS[q.mark].word}` : undefined}>
+                    aria-label={q.mark ? `${q.san}, ${MARKS[q.mark].word}` : undefined}>
                     {q.san}
                     {q.mark ? <MarkBadge mark={q.mark} /> : null}
                   </button>

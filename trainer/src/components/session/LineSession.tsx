@@ -250,7 +250,7 @@ function Run({
     if (alt) {
       say({
         kind: 'oops',
-        title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` — ${alt.name}` : ''}`,
+        title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` (${alt.name})` : ''}`,
         html: `${alt.why} <em>The course plays something else here. Try again.</em>`,
       });
     } else {
@@ -271,7 +271,7 @@ function Run({
     setTone('idle');
     say({
       kind: 'info',
-      text: `Skipped to ${plies[shared.plies].num} — the moves before it are the same as “${shared.chapter}”.`,
+      text: `Skipped to ${plies[shared.plies].num}: the moves before it are the same as “${shared.chapter}”.`,
     });
   };
 
@@ -409,7 +409,7 @@ function Summary({
           ? 'Flawless drill!'
           : 'Drill complete'
         : clean
-          ? 'Perfect recall!'
+          ? 'Test passed!'
           : 'Almost. One clean run passes';
   const detail =
     mode === 'learn'

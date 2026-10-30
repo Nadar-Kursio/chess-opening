@@ -43,8 +43,8 @@ export default function Openings() {
                       <li key={l.slug}>
                         <Link href={i === 0 ? `/openings/${o.id}/` : `/openings/${o.id}/${l.slug}/`}>
                           {l.name}
-                        </Link>{" "}
-                        — {l.moveCount} moves{l.side && l.side !== o.orientation ? `, played as ${l.side === "black" ? "Black" : "White"}` : ""}
+                        </Link>,{" "}
+                        {l.moveCount} moves{l.side && l.side !== o.orientation ? `, played as ${l.side === "black" ? "Black" : "White"}` : ""}
                       </li>
                     ))}
                   </ul>

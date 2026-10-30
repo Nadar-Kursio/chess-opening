@@ -21,28 +21,41 @@ function* sources(dir) {
   }
 }
 
-const TEXT = new Set([
-  ts.SyntaxKind.StringLiteral,
-  ts.SyntaxKind.NoSubstitutionTemplateLiteral,
-  ts.SyntaxKind.TemplateHead,
-  ts.SyntaxKind.TemplateMiddle,
-  ts.SyntaxKind.TemplateTail,
-  ts.SyntaxKind.JsxText,
-]);
+// Text built from parts (a template literal, or a JSX element's children) is checked whole, with
+// each interpolated part standing in as a word, so `${a} — ${b}` is caught like 'a — b'. A piece
+// that starts or ends with a space is joined to words there, so ' — ' counts too, and a bare '—'
+// placeholder doesn't.
+const PART = 'x';
+const joined = (text) => (/^\s/.test(text) ? PART : '') + text + (/\s$/.test(text) ? PART : '');
+const { SyntaxKind: K } = ts;
 
 const hits = [];
 for (const dir of DIRS) {
   for (const file of sources(path.join(ROOT, dir))) {
     const src = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
-    const visit = (node) => {
-      if (TEXT.has(node.kind)) {
-        for (const c of checks) {
-          for (const m of node.text.matchAll(c.re)) {
-            const { line } = src.getLineAndCharacterOfPosition(node.getStart());
-            const around = node.text.slice(Math.max(0, m.index - 40), m.index + m[0].length + 40);
-            hits.push(`${path.relative(ROOT, file)}:${line + 1} [${c.id}] …${around}…\n    ${c.advice}`);
-          }
+    const check = (node, piece) => {
+      const text = joined(piece);
+      for (const c of checks) {
+        for (const m of text.matchAll(c.re)) {
+          const { line } = src.getLineAndCharacterOfPosition(node.getStart());
+          const around = text.slice(Math.max(0, m.index - 40), m.index + m[0].length + 40);
+          hits.push(`${path.relative(ROOT, file)}:${line + 1} [${c.id}] …${around}…\n    ${c.advice}`);
         }
+      }
+    };
+    const visit = (node) => {
+      switch (node.kind) {
+        case K.StringLiteral:
+        case K.NoSubstitutionTemplateLiteral:
+          return check(node, node.text);
+        case K.TemplateExpression:
+          check(node, node.head.text + node.templateSpans.map((s) => PART + s.literal.text).join(''));
+          return node.templateSpans.forEach((s) => visit(s.expression));
+        case K.JsxElement:
+        case K.JsxFragment:
+          check(node, node.children.map((c) => (c.kind === K.JsxText ? c.text : PART)).join(''));
+          if (node.kind === K.JsxElement) visit(node.openingElement);
+          return node.children.forEach((c) => c.kind !== K.JsxText && visit(c));
       }
       ts.forEachChild(node, visit);
     };

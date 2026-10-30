@@ -47,7 +47,7 @@ export default function OpeningView({ opening, lineIndex, catalog }: Props) {
 
       <section className="path" id={`path-${op.id}`}>
         <div className="path__head">
-          <p className="label label--accent">Your learning path &mdash; {op.name}</p>
+          <p className="label label--accent">Your learning path: {op.name}</p>
           <span className="pill">{op.level}</span>
         </div>
         <p className="path__arc" dangerouslySetInnerHTML={{ __html: pr.arc }} />
