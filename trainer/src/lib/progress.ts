@@ -188,15 +188,17 @@ export function stepPassed(r: SessionResult) {
   }
 }
 
-export async function recordSession(userId: string, r: SessionResult) {
-  const day = dayIn(await learnerTimezone());
+/** Saves a session once: a repeat of the same `clientId` changes nothing and gets the same answer. */
+export async function recordSession(userId: string, r: SessionResult, { clientId, day }: { clientId: string; day: string }) {
   const passed = stepPassed(r);
   await transaction(async (client) => {
-    await client.query(
-      `insert into practice_sessions (user_id, opening_id, line_slug, mode, correct, wrong, hints, day)
-       values ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [userId, r.openingId, r.lineSlug, r.mode, r.correct, r.wrong, r.hints, day],
+    const { rowCount } = await client.query(
+      `insert into practice_sessions (user_id, opening_id, line_slug, mode, correct, wrong, hints, day, client_id)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       on conflict (user_id, client_id) do nothing`,
+      [userId, r.openingId, r.lineSlug, r.mode, r.correct, r.wrong, r.hints, day, clientId],
     );
+    if (!rowCount) return;
     if (r.lineSlug && r.mode !== 'free' && r.mode !== 'review') {
       const column = stepColumn(r.mode);
       const isRun = r.mode === 'drill' || r.mode === 'recall';

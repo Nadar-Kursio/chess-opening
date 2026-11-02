@@ -5,7 +5,7 @@
  * Next loads the matching file for `next start` / `next dev`; scripts load it with --env-file.
  */
 import { execFileSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -40,15 +40,21 @@ const stage = process.argv[2] as Stage;
 if (stage !== 'prod' && stage !== 'dev') throw new Error('Usage: env.ts prod|dev');
 const { file, port, url } = STAGES[stage];
 
+const appSecrets = stage === 'prod' ? secret('chesslab/app-secrets') : null;
+
 const values: Record<string, string> =
-  stage === 'prod'
+  appSecrets
     ? {
         DATABASE_URL: secret('chesslab/db-credentials').url,
         // The RDS instance is shared with Kursio; keep this process's share small.
         DB_POOL_MAX: '5',
-        ...(({ BETTER_AUTH_SECRET, EDGE_SECRET }) => ({ BETTER_AUTH_SECRET, EDGE_SECRET }))(
-          secret('chesslab/app-secrets'),
-        ),
+        BETTER_AUTH_SECRET: appSecrets.BETTER_AUTH_SECRET,
+        EDGE_SECRET: appSecrets.EDGE_SECRET,
+        // Next salts Server Action ids with this key and otherwise makes a new one per build, which
+        // breaks every action in every tab left open across a deploy.
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: createHash('sha256')
+          .update(`server-actions:${appSecrets.BETTER_AUTH_SECRET}`)
+          .digest('base64'),
       }
     : {
         DATABASE_URL: 'postgres://chesslab:chesslab@localhost:5520/chesslab',

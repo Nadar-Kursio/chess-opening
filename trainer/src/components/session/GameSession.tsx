@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
+import { saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Game, Turn } from '@/lib/types';
 import { Coach, CoachAvatar, SessionFrame, useMessages, type Msg, type Tone } from './Frame';
@@ -65,7 +65,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
     saved.current = true;
     play('done', sound);
     setTone('done');
-    void finishSession({
+    saveSession({
       openingId,
       lineSlug: null,
       mode: 'free',
@@ -74,7 +74,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
       hints: 0,
       score: null,
       positions: [],
-    }).catch(() => {});
+    });
   }, [ply, last, mode, score, openingId, sound]);
 
   const onMove = (from: string, to: string) => {

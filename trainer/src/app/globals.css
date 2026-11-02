@@ -1317,6 +1317,24 @@ a.card:hover {
   padding: var(--gutter);
 }
 
+/* ---------- saves waiting to sync ---------- */
+
+.outbox-note {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-4);
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: var(--border) solid var(--line);
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 10;
+}
+
 /* ---------- the session screen ---------- */
 
 .session {

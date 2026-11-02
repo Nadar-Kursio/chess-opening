@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import OutboxSync from '@/components/OutboxSync';
 import { Flame } from '@/components/ui/icons';
 import { countDue, endOfDay } from '@/lib/cards';
 import { getPulse, learnerTimezone } from '@/lib/progress';
@@ -37,6 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       <div className="app__main">{children}</div>
+      <OutboxSync userId={user.id} showWaiting />
     </div>
   );
 }

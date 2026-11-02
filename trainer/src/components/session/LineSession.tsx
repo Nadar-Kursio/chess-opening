@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { colourName, positionKey } from '@/lib/course';
+import { QUEUED_NOTE, saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Line, Severity, Turn } from '@/lib/types';
 import { useFlip } from './useFlip';
@@ -108,7 +108,7 @@ function Run({
   const [hintLevel, setHintLevel] = useState(0);
   const hinted = hintLevel > 0;
   const [stats, setStats] = useState({ correct: 0, wrong: 0, hints: 0 });
-  const [done, setDone] = useState<null | { passed: boolean | null }>(null);
+  const [done, setDone] = useState<null | { passed: boolean | null; queued?: boolean }>(null);
   const positions = useRef(new Map<string, boolean>());
   const say = (m: Omit<Msg, 'id'>) => setMsgs((list) => [...list, make(m)]);
 
@@ -142,12 +142,12 @@ function Run({
   }, [ply]);
 
   const finish = useCallback(
-    async (final: typeof stats) => {
+    (final: typeof stats) => {
       setDone({ passed: null });
       setTone('done');
       play('done', sound);
-      try {
-        const { passed } = await finishSession({
+      saveSession(
+        {
           openingId,
           lineSlug: line.slug,
           mode,
@@ -157,12 +157,18 @@ function Run({
             mode === 'learn'
               ? []
               : [...positions.current].map(([key, hit]) => ({ key, hit })),
-        });
-        setDone({ passed });
-      } catch {
-        setDone({ passed: false });
-        say({ kind: 'oops', text: 'Couldn’t save this run. Check your connection and try again.' });
-      }
+        },
+        (state) => {
+          if (state.status === 'saved') {
+            setDone({ passed: state.result.passed });
+          } else if (state.status === 'queued') {
+            setDone({ passed: false, queued: true });
+          } else {
+            setDone({ passed: false });
+            say({ kind: 'oops', text: 'This run can’t be saved: the chapter has changed since you opened it.' });
+          }
+        },
+      );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [openingId, line.slug, mode, sound],
@@ -305,7 +311,7 @@ function Run({
   const youDone = stats.correct;
   const current = plies[ply];
   const footer = done ? (
-    <Summary mode={mode} passed={done.passed} stats={stats} asked={asked} next={next} closeHref={closeHref} restart={restart} />
+    <Summary mode={mode} passed={done.passed} queued={!!done.queued} stats={stats} asked={asked} next={next} closeHref={closeHref} restart={restart} />
   ) : (
     <>
       <div className="foot__text">
@@ -386,6 +392,7 @@ function Run({
 function Summary({
   mode,
   passed,
+  queued,
   stats,
   asked,
   next,
@@ -394,6 +401,7 @@ function Summary({
 }: {
   mode: Props['mode'];
   passed: boolean | null;
+  queued: boolean;
   stats: { correct: number; wrong: number; hints: number };
   asked: number;
   next: Props['next'];
@@ -419,7 +427,7 @@ function Summary({
     <>
       <div className="foot__text">
         <strong>{headline}</strong>
-        <span>{passed === null ? 'Saving…' : detail}</span>
+        <span>{passed === null ? 'Saving…' : queued ? QUEUED_NOTE : detail}</span>
       </div>
       <div className="foot__actions">
         {passed === false || (mode !== 'learn' && !clean) ? (

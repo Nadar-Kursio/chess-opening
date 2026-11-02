@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploys new.chesslab.dev without downtime on a bad build:
-#   1. compiles the course, records any narration it lacks (within budget; a failure only means
+#   1. refreshes the settings, compiles the course, records any narration it lacks (within budget; a failure only means
 #      those lines play silent), and builds into .next-staging while the live .next keeps serving,
 #   2. stops the server, swaps the build in (keeping the old one as .next-previous), starts it,
 #   3. rolls back if the new one doesn't answer.
@@ -16,6 +16,7 @@ answers() {
   return 1
 }
 
+npx tsx scripts/env.ts prod
 scripts/content.sh
 npx tsx scripts/narrate.ts || echo "Narration not recorded; Learn plays the clips that exist." >&2
 rm -rf .next-staging
