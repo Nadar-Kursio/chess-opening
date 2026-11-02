@@ -374,7 +374,7 @@ function Run({
       side={
         <>
           <CoachAvatar voice={voice} />
-          <Coach msgs={msgs} voice={voice}>
+          <Coach msgs={msgs} voice={voice} promptKey={prompt?.clip}>
             {prompt ? (
               <Bubble kind="prompt" title={prompt.title} clip={prompt.clip} voice={voice}>
                 {prompt.html ? <p className="bubble__text" dangerouslySetInnerHTML={{ __html: prompt.html }} /> : null}

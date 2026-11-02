@@ -64,7 +64,7 @@ export function SessionFrame({
     return () => window.removeEventListener('keydown', onKey);
   }, [onFlip]);
   return (
-    <div className="session">
+    <div className={`session session--${tone}`}>
       <header className="session__top">
         <Link href={closeHref} className="icon-btn" aria-label="Leave this session">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
@@ -99,23 +99,42 @@ export function SessionFrame({
   );
 }
 
-export function Coach({ msgs, voice, children }: { msgs: Msg[]; voice?: Voice; children?: ReactNode }) {
-  const end = useRef<HTMLDivElement>(null);
+export function Coach({
+  msgs,
+  voice,
+  promptKey,
+  children,
+}: {
+  msgs: Msg[];
+  voice?: Voice;
+  /** Changes when `children`, the prompt under the messages, says something new. */
+  promptKey?: string | null;
+  children?: ReactNode;
+}) {
+  const feed = useRef<HTMLDivElement>(null);
+  const shown = useRef(0);
+  // Only ever scrolls the feed, never the page, and to the start of what's new: a long note is read
+  // from its first line. Several messages at once are read in order, from the first of them.
   useEffect(() => {
-    end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [msgs.length]);
+    const box = feed.current;
+    if (!box) return;
+    const target = msgs.length - shown.current > 1 ? box.children[shown.current] : box.lastElementChild;
+    shown.current = msgs.length;
+    if (!target) return;
+    const top = box.scrollTop + target.getBoundingClientRect().top - box.getBoundingClientRect().top;
+    box.scrollTo({ top, behavior: 'smooth' });
+  }, [msgs.length, promptKey]);
   return (
     <section className="coach" aria-label="Coach">
-      <div className="coach__feed">
+      <div className="coach__feed" ref={feed}>
         {msgs.map((m) => (
           <Bubble key={m.id} kind={m.kind} title={m.title} badge={m.badge} clip={m.clip} voice={voice}>
             {m.html ? <div className="bubble__text" dangerouslySetInnerHTML={{ __html: m.html }} /> : null}
             {m.text ? <p className="bubble__text">{m.text}</p> : null}
           </Bubble>
         ))}
-        <div ref={end} />
+        {children}
       </div>
-      {children}
     </section>
   );
 }
