@@ -5,7 +5,7 @@ import type { Colour, OpeningSummary } from './types';
 
 /* Which openings the trainer leads with. Everything else the build ships still appears, after
    these, so adding an opening stays data-only. */
-const FEATURED = ['london', 'scandinavian', 'sicilian'];
+const FEATURED = ['london', 'scandinavian', 'sicilian', 'queensgambit'];
 
 export function courses() {
   const all = getCatalog().openings;
