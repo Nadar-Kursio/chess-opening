@@ -147,23 +147,25 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
       }
       side={
         <>
-          <div className="segmented" role="group" aria-label="How to play through the game">
-            <button type="button" className={mode === 'guess' ? 'segmented__on' : ''} onClick={() => restart('guess')}>
-              Guess the moves
-            </button>
-            <button type="button" className={mode === 'watch' ? 'segmented__on' : ''} onClick={() => restart('watch')}>
-              Watch
-            </button>
-          </div>
-          {mode === 'guess' ? (
-            <div className="segmented segmented--small" role="group" aria-label="Which side to guess">
-              {(['w', 'b'] as Turn[]).map((t) => (
-                <button key={t} type="button" className={guessSide === t ? 'segmented__on' : ''} onClick={() => restart('guess', t)}>
-                  Guess {t === 'w' ? 'White' : 'Black'}
-                </button>
-              ))}
+          <div className="game-modes">
+            <div className="segmented" role="group" aria-label="How to play through the game">
+              <button type="button" className={mode === 'guess' ? 'segmented__on' : ''} onClick={() => restart('guess')}>
+                Guess
+              </button>
+              <button type="button" className={mode === 'watch' ? 'segmented__on' : ''} onClick={() => restart('watch')}>
+                Watch
+              </button>
             </div>
-          ) : null}
+            {mode === 'guess' ? (
+              <div className="segmented" role="group" aria-label="Which side to guess">
+                {(['w', 'b'] as Turn[]).map((t) => (
+                  <button key={t} type="button" className={guessSide === t ? 'segmented__on' : ''} onClick={() => restart('guess', t)}>
+                    {t === 'w' ? 'White' : 'Black'}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <CoachAvatar />
           <Coach msgs={msgs} />
         </>

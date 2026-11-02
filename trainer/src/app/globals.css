@@ -1103,9 +1103,14 @@ a.card:hover {
   color: var(--ink);
   box-shadow: var(--card-shadow);
 }
-.segmented--small button {
-  min-height: calc(var(--tap) - var(--space-4));
-  font-size: var(--text-sm);
+
+.game-modes {
+  display: flex;
+  gap: var(--space-2);
+  flex: none;
+}
+.game-modes .segmented {
+  flex: 1;
 }
 
 /* ---------- profile ---------- */
@@ -2252,20 +2257,6 @@ a.card:hover {
   .rep {
     grid-template-columns: minmax(0, 1fr);
   }
-  .session__body {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-3);
-  }
-  .session__board {
-    width: min(100%, var(--board-max), calc(100dvh - var(--header) - var(--foot) - var(--space-12) * 3));
-    justify-self: center;
-  }
-  .session__side {
-    height: auto;
-  }
-  .coach__feed {
-    max-height: calc(var(--tap) * 5);
-  }
   .auth {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-6);
@@ -2339,23 +2330,83 @@ a.card:hover {
   .session__title {
     display: none;
   }
-  .session__board {
-    width: 100%;
-  }
   .session__foot-inner {
     flex-wrap: wrap;
   }
   .foot__actions {
     width: 100%;
   }
-  .session__body {
-    padding-bottom: calc(var(--foot) + var(--tap) + var(--space-6));
-  }
   .foot__actions .btn {
     flex: 1;
   }
   .card {
     padding: var(--space-4);
+  }
+}
+
+/* A session on a phone or an upright tablet fits the screen and the page doesn't scroll: the board
+   stays in view, the footer sits below the coach rather than over it, and the coach's messages are
+   the one thing that scrolls. */
+@media (max-width: 960px) and (orientation: portrait) {
+  .session {
+    --foot: var(--foot-compact);
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .session__top {
+    padding-block: var(--space-1);
+  }
+  .session__body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--space-2);
+    min-height: 0;
+    padding: 0 var(--gutter) var(--space-2);
+    align-items: stretch;
+  }
+  .session__board {
+    width: min(100%, var(--board-max), calc(100dvh - var(--tap) - var(--space-2) - var(--foot) - var(--coach-reading)));
+    justify-self: center;
+    transition: width var(--mid) var(--ease);
+  }
+  .session__side {
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    gap: var(--space-2);
+  }
+  /* A master's annotations run longer than a coach's note. */
+  .session:has(.game-modes) {
+    --coach-reading: calc(var(--tap) * 6);
+  }
+  /* The run is over and what's left is to read: the board makes room for the coach's last word. */
+  .session--done .session__board {
+    width: min(50%, var(--board-max));
+  }
+  .session__foot {
+    position: static;
+  }
+  .session__foot-inner {
+    padding-block: var(--space-2);
+  }
+  /* The name plate only earns its height when it holds the voice controls. */
+  .coach__who:not(:has(button)) {
+    display: none;
+  }
+  .coach__who {
+    --coach-avatar: calc(var(--tap) * 0.6);
+  }
+  .coach__feed {
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  /* The board shows the position; on a phone that height is worth more as reading room. */
+  .session .tape {
+    display: none;
   }
 }
 
