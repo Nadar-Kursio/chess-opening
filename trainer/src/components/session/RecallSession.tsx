@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { finishRecall, gradeRecall } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { Flame } from '@/components/ui/icons';
 import type { Graded } from '@/lib/cards';
 import { colourName, otherTurn } from '@/lib/course';
+import { saveGrade, saveSession } from '@/lib/outbox';
 import { retryRun, type Run } from '@/lib/recall';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Severity } from '@/lib/types';
@@ -142,7 +142,9 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
         else c.wrong++;
         byCourse.set(a.openingId, c);
       }
-      void finishRecall([...byCourse.values()]).catch(() => undefined);
+      for (const c of byCourse.values()) {
+        saveSession({ ...c, lineSlug: null, mode: 'review', hints: 0, score: null, positions: [] });
+      }
     },
     [sound],
   );
@@ -179,16 +181,20 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
     const answer: Answer = { openingId: run.openingId, course: run.course, num: expected.num, hit };
     setAnswers((list) => [...list, answer]);
     const ms = Math.round(performance.now() - askedAt.current);
-    gradeRecall({ openingId: run.openingId, key: ask.key, hit, ms })
-      .catch(() => null)
-      .then((g) => {
-        answer.graded = g;
-        tag(msgId, { badge: badgeFor(g) });
-        if (g?.mastered) {
-          say({ kind: 'done', title: '★ In long-term memory', text: `${expected.num} in the ${run.course} won’t need asking for weeks.` });
-          play('done', sound);
-        }
-      });
+    saveGrade({ openingId: run.openingId, key: ask.key, hit, ms }, (state) => {
+      if (state.status !== 'saved') {
+        answer.graded = null;
+        tag(msgId, { badge: state.status === 'queued' ? 'Will sync' : 'Not saved' });
+        return;
+      }
+      const g = state.result.graded;
+      answer.graded = g;
+      tag(msgId, { badge: badgeFor(g) });
+      if (g?.mastered) {
+        say({ kind: 'done', title: '★ In long-term memory', text: `${expected.num} in the ${run.course} won’t need asking for weeks.` });
+        play('done', sound);
+      }
+    });
   };
 
   const miss = (from: string | null, to: string | null) => {

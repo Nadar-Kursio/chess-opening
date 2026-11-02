@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type Tree, type TreeEdge } from '@/lib/course';
+import { saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
@@ -60,14 +60,14 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
 
   const save = (t: typeof tally) => {
     if (t.correct + t.wrong === 0) return;
-    void finishSession({
+    saveSession({
       openingId,
       lineSlug: null,
       mode: 'free',
       ...t,
       score: null,
       positions: [...positions.current].map(([k, hit]) => ({ key: k, hit })),
-    }).catch(() => {});
+    });
     positions.current = new Map();
   };
 

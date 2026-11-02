@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { finishSession } from '@/app/actions';
 import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
 import { positionKey, type Question } from '@/lib/course';
+import { QUEUED_NOTE, saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Severity, Turn } from '@/lib/types';
 import { useFlip } from './useFlip';
@@ -64,7 +64,7 @@ function Run({
   const [flash, setFlash] = useState<BoardFlash | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [score, setScore] = useState({ first: 0, wrong: 0 });
-  const [done, setDone] = useState<null | { passed: boolean | null; pct: number }>(null);
+  const [done, setDone] = useState<null | { passed: boolean | null; pct: number; queued?: boolean }>(null);
   const positions = useRef(new Map<string, boolean>());
 
   const q = questions[index];
@@ -144,8 +144,8 @@ function Run({
     setDone({ passed: null, pct });
     setTone('done');
     play('done', sound);
-    try {
-      const { passed } = await finishSession({
+    saveSession(
+      {
         openingId,
         lineSlug,
         mode: mode === 'review' ? 'review' : 'quiz',
@@ -154,11 +154,12 @@ function Run({
         hints: 0,
         score: pct,
         positions: [...positions.current].map(([key, hit]) => ({ key, hit })),
-      });
-      setDone({ passed: mode === 'quiz' ? passed : true, pct });
-    } catch {
-      setDone({ passed: false, pct });
-    }
+      },
+      (state) => {
+        if (state.status === 'saved') setDone({ passed: mode === 'quiz' ? state.result.passed : true, pct });
+        else setDone({ passed: false, pct, queued: state.status === 'queued' });
+      },
+    );
   };
 
   usePrimaryKey(solved && !done ? advance : null);
@@ -193,7 +194,7 @@ function Run({
               : 'Not quite. 80% passes'}
         </strong>
         <span>
-          {done.passed === null ? 'Saving…' : `${score.first} of ${total} first time · ${done.pct}%`}
+          {done.passed === null ? 'Saving…' : done.queued ? QUEUED_NOTE : `${score.first} of ${total} first time · ${done.pct}%`}
         </span>
       </div>
       <div className="foot__actions">
