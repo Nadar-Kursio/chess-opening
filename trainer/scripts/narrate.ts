@@ -11,7 +11,11 @@ import type { Opening } from '../src/lib/types';
    is kept in NARRATION_DIR/ledger.json, and a run that would cross NARRATION_BUDGET_USD (default 5)
    records nothing. `--dry-run` prints what a run would record and cost. */
 
-const NARRATED = ['london', 'scandinavian', 'sicilian'];
+const NARRATED = ['london', 'scandinavian', 'sicilian', 'queensgambit'];
+/* Recording these too would cross the budget by $0.13, and no learner has picked Amy. */
+const SKIPPED: Partial<Record<Voice, string[]>> = {
+  amy: ['queensgambit/albin', 'queensgambit/chigorin', 'queensgambit/exchange-deep'],
+};
 const USD_PER_CHAR = 16 / 1_000_000; // Polly neural voices
 const BUDGET = Number(process.env.NARRATION_BUDGET_USD ?? 5);
 const CONTENT = process.env.CONTENT_DIR ?? path.join(process.cwd(), 'content');
@@ -27,11 +31,14 @@ function readLedger(): Ledger {
   return existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, 'utf8')) : { characters: 0, usd: 0 };
 }
 
-function texts() {
+function texts(voice: Voice) {
   const all = new Set([SAMPLE]);
   for (const id of NARRATED) {
     const op = JSON.parse(readFileSync(path.join(CONTENT, 'openings', `${id}.json`), 'utf8')) as Opening;
-    for (const line of op.lines) for (const u of utterances(line, line.side ?? op.orientation)) all.add(u.text);
+    for (const line of op.lines) {
+      if (SKIPPED[voice]?.includes(`${id}/${line.slug}`)) continue;
+      for (const u of utterances(line, line.side ?? op.orientation)) all.add(u.text);
+    }
   }
   return [...all];
 }
@@ -41,7 +48,7 @@ async function main() {
   const jobs: { voice: Voice; text: string; file: string }[] = [];
   for (const voice of Object.keys(VOICES) as Voice[]) {
     mkdirSync(path.join(NARRATION_DIR, voice), { recursive: true });
-    for (const text of texts()) {
+    for (const text of texts(voice)) {
       const file = path.join(NARRATION_DIR, voice, clipName(voice, text));
       if (!existsSync(file) && !jobs.some((j) => j.file === file)) jobs.push({ voice, text, file });
     }
