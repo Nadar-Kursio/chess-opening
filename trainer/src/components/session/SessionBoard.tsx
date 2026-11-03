@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Board, { type BoardArrow, type BoardBadge, type BoardFlash } from '@/components/Board';
 import { ChevronLeft, ChevronRight } from '@/components/ui/icons';
 import { otherTurn } from '@/lib/course';
-import { MARK_GLYPH, evalShare, evalText } from '@/lib/engineView';
+import { MARK_GLYPH, evalBarText, evalShare, evalText } from '@/lib/engineView';
 import type { Ply, Turn } from '@/lib/types';
 
 /* Looking back over the moves played, the same in every session: ← → or the buttons under the
@@ -151,7 +151,6 @@ export function SessionBoard({
           {review.isReviewing ? `Looking back: ${review.at > 0 ? shown.num : 'the start'}` : ''}
         </span>
         <MoveTape review={review} strip marks={!!engine} />
-        {engine && hasScore ? <b className="review-bar__score">{evalText(scored!)}</b> : null}
         <button
           type="button"
           className="icon-btn"
@@ -177,6 +176,11 @@ function EvalBar({ score, orientation }: { score: Pick<Ply, 'ev' | 'mate'> | nul
       aria-label={score ? `Engine score ${evalText(score)}` : 'Engine score hidden until you answer'}
     >
       <span className="eval-bar__white" style={{ height: `${share}%` }} />
+      {score ? (
+        <span className={`eval-bar__num eval-bar__num--${share >= 50 ? 'white' : 'black'}`} aria-hidden="true">
+          {evalBarText(score)}
+        </span>
+      ) : null}
     </div>
   );
 }

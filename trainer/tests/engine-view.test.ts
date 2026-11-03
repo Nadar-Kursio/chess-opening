@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { yourMoveIndexes } from '../src/lib/course.ts';
-import { evalShare, evalText, verdictOf, verdictWords } from '../src/lib/engineView.ts';
+import { evalBarText, evalShare, evalText, verdictOf, verdictWords } from '../src/lib/engineView.ts';
 import type { Line, Ply } from '../src/lib/types.ts';
 
 const position: Pick<Ply, 'ev' | 'verdicts'> = {
@@ -21,6 +21,16 @@ test('evalText reads as a player writes it', () => {
   assert.equal(evalText({ ev: 9998, mate: 2 }), 'M2');
   assert.equal(evalText({ ev: -9998, mate: -2 }), '−M2');
   assert.equal(evalText({ ev: 10000, mate: 0 }), '#');
+});
+
+test('evalBarText fits the bar and always says who is ahead', () => {
+  assert.equal(evalBarText({ ev: 36 }), '+0.4');
+  assert.equal(evalBarText({ ev: -707 }), '−7.1');
+  assert.equal(evalBarText({ ev: -4 }), '0.0');
+  assert.equal(evalBarText({ ev: 0 }), '0.0');
+  assert.equal(evalBarText({ ev: 996 }), '+10');
+  assert.equal(evalBarText({ ev: -1234 }), '−12');
+  assert.equal(evalBarText({ ev: -9998, mate: -3 }), '−M3');
 });
 
 test('evalShare splits the bar by who stands better', () => {
