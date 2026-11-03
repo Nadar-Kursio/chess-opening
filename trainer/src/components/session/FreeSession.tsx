@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
+import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type Tree, type TreeEdge } from '@/lib/course';
 import { saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
+import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
 import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 
@@ -38,7 +39,9 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
   const make = useMessages();
   const you = tree.side;
   const { orientation, flip } = useFlip(you);
-  const [key, setKey] = useState(tree.root);
+  const [path, setPath] = useState([{ key: tree.root, san: '' }]);
+  const key = path[path.length - 1].key;
+  const review = useMoveReview(path.map((step) => ({ ...tree.nodes[step.key], san: step.san, turn: otherTurn(tree.nodes[step.key].toMove) })));
   const [games, setGames] = useState(0);
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     make({
@@ -92,7 +95,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
       play(node.fen[sqIndex(e.to)] !== '.' ? 'capture' : 'move', sound);
       setFlash(null);
       setTone('idle');
-      setKey(e.next);
+      setPath((steps) => [...steps, { key: e.next, san: e.san }]);
       say({
         kind: 'theirs',
         title: `${colourName(otherTurn(you))} plays ${e.num}`,
@@ -116,7 +119,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
       setTone('good');
       say({ kind: 'yours', title: `${hit.num} ✓`, html: tree.nodes[hit.next].note });
       setWrongHere(0);
-      setKey(hit.next);
+      setPath((steps) => [...steps, { key: hit.next, san: hit.san }]);
       return;
     }
     play('bad', sound);
@@ -136,7 +139,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
     setTone('idle');
     setFlash(null);
     setMsgs([make({ kind: 'intro', title: `Game ${games + 2}`, text: 'New game. Maybe a different line this time.' })]);
-    setKey(tree.root);
+    setPath([{ key: tree.root, san: '' }]);
   };
 
   usePrimaryKey(over ? newGame : null);
@@ -154,16 +157,13 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
       counter={`${tally.correct} ✓`}
       tone={tone}
       board={
-        <Board
-          fen={node.fen}
+        <SessionBoard
+          review={review}
           orientation={orientation}
-          last={node.from ? { from: node.from, to: node.to } : null}
-          legal={node.legal}
           movable={yourTurn && !over ? you : null}
           onMove={onMove}
           arrows={arrows}
           flash={flash}
-          checkSide={node.check ? node.toMove : null}
           coordinates={coordinates}
         />
       }
@@ -171,6 +171,7 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
         <>
           <CoachAvatar />
           <Coach msgs={msgs} />
+          <MoveTape review={review} />
         </>
       }
       footer={

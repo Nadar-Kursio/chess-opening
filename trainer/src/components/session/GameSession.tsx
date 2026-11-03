@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
+import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Game, Turn } from '@/lib/types';
 import { Coach, CoachAvatar, SessionFrame, useMessages, type Msg, type Tone } from './Frame';
+import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
 import { useFlip } from './useFlip';
 
 /* A model game, two ways. Watch steps through it with the annotations. Guess stops before every
@@ -50,6 +51,8 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
     // Only annotated moves earn a bubble; the rest would bury the ones that matter.
     if (next.note) say({ kind: next.turn === guessSide ? 'yours' : 'theirs', title: next.num, html: next.note });
   };
+
+  const review = useMoveReview(plies.slice(0, ply + 1), mode === 'watch' && next ? advance : undefined);
 
   // In Guess, the other side's moves play themselves.
   useEffect(() => {
@@ -97,18 +100,6 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
   };
 
   const arrows: BoardArrow[] = asking && tries >= 2 && next.from && next.to ? [{ from: next.from, to: next.to, kind: 'hint' }] : [];
-  const current = plies[ply];
-
-  // Watch mode: arrow keys step through the game.
-  useEffect(() => {
-    if (mode !== 'watch') return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') advance();
-      if (e.key === 'ArrowLeft' && ply > 0) setPly(ply - 1);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
 
   const restart = (m: 'watch' | 'guess', s: Turn = guessSide) => {
     setMode(m);
@@ -132,16 +123,13 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
       counter={mode === 'guess' ? `${score.found}/${score.asked}` : `${Math.ceil(ply / 2)}/${Math.ceil(last / 2)}`}
       tone={tone}
       board={
-        <Board
-          fen={current.fen}
+        <SessionBoard
+          review={review}
           orientation={orientation}
-          last={current.from ? { from: current.from, to: current.to } : null}
-          legal={asking ? plies[ply].legal : undefined}
           movable={asking ? guessSide : null}
           onMove={onMove}
           arrows={arrows}
           flash={flash}
-          checkSide={current.check ? (current.turn === 'w' ? 'b' : 'w') : null}
           coordinates={coordinates}
         />
       }
@@ -168,6 +156,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
           </div>
           <CoachAvatar />
           <Coach msgs={msgs} />
+          <MoveTape review={review} />
         </>
       }
       footer={
@@ -189,16 +178,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
             <span>{mode === 'watch' ? 'Use ← → or the buttons.' : asking ? `Move ${next.num.split('.')[0]}` : ' '}</span>
           </div>
           <div className="foot__actions">
-            {mode === 'watch' ? (
-              <>
-                <button type="button" className="btn btn--ghost" onClick={() => setPly(Math.max(0, ply - 1))} disabled={ply === 0}>
-                  Back
-                </button>
-                <button type="button" className="btn btn--primary" onClick={advance} disabled={finished}>
-                  Next
-                </button>
-              </>
-            ) : finished ? (
+            {mode === 'watch' ? null : finished ? (
               <button type="button" className="btn btn--primary" onClick={() => restart('guess')}>
                 Again
               </button>
