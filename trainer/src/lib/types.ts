@@ -34,7 +34,12 @@ export interface Ply {
   ev?: number;
   mate?: number;
   mark?: Mark;
+  /** Every legal move from this position, scored ahead of time by from+to. */
+  verdicts?: Record<string, MoveScore>;
 }
+
+/** A legal move as the engine sees it: SAN, White's score, g(ood), i(naccuracy) or b(lunder), mate distance. */
+export type MoveScore = [san: string, ev: number, sev: 'g' | 'i' | 'b', mate?: number];
 
 export interface Plan {
   point: string;
@@ -61,6 +66,8 @@ export interface Line {
   side?: Colour;
   plan?: Plan;
   record?: LineRecord;
+  /** A sideline's lesson opens here: the plies before it are the chapter's, already played. */
+  start?: number;
 }
 
 export interface Branch {
@@ -135,6 +142,54 @@ export interface Opening {
   lesson?: Lesson;
   lines: Line[];
   branchsets?: Branch[][];
+  /** The eval bar, move marks and wrong-move verdicts are on for this course. */
+  engineView?: boolean;
+  sidelines?: Sidelines;
+}
+
+export type SidelineKind = 'answer' | 'dodge' | 'set' | 'keep' | 'chapter';
+
+/** Somewhere club players leave a chapter, and what the learner does then. */
+export interface Sideline {
+  slug: string;
+  kind: SidelineKind;
+  num: string;
+  /** The moves before it, as a scoresheet. */
+  after: string;
+  /** Of the club games reaching this position. */
+  pct: number;
+  games: number;
+  at: number;
+  /** The chapter and opponent move it leaves at; none for a mistake found off the chapters. */
+  chapter: string | null;
+  moment: number | null;
+  fen: string;
+  from: string;
+  to: string;
+  short: string;
+  note: string;
+  name?: string;
+  auto?: string;
+  autoEv?: number;
+  best?: string;
+  bestEv?: number;
+  /** The chapter that teaches it, for kind 'chapter'. */
+  target?: string;
+  play?: { from: string; to: string };
+  yourMoves?: number;
+  line?: Line;
+}
+
+export interface Sidelines {
+  source: string;
+  scanned: number;
+  games: number;
+  elo: [number, number];
+  depth: number;
+  moments: { chapter: string; index: number; label: string; leave: number }[];
+  /** Percent of club replies in the first moves each chapter or sideline teaches, by slug. */
+  coverage: Record<string, number>;
+  items: Sideline[];
 }
 
 export interface Section {

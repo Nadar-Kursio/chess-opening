@@ -1,9 +1,14 @@
 import 'server-only';
-import { STEP_INFO, STEP_KINDS, type StepKind } from './course';
+import { STEP_INFO, STEP_KINDS, sidelineLine, type StepKind } from './course';
 import type { Opening } from './types';
 
 /** Where the button at the end of a passed step goes: the chapter's next step, else the next chapter. */
 export function nextAfter(op: Opening, slug: string, step: StepKind) {
+  if (sidelineLine(op, slug)) {
+    return step === 'learn'
+      ? { href: `/openings/${op.id}/${slug}/drill`, label: `Next: ${STEP_INFO.drill.label}` }
+      : { href: `/openings/${op.id}#sidelines`, label: 'Back to sidelines' };
+  }
   const k = STEP_KINDS.indexOf(step);
   if (k < STEP_KINDS.length - 1) {
     const kind = STEP_KINDS[k + 1];

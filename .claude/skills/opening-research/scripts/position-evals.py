@@ -9,9 +9,9 @@ time and the build takes half a second.
 
 WHAT IT SCORES
 
-Every distinct position the opening reaches, from all four places a board appears
+Every distinct position the opening reaches, from all the places a board appears
 on the page -- the variations, the deep dive, the continuation of every authored
-deviation, and the model games. One number per position, at one depth, so the bar
+deviation, the model games and the generated sidelines. One number per position, at one depth, so the bar
 means the same thing wherever the reader sees it. A page that scored the main
 line at depth 20 and a deviation at depth 14 would be inviting a comparison
 between two numbers that cannot be compared.
@@ -86,6 +86,14 @@ def positions(op, skip):
         if game["id"] in skip:
             continue
         walk(chess.Board(), game["moves"].split(), f"game '{game['id']}'")
+
+    sidelines = os.path.join(ROOT, "src", "content", "sidelines", f"{op['id']}.json")
+    if os.path.exists(sidelines):
+        with open(sidelines, encoding="utf-8") as f:
+            for item in json.load(f)["sidelines"]:
+                if item.get("line"):
+                    walk(chess.Board(), (item["moves"] + " " + item["reply"] + " " + item["line"]).split(),
+                         f"sideline '{item['slug']}'")
     return out
 
 

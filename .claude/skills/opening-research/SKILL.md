@@ -67,6 +67,14 @@ fifteen of them and about 190k games, which takes three or four minutes to scan.
 It also prints the `record` line a variation ships (see below), which is the only
 way that key should ever be filled in.
 
+**What club players play is a different count.** The archives above are masters.
+`club-stats.py` streams a Lichess monthly database and counts replies by position
+between 1200 and 2000 rated players. `sidelines.py` then asks the engine, for each
+reply, whether the chapter's next move still holds up, and sorts it into keep your
+setup, needs an answer, trap to dodge or trap to set. `move-verdicts.py` scores every
+legal move from every asked position, so a wrong move gets a real answer. All three
+need a re-run after editing a covered opening.
+
 **The corpus has holes, and the honest answer is to say so.** pgnmentor's
 per-variation archives follow the ECO split, not your repertoire: there is no
 archive with 1.d4 d5 2.Bf4 games, and the four Scandinavian archives hold only

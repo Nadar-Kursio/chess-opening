@@ -6,6 +6,7 @@ import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { Flame } from '@/components/ui/icons';
 import type { Graded } from '@/lib/cards';
 import { colourName, otherTurn } from '@/lib/course';
+import { verdictOf, verdictWords } from '@/lib/engineView';
 import { saveGrade, saveSession } from '@/lib/outbox';
 import { retryRun, type Run } from '@/lib/recall';
 import { play, type SoundSet } from '@/lib/sound';
@@ -210,11 +211,14 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
 
   const miss = (from: string | null, to: string | null) => {
     if (!run || !ask || !expected) return;
+    const alt = from ? ask.alternatives.find((a) => a.from === from && a.to === to) : undefined;
+    const position = run.plies[ask.at];
+    const verdict = from && to ? verdictOf(position, from, to, alt?.sev) : null;
+    const words = verdict && verdictWords(verdict, position, expected.num);
     play('bad', sound);
     setTone('bad');
-    setFlash(from && to ? { sq: to, kind: 'bad' } : null);
+    setFlash(from && to ? { sq: to, kind: 'bad', verdict } : null);
     setCombo(0);
-    const alt = from ? ask.alternatives.find((a) => a.from === from && a.to === to) : undefined;
     const id = say(
       !from
         ? { kind: 'hint', title: `The move is ${expected.num}`, text: 'Play it to lock it in.' }
@@ -224,7 +228,11 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
               title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` (${alt.name})` : ''}`,
               html: `${alt.why} <em>The course plays ${expected.num}: play it.</em>`,
             }
-          : { kind: 'oops', title: 'Not this time', text: `The move here is ${expected.num}. Play it to carry on.` },
+          : {
+              kind: 'oops',
+              title: words?.title ?? 'Not this time',
+              text: `${words ? `${words.text} ` : ''}The move here is ${expected.num}. Play it to carry on.`,
+            },
     );
     if (!run.retry) grade(false, id);
     // Found again later in the round, a miss is relearned while the correction is fresh.
@@ -366,6 +374,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
           arrows={arrows}
           flash={flash}
           coordinates={coordinates}
+          engine={run.engineView ? { hidden: phase !== 'answered' && phase !== 'done' } : null}
         />
       }
       side={
@@ -378,7 +387,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
               <Combo combo={combo} />
             </div>
             <Coach msgs={msgs} />
-            <MoveTape review={review} />
+            <MoveTape review={review} marks={run.engineView} />
           </>
         )
       }

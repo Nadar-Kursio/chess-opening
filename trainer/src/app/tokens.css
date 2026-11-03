@@ -95,6 +95,11 @@
   --coach-reading: calc(var(--tap) * 4.5);
   --foot-compact: calc(var(--tap) * 1.6);
   --review-bar: calc(var(--tap) * 0.75);
+  --eval-bar: 14px;
+  --hairline: 1px;
+  --mark-badge: 22px;
+  --sideline-num: 72px;
+  --sideline-detail: 380px;
   --bubble-play: 28px;
   --wave-bar: 3px;
   --wave-height: 14px;

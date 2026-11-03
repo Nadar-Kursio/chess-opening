@@ -28,6 +28,7 @@ export default async function GamePage({ params }: Params) {
       closeHref={`/openings/${id}`}
       sound={settings.sound}
       coordinates={settings.coordinates}
+      engineView={getOpening(id).engineView}
     />
   );
 }

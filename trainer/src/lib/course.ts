@@ -61,7 +61,12 @@ export function chapters(op: Opening): Chapter[] {
 }
 
 export function lineBySlug(op: Opening, slug: string) {
-  return op.lines.find((l) => l.slug === slug) ?? null;
+  return op.lines.find((l) => l.slug === slug) ?? sidelineLine(op, slug) ?? null;
+}
+
+/** A sideline's lesson, which plays like a chapter but only has Learn and Drill. */
+export function sidelineLine(op: Opening, slug: string) {
+  return op.sidelines?.items.find((s) => s.slug === slug)?.line;
 }
 
 /** Ply indexes (1-based into `plies`) of the moves the learner plays in a line. */
@@ -69,7 +74,7 @@ export function yourMoveIndexes(line: Line, side: Colour) {
   const t = turnOf(side);
   const out: number[] = [];
   line.plies.forEach((p, i) => {
-    if (i > 0 && p.turn === t) out.push(i);
+    if (i > (line.start ?? 0) && p.turn === t) out.push(i);
   });
   return out;
 }
@@ -275,6 +280,8 @@ export interface TreeNode {
   note?: string | null;
   ev?: number;
   mate?: number;
+  mark?: Ply['mark'];
+  verdicts?: Ply['verdicts'];
   moves: TreeEdge[];
 }
 
@@ -308,6 +315,8 @@ export function buildTree(op: Opening, side: Colour): Tree {
       note: p.note,
       ev: p.ev,
       mate: p.mate,
+      mark: p.mark,
+      verdicts: p.verdicts,
       moves: [],
     };
     return key;
@@ -338,6 +347,10 @@ export function buildTree(op: Opening, side: Colour): Tree {
         for (let k = 1; k < b.plies.length; k++) link(b.plies[k - 1], b.plies[k], 2);
       }
     });
+  }
+  for (const s of op.sidelines?.items ?? []) {
+    if (!s.line || !root || lineSide(op, s.line) !== side) continue;
+    for (let k = 1; k < s.line.plies.length; k++) link(s.line.plies[k - 1], s.line.plies[k], 1);
   }
   return { root, side: you, nodes };
 }

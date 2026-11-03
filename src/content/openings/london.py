@@ -231,7 +231,7 @@ OPENING = {
              "line": "e3 Nf6 Nf3 Nc6 Nbd2 e6 c3",
              "see": "london#c5-challenge"},
             {"san": "e6", "severity": "playable", "tier": "Foundation",
-             "why": "Solid and the most common move at club level. It shuts in the c8-bishop for the moment, which is the standing cost of every ...e6 system. 3.e3 c5 4.Nf3 and you are in the main line a move order later.",
+             "why": "Solid, and common at club level. It shuts in the c8-bishop for the moment, which is the standing cost of every ...e6 system. 3.e3 c5 4.Nf3 and you are in the main line a move order later.",
              "line": "e3 c5 Nf3 Nf6 Nbd2 Nc6"},
             {"san": "Bf5", "severity": "playable", "tier": "Structure",
              "why": "Your own idea played back at you, and it is entirely correct. Do not fight for the diagonal; hit the centre instead. 3.c4 is the engine's pick, because with the bishop off c8 the pawn on b7 has nothing at home to guard it. 3...Nf6 4.Nc3 e6 5.Qb3 and the queen hits b7 and d5 at the same moment. Note that Qb3 only becomes possible once the c-pawn has moved off c2, and that is true in every London position where this queen sortie matters.",

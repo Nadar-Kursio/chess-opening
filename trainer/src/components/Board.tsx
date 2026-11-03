@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import type { Verdict } from '@/lib/engineView';
 import type { Turn } from '@/lib/types';
 
 /* An 8x8 grid of squares with SVG pieces. It knows no chess: which moves exist is the packed
@@ -18,6 +19,14 @@ export interface BoardArrow {
 export interface BoardFlash {
   sq: string;
   kind: 'good' | 'bad' | 'hint';
+  /** What the engine made of the move just tried here. */
+  verdict?: Verdict | null;
+}
+
+export interface BoardBadge {
+  sq: string;
+  glyph: string;
+  mark: 'brilliant' | 'great' | 'inaccuracy' | 'blunder';
 }
 
 interface Props {
@@ -31,6 +40,8 @@ interface Props {
   onMove?: (from: string, to: string) => void;
   arrows?: BoardArrow[];
   flash?: BoardFlash | null;
+  /** A move's mark, on the square it landed on. */
+  badge?: BoardBadge | null;
   /** The side to move is in check: its king's square glows. */
   checkSide?: Turn | null;
   coordinates?: boolean;
@@ -81,6 +92,7 @@ export default function Board({
   onMove,
   arrows = [],
   flash,
+  badge,
   checkSide,
   coordinates = true,
   animate = true,
@@ -229,6 +241,7 @@ export default function Board({
           />
         ) : null}
         {isTarget ? <span className={ch ? 'target target--capture' : 'target'} /> : null}
+        {badge?.sq === sq ? <span className={`mark-badge mark-badge--${badge.mark}`}>{badge.glyph}</span> : null}
       </div>,
     );
   }

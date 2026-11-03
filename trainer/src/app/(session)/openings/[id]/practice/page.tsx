@@ -26,6 +26,7 @@ export default async function PracticePage({ params, searchParams }: PageProps<'
       closeHref={`/openings/${id}`}
       sound={settings.sound}
       coordinates={settings.coordinates}
+      engineView={op.engineView}
     />
   );
 }
