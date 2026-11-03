@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
+import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { positionKey, type Question } from '@/lib/course';
 import { QUEUED_NOTE, saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Severity, Turn } from '@/lib/types';
 import { useFlip } from './useFlip';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
+import { SessionBoard, useMoveReview } from './SessionBoard';
 
 /* Questions one at a time: the board plays the opponent's move in, the learner answers. Used by a
    chapter's quiz, by "punish the blunder" and by the review of missed positions. Score is the
@@ -69,6 +70,10 @@ function Run({
 
   const q = questions[index];
   const total = questions.length;
+  // A question is one position, so there is only ever one step back.
+  const review = useMoveReview(
+    !q ? [] : solved ? [q.position, q.answer] : !q.before ? [q.position] : shown === 'before' ? [q.before] : [q.before, q.position],
+  );
 
   // Each question opens on the position before the opponent's move, then plays it in.
   useEffect(() => {
@@ -176,12 +181,10 @@ function Run({
     );
   }
 
-  const board = shown === 'before' && q.before ? q.before : q.position;
   const arrows: BoardArrow[] =
     attempts >= 2 && !solved && q.answer.from && q.answer.to
       ? [{ from: q.answer.from, to: q.answer.to, kind: 'hint' }]
       : [];
-  const solvedBoard = solved ? q.answer : board;
 
   const footer = done ? (
     <>
@@ -229,16 +232,13 @@ function Run({
       counter={`${index + 1}/${total}`}
       tone={tone}
       board={
-        <Board
-          fen={solvedBoard.fen}
+        <SessionBoard
+          review={review}
           orientation={orientation}
-          last={solvedBoard.from ? { from: solvedBoard.from, to: solvedBoard.to } : null}
-          legal={q.position.legal}
           movable={!solved && !done && shown === 'position' ? side : null}
           onMove={onMove}
           arrows={arrows}
           flash={flash}
-          checkSide={solvedBoard.check ? (solvedBoard.turn === 'w' ? 'b' : 'w') : null}
           coordinates={coordinates}
         />
       }

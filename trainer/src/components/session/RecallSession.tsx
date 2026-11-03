@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
+import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { Flame } from '@/components/ui/icons';
 import type { Graded } from '@/lib/cards';
 import { colourName, otherTurn } from '@/lib/course';
@@ -11,7 +11,8 @@ import { retryRun, type Run } from '@/lib/recall';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Severity } from '@/lib/types';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
-import { MoveTape, squareIndex } from './LineSession';
+import { squareIndex } from './LineSession';
+import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
 
 /* A round of Recall: the board replays the moves leading to each due position and the learner
    finds the move from memory. A right answer is graded and the round flows on; a miss shows the
@@ -88,6 +89,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
   const [r, setR] = useState(0);
   const run = queue[r] as Queued | undefined;
   const [ply, setPly] = useState(run?.start ?? 0);
+  const review = useMoveReview(run ? run.plies.slice(0, ply + 1) : []);
   const [k, setK] = useState(0);
   const [phase, setPhase] = useState<Phase>('replay');
   const [auto, setAuto] = useState(false);
@@ -130,6 +132,15 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
     return () => clearTimeout(t);
   }, [phase, ply, run, ask, sound]);
 
+  // Grades read how long the answer took, and checking the line isn't hesitating over the move.
+  useEffect(() => {
+    if (phase !== 'ask' || !review.isReviewing) return;
+    const startedAt = performance.now();
+    return () => {
+      askedAt.current += performance.now() - startedAt;
+    };
+  }, [phase, review.isReviewing]);
+
   const finish = useCallback(
     (all: Answer[]) => {
       setPhase('done');
@@ -170,10 +181,10 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
   }, [run, k, r, queue, finish, answers]);
 
   useEffect(() => {
-    if (phase !== 'answered' || !auto) return;
+    if (phase !== 'answered' || !auto || review.isReviewing) return;
     const t = setTimeout(advance, ANSWERED_MS);
     return () => clearTimeout(t);
-  }, [phase, auto, advance]);
+  }, [phase, auto, advance, review.isReviewing]);
 
   /** Saves a first attempt and tags the coach's message with when the move comes back. */
   const grade = (hit: boolean, msgId: number) => {
@@ -276,7 +287,6 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
 
   if (!run) return null;
   const hits = answers.filter((a) => a.hit).length;
-  const current = run.plies[ply];
   const orientation = flipped ? otherTurn(run.side) : run.side;
   const arrows: BoardArrow[] =
     phase === 'reveal' && expected?.from && expected.to ? [{ from: expected.from, to: expected.to, kind: 'hint' }] : [];
@@ -348,16 +358,13 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
       counter={`${answers.length}/${total}`}
       tone={tone}
       board={
-        <Board
-          fen={current.fen}
+        <SessionBoard
+          review={review}
           orientation={orientation}
-          last={current.from ? { from: current.from, to: current.to } : null}
-          legal={current.legal}
           movable={phase === 'ask' || phase === 'reveal' ? run.side : null}
           onMove={onMove}
           arrows={arrows}
           flash={flash}
-          checkSide={current.check ? otherTurn(current.turn) : null}
           coordinates={coordinates}
         />
       }
@@ -371,7 +378,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
               <Combo combo={combo} />
             </div>
             <Coach msgs={msgs} />
-            <MoveTape plies={run.plies} upTo={ply} />
+            <MoveTape review={review} />
           </>
         )
       }

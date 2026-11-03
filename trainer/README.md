@@ -19,6 +19,7 @@ since the trainer, branch positions too), scores are the shipped evals.
 | Saving | `src/lib/outbox.ts` writes every result to the browser first, posts it to `/api/saves` (three tries) and keeps what fails until `OutboxSync` gets it through. The server ignores a repeat of the same id. |
 | Sessions | `src/components/session/` — `LineSession` (learn/drill/recall), `QuizSession` (quiz, punish, review), `FreeSession`. |
 | Recall | `src/lib/memory.ts` (FSRS scheduling, grades from behaviour), `src/lib/recall.ts` (cards and the runs that ask them), `src/lib/cards.ts` (the deck in `review_cards`), `RecallSession`. See below. |
+| Looking back | `components/session/SessionBoard.tsx` is the board every session draws, plus the arrow keys, the buttons under it and the clickable move list. A session passes only the positions already reached, so stepping forward can't show the move it's about to ask for. |
 | Narration | `src/lib/speech.ts` turns course prose into what the coach says in Learn ("2.Bf4" → "bishop f4"); `scripts/narrate.ts` records it with Amazon Polly; `useNarration` plays it. See below. |
 | Auth | Better Auth, email + password, open sign-up. Every page requires an account (`src/proxy.ts`, then `requirePageUser`). |
 

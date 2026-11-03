@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Board, { type BoardArrow, type BoardFlash } from '@/components/Board';
+import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { colourName, positionKey } from '@/lib/course';
 import { QUEUED_NOTE, saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Line, Severity, Turn } from '@/lib/types';
+import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
 import { useFlip } from './useFlip';
 import { Bubble, Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone, type Voice } from './Frame';
 import { useNarration, type NarrationProps } from './useNarration';
@@ -81,6 +82,7 @@ function Run({
   const make = useMessages();
   const { orientation, flip } = useFlip(side);
   const [ply, setPly] = useState(0);
+  const review = useMoveReview(plies.slice(0, ply + 1));
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     make({ kind: 'intro', title: line.name, html: line.note, clip: 'intro' }),
     ...(line.record
@@ -309,7 +311,6 @@ function Run({
   usePrimaryKey(done && done.passed !== null ? () => (window.location.href = done.passed && next ? next.href : closeHref) : null);
 
   const youDone = stats.correct;
-  const current = plies[ply];
   const footer = done ? (
     <Summary mode={mode} passed={done.passed} queued={!!done.queued} stats={stats} asked={asked} next={next} closeHref={closeHref} restart={restart} />
   ) : (
@@ -358,16 +359,13 @@ function Run({
       counter={`${youDone}/${asked}`}
       tone={tone}
       board={
-        <Board
-          fen={current.fen}
+        <SessionBoard
+          review={review}
           orientation={orientation}
-          last={current.from ? { from: current.from, to: current.to } : null}
-          legal={current.legal}
           movable={yourTurn && !done ? side : null}
           onMove={onMove}
           arrows={arrows}
           flash={flash}
-          checkSide={current.check ? (current.turn === 'w' ? 'b' : 'w') : null}
           coordinates={coordinates}
         />
       }
@@ -381,7 +379,7 @@ function Run({
               </Bubble>
             ) : null}
           </Coach>
-          <MoveTape plies={plies} upTo={ply} />
+          <MoveTape review={review} />
         </>
       }
       footer={footer}
@@ -454,20 +452,6 @@ function Summary({
         )}
       </div>
     </>
-  );
-}
-
-/** The moves so far, as a scoresheet the learner can glance at. */
-export function MoveTape({ plies, upTo }: { plies: Line['plies']; upTo: number }) {
-  return (
-    <ol className="tape" aria-label="Moves so far">
-      {plies.slice(1, upTo + 1).map((p, i) => (
-        <li key={i} className={i + 1 === upTo ? 'tape__move tape__move--now' : 'tape__move'}>
-          {p.turn === 'w' ? <span className="tape__num">{p.num.split('.')[0]}.</span> : null}
-          {p.san}
-        </li>
-      ))}
-    </ol>
   );
 }
 
