@@ -27,6 +27,7 @@ export default async function PunishPage({ params }: PageProps<'/openings/[id]/p
       next={null}
       sound={settings.sound}
       coordinates={settings.coordinates}
+      engineView={op.engineView}
     />
   );
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { colourName, positionKey } from '@/lib/course';
+import { verdictOf, verdictWords } from '@/lib/engineView';
 import { QUEUED_NOTE, saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Line, Severity, Turn } from '@/lib/types';
@@ -42,6 +43,7 @@ interface Props {
   shared: { plies: number; chapter: string } | null;
   /** Learn only: the recorded coach, when this line has been narrated. */
   narration: NarrationProps | null;
+  engineView: boolean;
 }
 
 const SEV_WORD: Record<Severity, string> = {
@@ -70,18 +72,20 @@ function Run({
   coordinates,
   shared,
   narration,
+  engineView,
   restart,
 }: Props & { restart: () => void }) {
   const plies = line.plies;
   const last = plies.length - 1;
-  const [start, setStart] = useState(0);
+  const opensAt = line.start ?? 0;
+  const [start, setStart] = useState(opensAt);
   const mine = plies.map((p, i) => i > start && p.turn === side);
   const asked = mine.filter(Boolean).length;
   const opponent = colourName(side === 'w' ? 'b' : 'w');
 
   const make = useMessages();
   const { orientation, flip } = useFlip(side);
-  const [ply, setPly] = useState(0);
+  const [ply, setPly] = useState(opensAt);
   const review = useMoveReview(plies.slice(0, ply + 1));
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     make({ kind: 'intro', title: line.name, html: line.note, clip: 'intro' }),
@@ -190,6 +194,8 @@ function Run({
             .map((p) => make({ kind: 'yours', title: p.num, html: p.note })),
         ]);
       }
+      // A sideline's reason names the answer, so Drill keeps it until the moves are played.
+      if (mode === 'drill' && opensAt) say({ kind: 'info', title: 'Why this matters', html: plies[opensAt + 1].note });
       if (line.plan) {
         const plan = line.plan;
         const next = plan.next?.length ? `<ul>${plan.next.map((n) => `<li>${n}</li>`).join('')}</ul>` : '';
@@ -210,7 +216,7 @@ function Run({
       say({
         kind: 'theirs',
         title: `${opponent} plays ${move.num}`,
-        html: mode === 'recall' ? null : move.note,
+        html: mode === 'recall' || (mode === 'drill' && opensAt && ply === opensAt) ? null : move.note,
         clip: `p${ply + 1}`,
       });
       speak(`p${ply + 1}`);
@@ -241,18 +247,21 @@ function Run({
       setPly(ply + 1);
       return;
     }
+    const alt = alternatives[ply]?.find((a) => a.from === from && a.to === to);
+    const verdict = verdictOf(plies[ply], from, to, alt?.sev);
+    const words = verdict && verdictWords(verdict, plies[ply], expected.num);
+    const fine = verdict?.sev === 'good';
     play('bad', sound);
-    setFlash({ sq: to, kind: 'bad' });
-    setTone('bad');
+    setFlash({ sq: to, kind: fine ? 'hint' : 'bad', verdict });
+    setTone(fine ? 'info' : 'bad');
     if (mode === 'learn') {
-      say({ kind: 'oops', text: `Follow the arrow: this line plays ${expected.num}.` });
+      say({ kind: fine ? 'info' : 'oops', title: words?.title, text: `${words ? `${words.text} ` : ''}Follow the arrow: this line plays ${expected.num}.` });
       return;
     }
     if (wrongHere === 0) setStats((s) => ({ ...s, wrong: s.wrong + 1 }));
     setWrongHere((n) => n + 1);
-    const alt = alternatives[ply]?.find((a) => a.from === from && a.to === to);
     if (mode === 'recall') {
-      say({ kind: 'oops', title: 'Not this time', text: `The move here is ${expected.num}. Play it to carry on.` });
+      say({ kind: fine ? 'info' : 'oops', title: words?.title ?? 'Not this time', text: `${words ? `${words.text} ` : ''}The move here is ${expected.num}. Play it to carry on.` });
       return;
     }
     if (alt) {
@@ -261,6 +270,8 @@ function Run({
         title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` (${alt.name})` : ''}`,
         html: `${alt.why} <em>The course plays something else here. Try again.</em>`,
       });
+    } else if (words) {
+      say({ kind: fine ? 'info' : 'oops', title: words.title, text: `${words.text} ${wrongHere >= 1 ? 'Follow the arrow.' : 'Try again.'}` });
     } else {
       say({
         kind: 'oops',
@@ -311,6 +322,14 @@ function Run({
   usePrimaryKey(done && done.passed !== null ? () => (window.location.href = done.passed && next ? next.href : closeHref) : null);
 
   const youDone = stats.correct;
+  // Drill holds the bar at the learner's own last move, so it can't hint at the next one.
+  const engine = !engineView
+    ? null
+    : mode === 'recall'
+      ? { hidden: !done }
+      : mode === 'drill' && !done
+        ? { upTo: plies.findLastIndex((p, i) => i <= ply && mine[i]) }
+        : {};
   const footer = done ? (
     <Summary mode={mode} passed={done.passed} queued={!!done.queued} stats={stats} asked={asked} next={next} closeHref={closeHref} restart={restart} />
   ) : (
@@ -367,6 +386,7 @@ function Run({
           arrows={arrows}
           flash={flash}
           coordinates={coordinates}
+          engine={engine}
         />
       }
       side={
@@ -379,7 +399,7 @@ function Run({
               </Bubble>
             ) : null}
           </Coach>
-          <MoveTape review={review} />
+          <MoveTape review={review} marks={engineView} />
         </>
       }
       footer={footer}

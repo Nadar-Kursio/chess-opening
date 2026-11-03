@@ -18,6 +18,7 @@ import { requirePageUser } from '@/lib/session';
 import Overview from '@/components/lesson/Overview';
 import WinBar from '@/components/ui/WinBar';
 import ResetCourse from './ResetCourse';
+import Sidelines from './Sidelines';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const sides = sidesTaught(op);
   const punish = punishQuestions(op, op.orientation).length;
   const games = getCatalog().games.filter((g) => g.op === id);
+  const sidelines = op.sidelines;
   const nextHref = p.next ? `/openings/${id}/${p.next.slug}/${p.next.step}` : null;
 
   return (
@@ -214,6 +216,19 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                   </span>
                 </Link>
               </li>
+              {sidelines ? (
+                <li>
+                  <a href="#sidelines" className="way">
+                    <span className="way__icon way__icon--blue">
+                      <Target size={20} />
+                    </span>
+                    <span>
+                      <b>When they leave the line</b>
+                      <span className="muted small">What club players really play, and when your setup isn’t enough.</span>
+                    </span>
+                  </a>
+                </li>
+              ) : null}
               {punish ? (
                 <li>
                   <Link href={`/openings/${id}/punish`} className="way">
@@ -253,6 +268,25 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
           ) : null}
         </aside>
       </div>
+
+      {sidelines ? (
+        <Sidelines
+          openingId={id}
+          orientation={op.orientation}
+          source={sidelines.source}
+          scanned={sidelines.scanned}
+          games={sidelines.games}
+          elo={sidelines.elo}
+          depth={sidelines.depth}
+          moments={sidelines.moments}
+          coverage={sidelines.coverage}
+          // The lessons stay on the server: the page only needs what the rows show.
+          items={sidelines.items.map(({ line: _line, ...row }) => row)}
+          chapters={chs.map((ch) => ({ slug: ch.slug, name: ch.name, index: ch.index }))}
+          learned={[...byLine.values()].filter((l) => l.learned_at).map((l) => l.line_slug)}
+          drilled={[...byLine.values()].filter((l) => l.drilled_at).map((l) => l.line_slug)}
+        />
+      ) : null}
     </main>
   );
 }

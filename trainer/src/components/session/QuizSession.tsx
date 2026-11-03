@@ -8,6 +8,7 @@ import { QUEUED_NOTE, saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Severity, Turn } from '@/lib/types';
 import { useFlip } from './useFlip';
+import { verdictOf, verdictWords } from '@/lib/engineView';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 import { SessionBoard, useMoveReview } from './SessionBoard';
 
@@ -26,6 +27,7 @@ interface Props {
   next: { href: string; label: string } | null;
   sound: SoundSet;
   coordinates: boolean;
+  engineView?: boolean;
 }
 
 const SEV_LABEL: Record<Severity, string> = {
@@ -50,6 +52,7 @@ function Run({
   next,
   sound,
   coordinates,
+  engineView = false,
   restart,
 }: Props & { restart: () => void }) {
   // Saving a result revalidates the page, and the server shuffles again: hold the order this run
@@ -122,16 +125,20 @@ function Run({
       ]);
       return;
     }
+    const verdict = verdictOf(q.position, from, to);
+    const words = verdict && verdictWords(verdict, q.position, q.answer.num);
+    const fine = verdict?.sev === 'good';
     play('bad', sound);
-    setFlash({ sq: to, kind: 'bad' });
-    setTone('bad');
+    setFlash({ sq: to, kind: fine ? 'hint' : 'bad', verdict });
+    setTone(fine ? 'info' : 'bad');
     if (attempts === 0) setScore((s) => ({ ...s, wrong: s.wrong + 1 }));
     setAttempts((a) => a + 1);
     setMsgs((list) => [
       ...list,
       make({
-        kind: 'oops',
-        text: attempts === 0 ? 'Not that one. Have another look.' : `The answer is ${q.answer.num}. Play it to continue.`,
+        kind: fine ? 'info' : 'oops',
+        title: words?.title,
+        text: `${words ? `${words.text} ` : ''}${attempts === 0 ? 'Have another look.' : `The answer is ${q.answer.num}. Play it to continue.`}`,
       }),
     ]);
   };
@@ -240,6 +247,7 @@ function Run({
           arrows={arrows}
           flash={flash}
           coordinates={coordinates}
+          engine={engineView ? { hidden: !solved } : null}
         />
       }
       side={

@@ -1,4 +1,4 @@
-import { alternativesAt, buildTree, lineSide, otherTurn, positionKey, toMove, turnOf, yourMoveIndexes, type Tree } from './course.ts';
+import { alternativesAt, buildTree, lineBySlug, lineSide, otherTurn, positionKey, toMove, turnOf, yourMoveIndexes, type Tree } from './course.ts';
 import type { Colour, Opening, Ply, Severity, Turn } from './types.ts';
 
 /* Recall, as rounds of runs. A card is a position where the learner has a move to find; a run
@@ -34,6 +34,7 @@ export interface Run {
   openingId: string;
   course: string;
   side: Turn;
+  engineView: boolean;
   /** From the starting position to the last answer. */
   plies: Ply[];
   /** Where the run's replay begins. */
@@ -135,7 +136,7 @@ export function isCard(op: Opening, key: string) {
 
 /** The cards a chapter's Learn introduces: every position in the line where the learner moves. */
 export function lineCards(op: Opening, slug: string) {
-  const line = op.lines.find((l) => l.slug === slug);
+  const line = lineBySlug(op, slug);
   if (!line) return [];
   const side = lineSide(op, line);
   return yourMoveIndexes(line, side)
@@ -164,6 +165,10 @@ function plyAt(tree: Tree, key: string, via: Pick<Edge, 'san' | 'num' | 'move'> 
     check: n.check,
     legal: n.legal,
     note: n.note,
+    ev: n.ev,
+    mate: n.mate,
+    mark: n.mark,
+    verdicts: n.verdicts,
   };
 }
 
@@ -249,6 +254,7 @@ function runAlong(op: Opening, side: Colour, path: string[], stops: Placed[]): R
     openingId: op.id,
     course: op.name,
     side: turnOf(side),
+    engineView: !!op.engineView,
     plies,
     start: Math.max(0, asks[0].at - CONTEXT_PLIES),
     asks,

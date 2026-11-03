@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import LineSession, { type Alternative } from '@/components/session/LineSession';
 import QuizSession from '@/components/session/QuizSession';
 import { getOpening, hasOpening } from '@/lib/content';
-import { STEP_INFO, STEP_KINDS, alternativesAt, lineBySlug, lineSide, quizFor, sharedStart, toMove, turnOf, type StepKind } from '@/lib/course';
+import { STEP_INFO, STEP_KINDS, alternativesAt, lineBySlug, lineSide, quizFor, sharedStart, sidelineLine, toMove, turnOf, type StepKind } from '@/lib/course';
 import { lineClips } from '@/lib/narration';
 import { getSettings } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
@@ -16,7 +16,8 @@ function resolve(id: string, slug: string, step: string) {
   if (!hasOpening(id) || !STEP_KINDS.includes(step as StepKind)) return null;
   const op = getOpening(id);
   const line = lineBySlug(op, slug);
-  return line ? { op, line, step: step as StepKind } : null;
+  if (!line || (sidelineLine(op, slug) && step !== 'learn' && step !== 'drill')) return null;
+  return { op, line, step: step as StepKind };
 }
 
 export async function generateMetadata({ params }: Params) {
@@ -38,7 +39,8 @@ export default async function StepPage({ params }: Params) {
     openingId: id,
     title,
     side,
-    closeHref: `/openings/${id}`,
+    closeHref: sidelineLine(op, slug) ? `/openings/${id}#sidelines` : `/openings/${id}`,
+    engineView: !!op.engineView,
     next: nextAfter(op, slug, found.step),
     sound: settings.sound,
     coordinates: settings.coordinates,
@@ -64,7 +66,7 @@ export default async function StepPage({ params }: Params) {
       mode={found.step}
       line={line}
       alternatives={alternatives}
-      shared={found.step === 'learn' ? null : sharedStart(op, line)}
+      shared={found.step === 'learn' || sidelineLine(op, slug) ? null : sharedStart(op, line)}
       narration={Object.keys(clips).length ? { clips, on: settings.narration, rate: settings.speech_rate } : null}
     />
   );

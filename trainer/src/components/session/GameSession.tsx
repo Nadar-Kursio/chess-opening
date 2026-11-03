@@ -20,9 +20,10 @@ interface Props {
   closeHref: string;
   sound: SoundSet;
   coordinates: boolean;
+  engineView?: boolean;
 }
 
-export default function GameSession({ openingId, game, side, closeHref, sound, coordinates }: Props) {
+export default function GameSession({ openingId, game, side, closeHref, sound, coordinates, engineView = false }: Props) {
   const make = useMessages();
   const plies = game.plies;
   const last = plies.length - 1;
@@ -131,6 +132,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
           arrows={arrows}
           flash={flash}
           coordinates={coordinates}
+          engine={!engineView ? null : mode === 'watch' || finished ? {} : { upTo: plies.findLastIndex((p, i) => i <= ply && p.turn === guessSide) }}
         />
       }
       side={
@@ -156,7 +158,7 @@ export default function GameSession({ openingId, game, side, closeHref, sound, c
           </div>
           <CoachAvatar />
           <Coach msgs={msgs} />
-          <MoveTape review={review} />
+          <MoveTape review={review} marks={engineView} />
         </>
       }
       footer={

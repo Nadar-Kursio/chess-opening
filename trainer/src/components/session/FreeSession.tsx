@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type Tree, type TreeEdge } from '@/lib/course';
+import { verdictOf, verdictWords } from '@/lib/engineView';
 import { saveSession } from '@/lib/outbox';
 import { play, type SoundSet } from '@/lib/sound';
 import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
@@ -21,6 +22,7 @@ interface Props {
   closeHref: string;
   sound: SoundSet;
   coordinates: boolean;
+  engineView?: boolean;
 }
 
 function choose(moves: TreeEdge[]) {
@@ -35,7 +37,7 @@ function choose(moves: TreeEdge[]) {
 
 const SEV_WORD = { playable: 'A sideline', inaccuracy: 'An inaccuracy', blunder: 'A blunder' } as const;
 
-export default function FreeSession({ openingId, title, tree, closeHref, sound, coordinates }: Props) {
+export default function FreeSession({ openingId, title, tree, closeHref, sound, coordinates, engineView = false }: Props) {
   const make = useMessages();
   const you = tree.side;
   const { orientation, flip } = useFlip(you);
@@ -122,12 +124,19 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
       setPath((steps) => [...steps, { key: hit.next, san: hit.san }]);
       return;
     }
+    const verdict = verdictOf(node, from, to);
+    const words = verdict && verdictWords(verdict, node, node.moves[0]?.num ?? '');
+    const fine = verdict?.sev === 'good';
     play('bad', sound);
-    setFlash({ sq: to, kind: 'bad' });
-    setTone('bad');
+    setFlash({ sq: to, kind: fine ? 'hint' : 'bad', verdict });
+    setTone(fine ? 'info' : 'bad');
     if (wrongHere === 0) setTally((t) => ({ ...t, wrong: t.wrong + 1 }));
     setWrongHere((n) => n + 1);
-    say({ kind: 'oops', text: wrongHere >= 1 ? 'The arrow shows your repertoire move.' : 'Not your repertoire move here. Try again.' });
+    say({
+      kind: fine ? 'info' : 'oops',
+      title: words?.title,
+      text: `${words ? `${words.text} ` : ''}${wrongHere >= 1 ? 'The arrow shows your repertoire move.' : 'Not your repertoire move here. Try again.'}`,
+    });
   };
 
   const newGame = () => {
@@ -165,13 +174,14 @@ export default function FreeSession({ openingId, title, tree, closeHref, sound, 
           arrows={arrows}
           flash={flash}
           coordinates={coordinates}
+          engine={engineView ? { upTo: path.findLastIndex((step) => tree.nodes[step.key].toMove !== you && step.san !== '') } : null}
         />
       }
       side={
         <>
           <CoachAvatar />
           <Coach msgs={msgs} />
-          <MoveTape review={review} />
+          <MoveTape review={review} marks={engineView} />
         </>
       }
       footer={

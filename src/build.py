@@ -39,7 +39,7 @@ from content.structures import STRUCTURES
 from engine.board import board_array
 from engine.intel import move_data
 from engine.lesson import build_lesson
-from engine.marks import classify, sacrifice
+from engine.marks import BLUNDER, DECIDED, INACCURACY, classify, sacrifice
 from engine.notes import parse_notes
 
 SRC = os.path.dirname(os.path.abspath(__file__))
@@ -611,6 +611,145 @@ def build_line(op_id, index, line, errors, branches=None, notes=None, evals=None
     return out
 
 
+def load_generated(folder, op_id):
+    path = os.path.join(os.path.dirname(EVALS), folder, f"{op_id}.json")
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def move_verdicts(data):
+    """Each asked position's legal moves with what the engine makes of them.
+
+    Keyed the way the trainer keys a position. The severity is settled here so the
+    browser only reads it, on marks.py's bands and against the best move in the same
+    search, which is the comparison a lower depth still gets right.
+    """
+    out = {}
+    for epd, moves in data["positions"].items():
+        board = chess.Board(epd + " 0 1")
+        sign = 1 if board.turn == chess.WHITE else -1
+        best = max(sign * m[1] for m in moves.values())
+        record = {}
+        for uci, m in moves.items():
+            cost = best - sign * m[1]
+            # Once the game is lost, a further half-pawn is bookkeeping, as in marks.py.
+            sev = "b" if cost >= BLUNDER else "i" if cost >= INACCURACY and best > -DECIDED else "g"
+            record[uci] = [m[0], m[1], sev] + m[2:]
+        out[board_array(board) + ("w" if board.turn == chess.WHITE else "b")] = record
+    return out
+
+
+def san_with_number(board, san):
+    return f"{board.fullmove_number}.{'..' if board.turn == chess.BLACK else ''}{san}"
+
+
+def scoresheet(sans):
+    """1.d4 d5 2.Bf4, for telling apart two sidelines with the same move."""
+    return " ".join(f"{i // 2 + 1}.{san}" if i % 2 == 0 else san for i, san in enumerate(sans))
+
+
+def sideline_copy(item, before, after, branch):
+    """The row's sentence and the detail's text, for a sideline the coach may never have written about."""
+    line = item.get("line", "").split()
+    first = san_with_number(after, line[0]) if line else None
+    auto = san_with_number(after, item["auto"]) if item.get("auto") else None
+    if item["kind"] == "keep":
+        short = f"Play {auto}." if not line or line[0] == item["auto"] else f"{auto} holds. The course prefers {first}."
+    elif item["kind"] == "answer":
+        sign = 1 if after.turn == chess.WHITE else -1
+        if not auto:
+            short = f"Play {first}."
+        elif sign * item["autoEv"] < 0:
+            short = f"{auto} leaves you worse. Play {first}."
+        else:
+            short = f"{auto} gives away part of your edge. {first} is better."
+    elif item["kind"] == "dodge":
+        short = f"The natural {auto} walks into it. Play {first}."
+    else:
+        short = f"A mistake club players make. {first} leaves you clearly better."
+    return short, branch["why"] if branch else short
+
+
+def build_sideline(op, index, item, errors, evals, chapters):
+    """One sideline's row and, unless a chapter already teaches it, its lesson: a Line that plays
+    the chapter's moves to the moment Black leaves, so a session and Recall can treat it as one."""
+    prefix = item["moves"].split()
+    before = chess.Board()
+    for san in prefix:
+        before.push_san(san)
+    num = san_with_number(before, item["reply"])
+    after = before.copy()
+    reply = after.parse_san(item["reply"])
+    after.push(reply)
+    row = {k: item[k] for k in ("slug", "kind", "pct", "games", "at", "chapter", "moment") if k in item}
+    row.update(num=num, after=scoresheet(prefix), fen=board_array(after), **{"from": chess.square_name(reply.from_square),
+                                                   "to": chess.square_name(reply.to_square)})
+    if item["kind"] == "chapter":
+        row["target"] = item["target"]
+        row["short"] = f"Chapter {chapters[item['target']] + 1} teaches this."
+        row["note"] = row["short"]
+        return row
+
+    # By position, because the sideline's move order needn't be the one the branch was written under.
+    branch = None
+    for key, entries in (op.get("branches") or {}).items():
+        board = chess.Board()
+        for san in key.split():
+            board.push_san(san)
+        if board.epd() == before.epd():
+            branch = next((b for b in entries if b["san"] == item["reply"]), None)
+            break
+    row["short"], row["note"] = sideline_copy(item, before, after, branch)
+    if branch and branch.get("name"):
+        row["name"] = branch["name"]
+    for key in ("auto", "autoEv", "best", "bestEv"):
+        if item.get(key) is not None:
+            row[key] = item[key]
+    if item.get("auto"):
+        row["auto"] = san_with_number(after, item["auto"])
+    if item.get("best"):
+        row["best"] = san_with_number(after, item["best"])
+
+    line_moves = item["line"].split()
+    first = after.parse_san(line_moves[0])
+    row["play"] = {"from": chess.square_name(first.from_square), "to": chess.square_name(first.to_square)}
+    row["yourMoves"] = (len(line_moves) + 1) // 2
+    ply = len(prefix) + 1
+    built = build_line(op["id"], index, {
+        "name": f"They left the line: {num}",
+        "note": f"{item['pct']}% of club games at this point go this way." if item["pct"] else "This one is rare at club level, and worth knowing anyway.",
+        "moves": " ".join(prefix + [item["reply"]] + line_moves),
+        "notes": {ply: row["note"]},
+        "slug": item["slug"],
+    }, errors, evals=evals)
+    built["start"] = len(prefix)
+    row["line"] = built
+    return row
+
+
+def build_coaching(op, errors, evals):
+    """What only the trainer reads: wrong-move verdicts and the sidelines. In its own file, so
+    the course the static site ships is the same with or without it."""
+    verdicts = load_generated("verdicts", op["id"])
+    sidelines = load_generated("sidelines", op["id"])
+    if not verdicts and not sidelines:
+        return None
+    out = {}
+    if verdicts:
+        out["verdicts"] = move_verdicts(verdicts)
+        out["verdictDepth"] = verdicts["depth"]
+    if sidelines:
+        chapters = {line["slug"]: i for i, line in enumerate(op["lines"])}
+        out["sidelines"] = {
+            **{k: sidelines[k] for k in ("source", "scanned", "games", "elo", "depth", "moments", "coverage")},
+            "items": [build_sideline(op, 1000 + i, item, errors, evals, chapters)
+                      for i, item in enumerate(sidelines["sidelines"])],
+        }
+    return out
+
+
 def build_openings(games, evals):
     errors = []
     warnings = []
@@ -627,6 +766,9 @@ def build_openings(games, evals):
                            for i, line in enumerate(lines)]
         if branches.sets:
             record["branchsets"] = branches.sets
+        coaching = build_coaching(op, errors, evals)
+        if coaching:
+            record["coaching"] = coaching
         errors.extend(branches.unused(op["id"]))
         warnings.extend(branches.dead(op["id"]))
         # After the lines, because a deviation's positions are only built when a
@@ -843,7 +985,10 @@ def emit_files():
             [line["moves"] for line in with_deep_line(raw[op["id"]])],
             lambda message: print("  lesson:", message))
         print(f"  lesson: {op['id']}: {on_board} of {found} notation runs on a board")
-        files[f"openings/{op['id']}.json"] = compact({**op, "lesson": lesson})
+        course = {k: v for k, v in op.items() if k != "coaching"}
+        files[f"openings/{op['id']}.json"] = compact({**course, "lesson": lesson})
+        if op.get("coaching"):
+            files[f"coaching/{op['id']}.json"] = compact(op["coaching"])
     # Structures are shared reference content, so all of them ship — but the
     # derived back-references must only name openings the new site has pages
     # for, or the structure card would link into a 404.

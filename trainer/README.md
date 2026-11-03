@@ -20,6 +20,7 @@ since the trainer, branch positions too), scores are the shipped evals.
 | Sessions | `src/components/session/` — `LineSession` (learn/drill/recall), `QuizSession` (quiz, punish, review), `FreeSession`. |
 | Recall | `src/lib/memory.ts` (FSRS scheduling, grades from behaviour), `src/lib/recall.ts` (cards and the runs that ask them), `src/lib/cards.ts` (the deck in `review_cards`), `RecallSession`. See below. |
 | Looking back | `components/session/SessionBoard.tsx` is the board every session draws, plus the arrow keys, the buttons under it and the clickable move list. A session passes only the positions already reached, so stepping forward can't show the move it's about to ask for. |
+| Engine view | A course with `coaching/<id>.json` gets an eval bar, move marks, a verdict on every wrong move and the "When they leave the line" section. Nothing is searched at runtime: `src/lib/engineView.ts` only presents what the scripts in the `opening-research` skill generated. A sideline is a `Line` with a `start`, so sessions, saves and Recall treat it like a chapter, with Learn and Drill only. |
 | Narration | `src/lib/speech.ts` turns course prose into what the coach says in Learn ("2.Bf4" → "bishop f4"); `scripts/narrate.ts` records it with Amazon Polly; `useNarration` plays it. See below. |
 | Auth | Better Auth, email + password, open sign-up. Every page requires an account (`src/proxy.ts`, then `requirePageUser`). |
 

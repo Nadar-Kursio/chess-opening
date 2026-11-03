@@ -40,6 +40,14 @@ System `python3` has no `python-chess`; use the venv.
   **Re-run it after editing any line, deviation or game of a covered opening**,
   or the eval bar quietly loses the plies you moved; the build warns and
   `tests/test_content.py` fails.
+- `src/content/verdicts/*.json` (every legal move from every position the learner
+  is asked, from `move-verdicts.py`) and `src/content/sidelines/*.json` (where club
+  players leave the chapters and what to do then, from `club-stats.py` and
+  `sidelines.py`) are generated and committed the same way. Club percentages come
+  only from those scripts. Re-run `sidelines.py`, `position-evals.py` and
+  `move-verdicts.py`, in that order, after editing a covered opening. Only the
+  trainer reads them, through `coaching/<id>.json`; a course with neither file has
+  no eval bar, marks or sidelines there.
 - Adding an opening to the site is data-only: author a `slug` per line and add
   the id to `PORTED` in `src/build.py`. If the app needs code to accommodate a
   new opening, that is a bug in the app.
