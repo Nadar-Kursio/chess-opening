@@ -15,6 +15,15 @@ export function evalText({ ev, mate }: Score) {
   return `${value > 0 ? '+' : value < 0 ? '−' : ''}${(Math.abs(value) / 100).toFixed(2)}`;
 }
 
+/** The same score for the width of the bar: one decimal, none once it reaches ten. */
+export function evalBarText({ ev, mate }: Score) {
+  if (mate !== undefined) return evalText({ ev, mate });
+  const pawns = Math.abs(ev ?? 0) / 100;
+  const shown = pawns >= 9.95 ? pawns.toFixed(0) : pawns.toFixed(1);
+  if (Number(shown) === 0) return shown;
+  return `${(ev ?? 0) > 0 ? '+' : '−'}${shown}`;
+}
+
 /** White's share of the bar: the gap between +0.2 and +0.8 shows, and the gap between +8 and +12 doesn't. */
 export function evalShare({ ev, mate }: Score) {
   if (mate !== undefined) return (mate === 0 ? (ev ?? 0) >= 0 : mate > 0) ? 100 : 0;

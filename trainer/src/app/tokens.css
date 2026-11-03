@@ -95,7 +95,13 @@
   --coach-reading: calc(var(--tap) * 4.5);
   --foot-compact: calc(var(--tap) * 1.6);
   --review-bar: calc(var(--tap) * 0.75);
-  --eval-bar: 14px;
+  --eval-bar: 28px;
+  --eval-num: 11px;
+  --eval-white: #f4f6fa;
+  --eval-black: #1b2333;
+  --mark-glyph: #ffffff;
+  --mark-inaccuracy: #c4850f;
+  --mark-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   --hairline: 1px;
   --mark-badge: 22px;
   --sideline-num: 72px;
