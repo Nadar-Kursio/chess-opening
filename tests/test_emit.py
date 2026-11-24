@@ -16,7 +16,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from build import EVALS, PORTED, emit_files
+from build import EVALS, PORTED, emit_files, opponent_keys
 from engine.marks import MARKS
 from content.openings import ORDER
 from content.sections import SECTIONS
@@ -290,6 +290,31 @@ class TestEmit(unittest.TestCase):
             game = self.files[f"games/{name}.json"]
             self.assertIn(game["op"], PORTED, name)
             self.assertTrue(game["plies"], name)
+
+    def test_club_counts_ship_in_their_own_file_for_every_opponent_move(self):
+        """The sparring partner reads club/<id>.json. It stays out of coaching/, which is what
+        turns the engine view on, and it covers every position the opponent moves in, or a game
+        quietly falls back to the course's own weights; re-run club-moves.py after an edit."""
+        clubs = sorted(name[len("club/"):-len(".json")] for name in self.files if name.startswith("club/"))
+        self.assertTrue({"london", "queensgambit", "ruylopez", "sicilian", "scandinavian"} <= set(clubs))
+        start = "rnbqkbnrpppppppp" + "." * 32 + "PPPPPPPPRNBQKBNR" + "w"
+        for op_id in clubs:
+            club = self.files[f"club/{op_id}.json"]
+            self.assertNotIn("club", self.files.get(f"coaching/{op_id}.json", {}), op_id)
+            self.assertEqual(club["elo"], [1200, 2000], op_id)
+            self.assertGreater(club["games"], 0, op_id)
+            self.assertGreaterEqual(club["scanned"], club["games"], op_id)
+            record = dict(self.files[f"openings/{op_id}.json"])
+            record["coaching"] = self.files.get(f"coaching/{op_id}.json", {})
+            self.assertFalse(opponent_keys(record) - set(club["positions"]) - {start}, op_id)
+            for key, moves in club["positions"].items():
+                self.assertRegex(key, r"^[.pnbrqkPNBRQK]{64}[wb]$", op_id)
+                for san, games, uci, diff, check in moves:
+                    self.assertGreater(games, 0, f"{op_id}: {san}")
+                    self.assertRegex(uci, r"^[a-h][1-8][a-h][1-8]$", f"{op_id}: {san}")
+                    self.assertRegex(diff, r"^([a-h][1-8][.pnbrqkPNBRQK]){2,4}$", f"{op_id}: {san}")
+                    self.assertIn(f"{uci[:2]}.", diff, f"{op_id}: {san} leaves its square")
+                    self.assertIn(check, (0, 1), f"{op_id}: {san}")
 
 
 if __name__ == "__main__":

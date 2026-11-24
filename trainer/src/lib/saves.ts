@@ -11,12 +11,14 @@ const PositionKey = z.string().regex(/^[.pnbrqkPNBRQK]{64}[wb]$/);
 const SessionSave = z.object({
   openingId: z.string().max(64),
   lineSlug: z.string().max(120).nullable(),
-  mode: z.enum(['learn', 'drill', 'recall', 'quiz', 'free', 'review']),
+  mode: z.enum(['learn', 'drill', 'recall', 'quiz', 'free', 'review', 'spar']),
   correct: Count,
   wrong: Count,
   hints: Count,
   score: z.number().int().min(0).max(100).nullable(),
   positions: z.array(z.object({ key: PositionKey, hit: z.boolean() })).max(400),
+  /** A sparring game: the chair and how many of the learner's moves stayed in book. */
+  spar: z.object({ side: z.enum(['white', 'black']), depth: Count }).optional(),
 });
 
 const GradeSave = z.object({

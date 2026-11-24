@@ -72,8 +72,13 @@ way that key should ever be filled in.
 between 1200 and 2000 rated players. `sidelines.py` then asks the engine, for each
 reply, whether the chapter's next move still holds up, and sorts it into keep your
 setup, needs an answer, trap to dodge or trap to set. `move-verdicts.py` scores every
-legal move from every asked position, so a wrong move gets a real answer. All three
-need a re-run after editing a covered opening.
+legal move from every asked position, so a wrong move gets a real answer.
+`club-moves.py` counts, in one pass of the stream for several openings at once, every
+club move from every position a course's opponent moves in (chapters, deviations and
+sidelines), into `src/content/club/<id>.json`; the trainer's sparring partner plays
+from it. All four need a re-run after editing a covered opening, `club-moves.py` after
+`sidelines.py`. Run the streaming scripts with `nice -n 19` and cap them with
+`--games`; the file records the sample size.
 
 **The corpus has holes, and the honest answer is to say so.** pgnmentor's
 per-variation archives follow the ECO split, not your repertoire: there is no
