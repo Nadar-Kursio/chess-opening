@@ -2,9 +2,11 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Verdict } from '@/lib/engineView';
+import { pieceCode, pieceUrl } from '@/lib/pieces';
 import type { Turn } from '@/lib/types';
+import { usePieceRaster } from './usePieceRaster';
 
-/* An 8x8 grid of squares with SVG pieces. It knows no chess: which moves exist is the packed
+/* An 8x8 grid of squares with pieces on it. It knows no chess: which moves exist is the packed
    `legal` string the build shipped for this position, and the board only reports what the hand
    did. Click a piece then a square, or drag it — both end in onMove. */
 
@@ -53,11 +55,6 @@ function squareName(index: number) {
   return FILES[index % 8] + (8 - Math.floor(index / 8));
 }
 
-function pieceSrc(ch: string) {
-  const colour = ch === ch.toUpperCase() ? 'w' : 'b';
-  return `/pieces/${colour}${ch.toUpperCase()}.svg`;
-}
-
 const PIECE_NAME: Record<string, string> = {
   k: 'king',
   q: 'queen',
@@ -104,6 +101,8 @@ export default function Board({
   const [drag, setDrag] = useState<{ from: string; moved: boolean } | null>(null);
   const start = useRef({ x: 0, y: 0 });
   const [prevFen, setPrevFen] = useState(fen);
+  // A piece fills 94% of its square (.piece).
+  const raster = usePieceRaster(boardRef, 0.94 / 8);
 
   // A new position clears any half-made move.
   if (prevFen !== fen) {
@@ -233,7 +232,7 @@ export default function Board({
           <img
             // Remounting on each new position replays the slide from the origin square.
             key={arriving ? `${fen}-${sq}` : sq}
-            src={pieceSrc(ch)}
+            src={pieceUrl(pieceCode(ch), raster)}
             alt=""
             draggable={false}
             className={`piece${arriving ? ' piece--arriving' : ''}${drag?.moved && drag.from === sq ? ' piece--lifted' : ''}${isMine(sq) ? ' piece--mine' : ''}`}
@@ -264,7 +263,7 @@ export default function Board({
       <img
         ref={ghostRef}
         className={drag?.moved ? 'ghost' : 'ghost ghost--hidden'}
-        src={pieceSrc((drag && at(drag.from)) || 'P')}
+        src={pieceUrl(pieceCode((drag && at(drag.from)) || 'P'), raster)}
         alt=""
       />
     </div>
