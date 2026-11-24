@@ -212,6 +212,18 @@
   --rush-pip: 10px;
   --rush-best-min: 64px;
   --cover-blur: 3px;
+  /* chapter crowns and the trap collection */
+  --crown-sm: 22px;
+  --crown-md: 36px;
+  --crown-lg: 56px;
+  --crown-label: 56px;
+  --crown-off: #e4e9f1;
+  --crown-off-edge: #cdd5e1;
+  --crown-body: #fff3d9;
+  --crown-edge: #d0901a;
+  --crown-jewel: #f5b83d;
+  --crown-gem: #e5484d;
+  --crown-lost: #e5484d;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 120ms;
@@ -248,6 +260,12 @@
     --badge-shine: rgba(255, 255, 255, 0.24);
     --toast-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
     --scrim: rgba(0, 0, 0, 0.55);
+    /* chapter crowns */
+    --crown-off: #263145;
+    --crown-off-edge: #3a4660;
+    --crown-body: #3a2f16;
+    --crown-edge: #f5b83d;
+    --crown-lost: #ff8f93;
     color-scheme: dark;
   }
 }

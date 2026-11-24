@@ -20,6 +20,8 @@ export interface XpSource {
   questsCleared: number;
   /** Days on which all three quests were cleared. */
   questDays: number;
+  /** XP from the learner's imported games, already added up by `gameXp`. */
+  games: number;
   /** Badge tiers unlocked, by tier. */
   tiers: Record<Tier, number>;
 }
@@ -39,7 +41,18 @@ export const XP = {
   quest: 15,
   questDay: 50,
   tier: { bronze: 20, silver: 50, gold: 100 } satisfies Record<Tier, number>,
+  gameMove: 2,
+  gameEnd: 20,
+  gameTrap: 50,
 } as const;
+
+/** Book moves a single game is paid for: past this, a long game in the course is still one game. */
+export const GAME_MOVES_CAP = 12;
+
+/** What one imported game earns: its own moves in book, reaching the course's end, a trap sprung. */
+export function gameXp(g: { bookMoves: number; reachedEnd: boolean; sprung: boolean }) {
+  return Math.min(g.bookMoves, GAME_MOVES_CAP) * XP.gameMove + (g.reachedEnd ? XP.gameEnd : 0) + (g.sprung ? XP.gameTrap : 0);
+}
 
 export interface XpPart {
   label: string;
@@ -57,6 +70,7 @@ export function xpParts(s: XpSource): XpPart[] {
     { label: 'Perfect quizzes', xp: s.perfectQuizzes * XP.perfectQuiz },
     { label: 'Recall', xp: s.recalled * XP.recalled + s.longTerm * XP.longTerm },
     { label: 'Opening Rush', xp: s.rushPoints * XP.rushPoint },
+    { label: 'Your games', xp: s.games },
     { label: 'Daily quests', xp: s.questsCleared * XP.quest + s.questDays * XP.questDay },
     {
       label: 'Badges',

@@ -8,7 +8,7 @@ import { QUEST_DEFS, questStates, questsFor, type Today } from '../src/lib/quest
 import { lineCards } from '../src/lib/recall.ts';
 import { POOL_SIZE, multiplier, rushOrder, rushPool } from '../src/lib/rush.ts';
 import type { Opening } from '../src/lib/types.ts';
-import { RANKS, XP, levelFor, levelStart, rankName, totalXp, xpParts, type XpSource } from '../src/lib/xp.ts';
+import { GAME_MOVES_CAP, RANKS, XP, gameXp, levelFor, levelStart, rankName, totalXp, xpParts, type XpSource } from '../src/lib/xp.ts';
 
 const ROOT = process.env.CONTENT_DIR ?? path.join(import.meta.dirname, '..', 'content');
 const openings = new Map<string, Opening>(
@@ -45,6 +45,7 @@ const NONE: XpSource = {
   rushPoints: 0,
   questsCleared: 0,
   questDays: 0,
+  games: 0,
   tiers: { bronze: 0, silver: 0, gold: 0 },
 };
 
@@ -71,6 +72,16 @@ test('XP adds every source at its rate and lists only what earned some', () => {
   const parts = xpParts(s);
   assert.equal(parts[0].label, 'Moves found');
   for (let i = 1; i < parts.length; i++) assert.ok(parts[i - 1].xp >= parts[i].xp, 'largest first');
+});
+
+test('a real game pays for its book moves up to a cap, its line end and a trap sprung', () => {
+  assert.equal(gameXp({ bookMoves: 0, reachedEnd: false, sprung: false }), 0);
+  assert.equal(gameXp({ bookMoves: 5, reachedEnd: false, sprung: false }), 5 * XP.gameMove);
+  assert.equal(gameXp({ bookMoves: 40, reachedEnd: false, sprung: false }), GAME_MOVES_CAP * XP.gameMove);
+  assert.equal(gameXp({ bookMoves: 8, reachedEnd: true, sprung: true }), 8 * XP.gameMove + XP.gameEnd + XP.gameTrap);
+  assert.ok(XP.gameTrap > XP.gameEnd, 'a trap is the bigger bonus');
+  const parts = xpParts({ ...NONE, moves: 10, games: 70 });
+  assert.deepEqual(parts[0], { label: 'Your games', xp: 70 });
 });
 
 test('each level takes 100 XP more than the last', () => {
@@ -118,6 +129,8 @@ const ZERO: Totals = {
   sparSessions: 0,
   gameSessions: 0,
   questDays: 0,
+  fullCrowns: 0,
+  trapsSprung: 0,
 };
 
 test('about twenty badge tiers, with unique ids and rising goals', () => {
@@ -129,7 +142,7 @@ test('about twenty badge tiers, with unique ids and rising goals', () => {
     for (let i = 1; i < b.tiers.length; i++) assert.ok(b.tiers[i].goal > b.tiers[i - 1].goal, b.id);
     assert.equal(tierName(b, b.tiers.length - 1), 'gold', `${b.id} tops out at gold`);
   }
-  for (const metric of ['sparSessions', 'gameSessions', 'rushBest'] as const) {
+  for (const metric of ['sparSessions', 'gameSessions', 'rushBest', 'fullCrowns', 'trapsSprung'] as const) {
     assert.ok(BADGES.some((b) => b.metric === metric), `a badge for ${metric}`);
   }
 });

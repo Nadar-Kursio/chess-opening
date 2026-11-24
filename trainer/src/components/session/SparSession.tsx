@@ -69,6 +69,8 @@ export default function SparSession({ openingId, course, side, book, opponent: f
   const [tally, setTally] = useState({ correct: 0, wrong: 0, hints: 0 });
   const [msgs, setMsgs] = useState<Msg[]>(() => [make(intro(first, course, you, book.elo))]);
   const asked = useRef({ key: '', at: 0, graded: false });
+  // Every position the game reached, the leaving move's included: the server looks for traps in it.
+  const trail = useRef([tree.root]);
 
   const key = path[path.length - 1].key;
   const node = tree.nodes[key];
@@ -95,7 +97,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
 
   const store = (t: typeof tally, reached: number) => {
     if (t.correct + t.wrong === 0) return;
-    saveSession({ openingId, lineSlug: null, mode: 'spar', ...t, score: null, positions: [], spar: { side, depth: reached } });
+    saveSession({ openingId, lineSlug: null, mode: 'spar', ...t, score: null, positions: [], spar: { side, depth: reached, keys: trail.current } });
   };
 
   // A game left half way still counts the moves found in it, whether by the close button or the tab.
@@ -133,6 +135,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
       setTone('idle');
       setPlayed((list) => [...list, { num: move.num, share, forced: choice.forced }]);
       if ('fen' in move) {
+        trail.current = [...trail.current, move.fen + you];
         setLeft(move);
         say({
           kind: 'theirs',
@@ -142,6 +145,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
         finish({ kind: 'left', leave: move, share }, tally, depth);
         return;
       }
+      trail.current = [...trail.current, move.next];
       setPath((list) => [...list, { key: move.next, san: move.san }]);
       const intoSideline = book.lines[book.study[move.next]]?.sideline && !book.lines[book.study[key]]?.sideline;
       say({
@@ -191,6 +195,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
       setTone('good');
       setWrongHere(0);
       setHintLevel(0);
+      trail.current = [...trail.current, hit.next];
       setPath((list) => [...list, { key: hit.next, san: hit.san }]);
       say({ kind: 'yours', title: `${hit.num} ✓`, html: tree.nodes[hit.next].note });
       if (!tree.nodes[hit.next].moves.length) finish({ kind: 'book' }, t, reached);
@@ -238,6 +243,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
     const next = pickOpponent(Math.random, opponent.id);
     setOpponent(next);
     setPath([{ key: tree.root, san: '' }]);
+    trail.current = [tree.root];
     setLeft(null);
     setLives(LIVES);
     setDepth(0);

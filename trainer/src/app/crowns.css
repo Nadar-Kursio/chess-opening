@@ -1,0 +1,113 @@
+/* Chapter crowns: the mark on each chapter card and the row in the course header. */
+
+.crown {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+.crown--sm {
+  width: var(--crown-sm);
+  height: calc(var(--crown-sm) * 0.75);
+}
+.crown--md {
+  width: var(--crown-md);
+  height: calc(var(--crown-md) * 0.75);
+}
+.crown--lg {
+  width: var(--crown-lg);
+  height: calc(var(--crown-lg) * 0.75);
+}
+.crown__body,
+.crown__band {
+  fill: var(--crown-off);
+  stroke: var(--crown-off-edge);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.crown__jewel {
+  fill: var(--crown-off);
+  stroke: var(--crown-off-edge);
+  stroke-width: 1.2;
+}
+.crown:not(.crown--l0) .crown__body,
+.crown:not(.crown--l0) .crown__band {
+  fill: var(--crown-body);
+  stroke: var(--crown-edge);
+}
+.crown__jewel--on {
+  fill: var(--crown-jewel);
+  stroke: var(--crown-edge);
+}
+.crown__jewel--lost {
+  fill: none;
+  stroke: var(--crown-lost);
+  stroke-dasharray: 2 1.6;
+}
+.crown--l5 .crown__body,
+.crown--l5 .crown__band {
+  fill: var(--tier-gold);
+  stroke: var(--tier-gold-deep);
+}
+.crown--l5 .crown__jewel--on {
+  fill: var(--crown-gem);
+  stroke: var(--tier-gold-deep);
+}
+.crown__shine {
+  stroke: var(--badge-shine);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.chapter__head .chapter__titles {
+  flex: 1 1 auto;
+}
+.chapter__crown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  min-width: var(--crown-label);
+}
+.chapter__crown-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.chapter--done .chapter__crown-label,
+.chapter__crown:has(.crown--l5) .chapter__crown-label {
+  color: var(--gold-ink);
+}
+.chip--fading {
+  background: var(--red-soft);
+  color: var(--red-ink);
+  text-decoration: none;
+}
+
+.crown-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+.crown-sum__row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.crown-sum__text {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.crown-sum__text b {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--gold-ink);
+}
+.crown-sum__fading {
+  color: var(--red-ink);
+}

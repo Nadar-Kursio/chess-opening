@@ -36,6 +36,13 @@ const EMBLEMS: Record<Emblem, React.ReactNode> = {
     </>
   ),
   flag: <path d="M5 21.5V3.5M5 4h12.5l-2.6 4.5 2.6 4.5H5" className="badge__stroke" />,
+  trap: <path d="M2.5 19.5h19M4 13.5a8 6.5 0 0 0 16 0zM4 13.5l2-4 2 4 2-4 2 4 2-4 2 4 2-4 2 4" className="badge__stroke" />,
+  jewels: (
+    <>
+      <path d="M4 18.5h16l1.5-10-5 4L12 6l-4.5 6.5-5-4z" />
+      <path d="M4 21h16" className="badge__stroke" />
+    </>
+  ),
 };
 
 export default function Badge({

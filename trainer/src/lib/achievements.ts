@@ -16,9 +16,13 @@ export interface Totals {
   sparSessions: number;
   gameSessions: number;
   questDays: number;
+  /** Chapters at the full crown right now. */
+  fullCrowns: number;
+  /** Different trap courses the learner has sprung in a real game or a sparring game. */
+  trapsSprung: number;
 }
 
-export type Emblem = 'book' | 'flame' | 'target' | 'crown' | 'brain' | 'star' | 'bolt' | 'swords' | 'board' | 'flag';
+export type Emblem = 'book' | 'flame' | 'target' | 'crown' | 'brain' | 'star' | 'bolt' | 'swords' | 'board' | 'flag' | 'trap' | 'jewels';
 
 export interface BadgeDef {
   id: string;
@@ -123,6 +127,23 @@ export const BADGES: BadgeDef[] = [
     tiers: [
       { goal: 1, label: 'Study one of your own games' },
       { goal: 10, label: 'Study 10 of your own games' },
+    ],
+  },
+  {
+    id: 'crowned',
+    name: 'Crowned',
+    emblem: 'jewels',
+    metric: 'fullCrowns',
+    tiers: [{ goal: 1, label: 'Earn the full crown on a chapter' }],
+  },
+  {
+    id: 'traps',
+    name: 'Trap Setter',
+    emblem: 'trap',
+    metric: 'trapsSprung',
+    tiers: [
+      { goal: 1, label: 'Spring a trap in one of your games' },
+      { goal: 5, label: 'Spring 5 different traps' },
     ],
   },
   {
