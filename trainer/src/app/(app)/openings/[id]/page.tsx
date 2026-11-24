@@ -209,6 +209,17 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                   ))
                 : null}
               <li>
+                <Link href={`/repertoire/${id}`} className="way">
+                  <span className="way__icon way__icon--purple">
+                    <Book size={20} />
+                  </span>
+                  <span>
+                    <b>Explore the tree</b>
+                    <span className="muted small">Every move the course teaches, with how well you know each one.</span>
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href={`/openings/${id}/shuffle`} className="way">
                   <span className="way__icon way__icon--blue">
                     <Shuffle size={20} />

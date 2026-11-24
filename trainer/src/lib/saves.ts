@@ -11,12 +11,22 @@ const PositionKey = z.string().regex(/^[.pnbrqkPNBRQK]{64}[wb]$/);
 const SessionSave = z.object({
   openingId: z.string().max(64),
   lineSlug: z.string().max(120).nullable(),
-  mode: z.enum(['learn', 'drill', 'recall', 'quiz', 'free', 'review', 'spar']),
+  mode: z.enum(['learn', 'drill', 'recall', 'quiz', 'free', 'review', 'rush', 'spar']),
   correct: Count,
   wrong: Count,
   hints: Count,
   score: z.number().int().min(0).max(100).nullable(),
   positions: z.array(z.object({ key: PositionKey, hit: z.boolean() })).max(400),
+  // An Opening Rush run touching several courses saves a session for each; one of them carries the run.
+  rush: z
+    .object({
+      scope: z.string().max(64),
+      score: Count,
+      found: Count,
+      strikes: z.number().int().min(0).max(3),
+      bestCombo: Count,
+    })
+    .optional(),
   /** A sparring game: the chair and how many of the learner's moves stayed in book. */
   spar: z.object({ side: z.enum(['white', 'black']), depth: Count }).optional(),
 });

@@ -136,6 +136,77 @@
   --spar-face-ink: #1b2333;
   --spar-glasses: #1b2333;
   --spar-heart-on: #e5484d;
+  /* repertoire explorer and stats: how well a position is remembered, weakest to strongest (one
+     hue, validated as an ordinal ramp), practice volume (a second one-hue ramp), and chart chrome */
+  --lvl-new: #7cc796;
+  --lvl-learning: #3fa766;
+  --lvl-familiar: #23804a;
+  --lvl-mastered: #145c33;
+  --weak: #e5484d;
+  --act-1: #84aff6;
+  --act-2: #4f8ef5;
+  --act-3: #2b68cf;
+  --act-4: #1b4790;
+  --viz-series: #2f72dd;
+  --viz-wash: rgba(47, 114, 221, 0.1);
+  --viz-grid: #e8ecf2;
+  --viz-axis: #cdd5e1;
+  --lvl-dot: 12px;
+  --weak-mark: 8px;
+  --club-meter: 36px;
+  --club-meter-h: 4px;
+  --bmap-cell: 14px;
+  --bmap-gap: 3px;
+  --bmap-label: 72px;
+  --rep-panel: 440px;
+  --chart-h: 168px;
+  --chart-axis: 28px;
+  --chart-bar: 24px;
+  --chart-line: 2px;
+  --chart-dot: 8px;
+  --cal-cell: 11px;
+  --cal-gap: 3px;
+  --weak-board: 132px;
+  --tip-max: 220px;
+  /* Games vs prep */
+  --games-board: 176px;
+  --games-board-sm: 128px;
+  --games-result: 28px;
+  --games-tally: 10px;
+  --games-dep-num: 84px;
+  --games-dep-num-sm: 56px;
+  --games-spinner: 14px;
+  /* fun: XP, levels, badges, quests, Opening Rush */
+  --tier-bronze: #d28a4e;
+  --tier-bronze-deep: #9a5a26;
+  --tier-bronze-ink: #fff4e8;
+  --tier-silver: #c9d1dd;
+  --tier-silver-deep: #8792a5;
+  --tier-silver-ink: #3a4558;
+  --tier-gold: #f7c843;
+  --tier-gold-deep: #c98d10;
+  --tier-gold-ink: #6e4a04;
+  --badge-shine: rgba(255, 255, 255, 0.38);
+  --badge-sm: 44px;
+  --badge-md: 56px;
+  --badge-lg: 76px;
+  --badge-lock: 18px;
+  --level-ring: 30px;
+  --level-ring-big: 112px;
+  --level-ring-stroke: 4px;
+  --tier-dot: 12px;
+  --toast-width: 380px;
+  --toast-shadow: 0 12px 32px rgba(27, 35, 51, 0.22);
+  --scrim: rgba(15, 20, 32, 0.45);
+  --confetti: 9px;
+  --confetti-reach: 34vmin;
+  --confetti-reach-big: 52vmin;
+  --quest-check: 26px;
+  --quest-bar: 6px;
+  --rush-count: 120px;
+  --rush-pip: 10px;
+  --rush-best-min: 64px;
+  --cover-blur: 3px;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 120ms;
@@ -168,6 +239,29 @@
     --board-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
     --card-shadow: none;
     --black-piece-chip: #0b0f18;
+    /* fun */
+    --badge-shine: rgba(255, 255, 255, 0.24);
+    --toast-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    --scrim: rgba(0, 0, 0, 0.55);
     color-scheme: dark;
+  }
+}
+
+/* repertoire explorer and stats, dark: the same ramps stepped for the dark surface, strongest lightest */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --lvl-new: #1f5a3a;
+    --lvl-learning: #2b8452;
+    --lvl-familiar: #45b071;
+    --lvl-mastered: #86dca6;
+    --weak: #ff6b70;
+    --act-1: #2b58a8;
+    --act-2: #3f7be0;
+    --act-3: #6ea3f7;
+    --act-4: #a9cbff;
+    --viz-series: #4f8ff5;
+    --viz-wash: rgba(79, 143, 245, 0.12);
+    --viz-grid: #222b3d;
+    --viz-axis: #3a4660;
   }
 }

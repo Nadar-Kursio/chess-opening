@@ -8,7 +8,7 @@ import { lineCards } from './recall';
 import type { SoundSet } from './sound';
 import type { SPEECH_RATES, Voice } from './speech';
 
-export type Mode = StepKind | 'free' | 'review' | 'spar';
+export type Mode = StepKind | 'free' | 'review' | 'rush' | 'spar';
 
 /* ---------- the learner's calendar ---------- */
 
@@ -199,7 +199,7 @@ export async function recordSession(userId: string, r: SessionResult, { clientId
       [userId, r.openingId, r.lineSlug, r.mode, r.correct, r.wrong, r.hints, day, clientId],
     );
     if (!rowCount) return;
-    if (r.lineSlug && r.mode !== 'free' && r.mode !== 'review' && r.mode !== 'spar') {
+    if (r.lineSlug && r.mode !== 'free' && r.mode !== 'review' && r.mode !== 'rush' && r.mode !== 'spar') {
       const column = stepColumn(r.mode);
       const isRun = r.mode === 'drill' || r.mode === 'recall';
       const isClean = isRun && r.wrong === 0 && r.hints === 0;
