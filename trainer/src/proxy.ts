@@ -5,7 +5,7 @@ const PUBLIC = ['/sign-in', '/sign-up', '/api/auth'];
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 /**
- * Two gates. new.chesslab.dev itself (a tunnel CNAME) passes. The older route — the edge Worker
+ * Two gates. The public host itself passes. The other route — the edge Worker
  * proxying to chesslab-origin.kursio.dev — passes only with EDGE_SECRET, so that hostname is not a
  * second way in (the machine itself is exempt, for health checks). Then every page needs an
  * account: no session cookie goes

@@ -1,11 +1,15 @@
-# The public face of new.chesslab.dev: a Worker on the custom domain that proxies to the origin
-# the `chesslab` tunnel serves. It exists because the tunnel's certificate covers kursio.dev only,
-# so new.chesslab.dev can't point at the tunnel directly. Deploy: `npx wrangler deploy` here.
+# The public face of chesslab.dev: a Worker on the custom domain that proxies to the origin the
+# `chesslab` tunnel serves. It exists because the tunnel's certificate covers kursio.dev only, so
+# chesslab.dev can't point at the tunnel directly. new.chesslab.dev, the app's first address,
+# redirects here. Deploy: `npx wrangler deploy` here.
 name = "chesslab-trainer-edge"
 main = "worker.js"
 compatibility_date = "2026-09-01"
 workers_dev = false
-routes = [{ pattern = "new.chesslab.dev", custom_domain = true }]
+routes = [
+  { pattern = "chesslab.dev", custom_domain = true },
+  { pattern = "new.chesslab.dev", custom_domain = true },
+]
 
 [vars]
 ORIGIN = "https://chesslab-origin.kursio.dev"

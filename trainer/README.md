@@ -1,4 +1,4 @@
-# ChessLab trainer — new.chesslab.dev
+# ChessLab trainer — chesslab.dev
 
 The account-backed course app: every opening the build ships becomes a course of chapters (one per
 line), and each chapter runs **Learn → Drill → Test → Quiz**. Beside the path: free practice
@@ -44,14 +44,14 @@ npm test                  # course model against trainer/content (or CONTENT_DIR
 
 |          | |
 | -------- | --- |
-| URL      | https://new.chesslab.dev |
+| URL      | https://chesslab.dev (new.chesslab.dev, its first address, redirects there) |
 | Server   | `next start` on :3020, systemd user unit `chesslab-trainer` (`deploy/systemd/`) |
 | Database | `chesslab` on the shared Kursio RDS instance, role `chesslab`, over TLS |
 | Settings | `.env.production.local` from `npm run env:prod` (Secrets Manager `chesslab/db-credentials`, `chesslab/app-secrets`) |
 | Network  | Worker `chesslab-trainer-edge` (`deploy/edge/`) on the custom domain → tunnel `chesslab` (`deploy/cloudflared/`, unit `chesslab-tunnel`) → :3020 |
 
 The Worker exists because the tunnel's origin certificate covers `kursio.dev` only, so
-`new.chesslab.dev` can't be a CNAME to the tunnel without a new `cloudflared tunnel login`. The
+`chesslab.dev` can't be a CNAME to the tunnel without a new `cloudflared tunnel login`. The
 tunnel serves `chesslab-origin.kursio.dev`; the app 404s any request there without the Worker's
 `x-chesslab-edge` secret.
 

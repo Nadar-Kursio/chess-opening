@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploys new.chesslab.dev without downtime on a bad build:
+# Deploys chesslab.dev without downtime on a bad build:
 #   1. refreshes the settings, compiles the course, records any narration it lacks (within budget; a failure only means
 #      those lines play silent), and builds into .next-staging while the live .next keeps serving,
 #   2. stops the server, swaps the build in (keeping the old one as .next-previous), starts it,
@@ -30,7 +30,7 @@ mv .next-staging .next
 systemctl --user start chesslab-trainer
 
 if answers; then
-  echo "Deployed: new.chesslab.dev answers on :3020."
+  echo "Deployed: chesslab.dev answers on :3020."
   exit 0
 fi
 if [ ! -d .next-previous ]; then

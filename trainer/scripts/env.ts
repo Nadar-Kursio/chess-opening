@@ -12,7 +12,7 @@ import path from 'node:path';
 type Stage = 'prod' | 'dev';
 
 const STAGES = {
-  prod: { file: '.env.production.local', port: 3020, url: 'https://new.chesslab.dev' },
+  prod: { file: '.env.production.local', port: 3020, url: 'https://chesslab.dev' },
   dev: { file: '.env.development.local', port: 3021, url: 'http://localhost:3021' },
 } satisfies Record<Stage, { file: string; port: number; url: string }>;
 

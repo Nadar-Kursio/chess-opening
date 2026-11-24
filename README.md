@@ -83,7 +83,8 @@ a preview link for exactly that.
 ## Publishing
 
 Push to `main`. CI runs the Python suite, emits the JSON, builds and smokes the
-site, and ships `web/out` to https://chesslab.dev via Cloudflare Pages. Every
+site, and ships `web/out` to https://chesslab.pages.dev via Cloudflare Pages
+(chesslab.dev itself is the account-backed app in `trainer/`). Every
 pull request gets the whole site at `https://<branch>.chesslab.pages.dev`,
 posted as a comment on the PR.
 
