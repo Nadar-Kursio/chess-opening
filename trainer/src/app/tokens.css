@@ -212,6 +212,11 @@
   --rush-pip: 10px;
   --rush-best-min: 64px;
   --cover-blur: 3px;
+  /* course traps: the trap courses a repertoire course meets */
+  --trap-board: 112px;
+  --trap-board-sm: 84px;
+  --trap-row-min: 440px;
+  --trap-badge: 36px;
   /* chapter crowns and the trap collection */
   --crown-sm: 22px;
   --crown-md: 36px;

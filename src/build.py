@@ -965,6 +965,108 @@ def build_structures(openings, errors):
     return out
 
 
+# A trap belongs to a course once the course follows it this many plies in. The first four are a
+# whole family's (1.e4 e5 2.Nf3 Nc6 begins the Ruy, the Italian and the Scotch alike), so a trap
+# the course has left by then is a neighbour's, not this course's.
+TRAP_REACH = 5
+
+
+def position_key(ply):
+    """A ply's position the way the trainer keys one: the board, then who is to move."""
+    to_move = "w" if not ply["san"] else ("b" if ply["turn"] == "w" else "w")
+    return ply["fen"] + to_move
+
+
+def chapter_positions(record):
+    """Every position each chapter reaches, by slug, and those of sidelines no chapter owns.
+
+    A chapter owns the deviations off its moves and the sidelines that leave it. A deviation with
+    no continuation is left out: it names another opening ("3.Bc4, the Italian") and stops there,
+    so the course teaches nothing past it.
+    """
+    sets = record.get("branchsets") or []
+    chapters = {}
+    for line in record["lines"]:
+        keys = chapters.setdefault(line["slug"], set())
+        for p in line["plies"]:
+            keys.add(position_key(p))
+            for br in sets[p["bx"]] if p.get("bx") is not None else []:
+                if len(br["plies"]) > 1:
+                    keys.update(position_key(bp) for bp in br["plies"])
+    loose = set()
+    for item in ((record.get("coaching") or {}).get("sidelines") or {}).get("items", []):
+        if item.get("line"):
+            keys = {position_key(p) for p in item["line"]["plies"]}
+            chapters.get(item.get("chapter"), loose).update(keys)
+    return chapters, loose
+
+
+def trap_reach(trap, keys):
+    """How many plies into the trap `keys` follows it, on whichever of its lines goes deepest.
+
+    By position, so a course that gets there by another move order still counts."""
+    return max((i for line in trap["lines"] for i, p in enumerate(line["plies"])
+                if position_key(p) in keys), default=0)
+
+
+def trap_moment(trap):
+    """The trap's critical position: where its lines part, one springing it, one stepping round."""
+    lines = [line["plies"] for line in trap["lines"]]
+    k = 0
+    while all(len(plies) > k + 1 for plies in lines) and len({plies[k + 1]["san"] for plies in lines}) == 1:
+        k += 1
+    p = lines[0][k]
+    return {key: p[key] for key in ("fen", "from", "to", "num", "turn")}
+
+
+def relate_traps(records):
+    """Hang each trap course off the repertoire courses it happens in, and point back.
+
+    A course gets `traps`: the ones it plays from the same side are to set, the others to watch
+    for. Each names the chapter that follows it deepest (where its chip goes), the trap course's
+    first chapter taught from the course's side, and the course's sideline that leaves on its
+    road when there is one. The trap course gets `partOf`, and that sideline row gets `trap`.
+    Derived, never authored: a course or trap that gains a line moves the links with it.
+    """
+    traps = [r for r in records if r["section"] == "traps"]
+    for course in records:
+        if course["section"] == "traps":
+            continue
+        chapters, loose = chapter_positions(course)
+        everything = loose.union(*chapters.values())
+        order = list(chapters)
+        sidelines = ((course.get("coaching") or {}).get("sidelines") or {}).get("items", [])
+        found = []
+        for trap in traps:
+            if trap_reach(trap, everything) < TRAP_REACH:
+                continue
+            reach = {slug: trap_reach(trap, keys) for slug, keys in chapters.items()}
+            # On a tie, the chapter whose own moves go deeper: the deviation it shares with the
+            # others hangs off every line that passes that position.
+            own = {line["slug"]: trap_reach(trap, {position_key(p) for p in line["plies"]})
+                   for line in course["lines"]}
+            chapter = max(order, key=lambda slug: (reach[slug], own[slug], -order.index(slug)))
+            on_road = {position_key(p) for line in trap["lines"] for p in line["plies"]}
+            leaving = [s for s in sidelines if s.get("line")
+                       and position_key(s["line"]["plies"][s["line"]["start"] + 1]) in on_road]
+            sideline = max(leaving, key=lambda s: s["line"]["start"], default=None)
+            if sideline and "trap" not in sideline:
+                sideline["trap"] = trap["id"]
+            learn = next((line["slug"] for line in trap["lines"]
+                          if line.get("side", trap["orientation"]) == course["orientation"]), None)
+            entry = {"id": trap["id"], "name": trap["name"],
+                     "group": "set" if trap["orientation"] == course["orientation"] else "watch",
+                     "chapter": chapter, "reach": reach[chapter], "moment": trap_moment(trap)}
+            if learn:
+                entry["learn"] = learn
+            if sideline:
+                entry["sideline"] = sideline["slug"]
+            found.append(entry)
+            trap.setdefault("partOf", []).append(course["id"])
+        if found:
+            course["traps"] = sorted(found, key=lambda t: (t["group"] != "set", order.index(t["chapter"])))
+
+
 def feedback_level(line):
     """How sharp the drill's feedback can be for this built line, 0..2.
 
@@ -1004,6 +1106,8 @@ def emit_files():
 
     ported = [op for op in openings if op["id"] in PORTED]
     ported_games = [g for g in games if g["op"] in PORTED]
+    # Among the ported only, so a link never names a course the site has no page for.
+    relate_traps(ported)
 
     def line_summary(line):
         out = {"slug": line["slug"], "name": line["name"], "note": line["note"],
