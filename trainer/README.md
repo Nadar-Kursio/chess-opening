@@ -42,6 +42,16 @@ npm run dev               # http://localhost:3021
 npm test                  # course model against trainer/content (or CONTENT_DIR)
 ```
 
+## Piece images
+
+The pieces are the SVGs in `public/pieces/`. At one device pixel per CSS pixel the browser's
+antialiasing leaves their heavy outlines stair-stepped, so below 2x `Board` and `MiniBoard` draw
+PNGs from `public/pieces/<size>/` instead, at a size 10-33% larger than the piece is drawn: the
+browser's slight shrink is what smooths the edges (`src/lib/pieces.ts`, `usePieceRaster`). From 2x
+up they keep the SVG. The PNGs are committed; after changing a piece SVG or `PIECE_SIZES`, run
+`npm run pieces` (sharp, 8x supersampled) and commit what it writes. The small piece icons outside
+boards (logo, coach, side pawns) stay SVG.
+
 ## Production
 
 |          | |

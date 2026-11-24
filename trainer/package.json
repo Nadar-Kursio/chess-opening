@@ -9,6 +9,7 @@
     "test": "node --test --experimental-strip-types tests/*.test.ts",
     "content": "scripts/content.sh",
     "narrate": "tsx scripts/narrate.ts",
+    "pieces": "tsx scripts/pieces.ts",
     "db:up": "docker compose up -d --wait",
     "db:migrate": "tsx --conditions=react-server --env-file=.env.development.local scripts/migrate.ts",
     "db:migrate:prod": "tsx --conditions=react-server --env-file=.env.production.local scripts/migrate.ts",
@@ -32,6 +33,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
