@@ -116,6 +116,14 @@
   --recall-icon: 48px;
   --gutter: 16px;
 
+  /* Games vs prep */
+  --games-board: 176px;
+  --games-board-sm: 128px;
+  --games-result: 28px;
+  --games-tally: 10px;
+  --games-dep-num: 84px;
+  --games-dep-num-sm: 56px;
+  --games-spinner: 14px;
   /* fun: XP, levels, badges, quests, Opening Rush */
   --tier-bronze: #d28a4e;
   --tier-bronze-deep: #9a5a26;
