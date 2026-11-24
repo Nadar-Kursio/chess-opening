@@ -6,8 +6,10 @@ name = "chesslab-trainer-edge"
 main = "worker.js"
 compatibility_date = "2026-09-01"
 workers_dev = false
+# chesslab.dev is a route, not a custom domain: its DNS record predates the Worker (it pointed at
+# the Pages site) and a custom domain can't take over an existing record.
 routes = [
-  { pattern = "chesslab.dev", custom_domain = true },
+  { pattern = "chesslab.dev/*", zone_name = "chesslab.dev" },
   { pattern = "new.chesslab.dev", custom_domain = true },
 ]
 
