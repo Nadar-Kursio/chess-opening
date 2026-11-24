@@ -11,7 +11,7 @@ const PositionKey = z.string().regex(/^[.pnbrqkPNBRQK]{64}[wb]$/);
 const SessionSave = z.object({
   openingId: z.string().max(64),
   lineSlug: z.string().max(120).nullable(),
-  mode: z.enum(['learn', 'drill', 'recall', 'quiz', 'free', 'review', 'rush']),
+  mode: z.enum(['learn', 'drill', 'recall', 'quiz', 'free', 'review', 'rush', 'spar']),
   correct: Count,
   wrong: Count,
   hints: Count,
@@ -27,6 +27,8 @@ const SessionSave = z.object({
       bestCombo: Count,
     })
     .optional(),
+  /** A sparring game: the chair and how many of the learner's moves stayed in book. */
+  spar: z.object({ side: z.enum(['white', 'black']), depth: Count }).optional(),
 });
 
 const GradeSave = z.object({

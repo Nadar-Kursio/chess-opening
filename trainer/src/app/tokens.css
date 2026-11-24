@@ -116,6 +116,26 @@
   --recall-icon: 48px;
   --gutter: 16px;
 
+  /* Sparring: the opponents' faces depict people, so their colours don't follow the theme. */
+  --spar-face: 44px;
+  --spar-face-lg: 64px;
+  --spar-heart: 20px;
+  --spar-skin-1: #f2c9a5;
+  --spar-skin-2: #d9a27a;
+  --spar-skin-3: #a8714f;
+  --spar-skin-4: #6e452f;
+  --spar-hair-1: #2b1d16;
+  --spar-hair-2: #7a4a24;
+  --spar-hair-3: #c9a15a;
+  --spar-hair-4: #9aa1ab;
+  --spar-shirt-1: #3d8bfd;
+  --spar-shirt-2: #e5484d;
+  --spar-shirt-3: #2e9e5b;
+  --spar-shirt-4: #8b5cf6;
+  --spar-shirt-5: #f5b83d;
+  --spar-face-ink: #1b2333;
+  --spar-glasses: #1b2333;
+  --spar-heart-on: #e5484d;
   /* repertoire explorer and stats: how well a position is remembered, weakest to strongest (one
      hue, validated as an ordinal ramp), practice volume (a second one-hue ramp), and chart chrome */
   --lvl-new: #7cc796;

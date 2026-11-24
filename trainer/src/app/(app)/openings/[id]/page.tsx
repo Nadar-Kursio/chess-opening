@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import MiniBoard from '@/components/ui/MiniBoard';
 import { Book, Brain, Check, Flame, Play, Question, Retry, Shuffle, Swords, Target } from '@/components/ui/icons';
 import { courseCard, sideLabel } from '@/lib/catalog';
-import { getCatalog, getOpening, hasOpening } from '@/lib/content';
+import { getCatalog, getClub, getOpening, hasOpening } from '@/lib/content';
 import {
   STEP_INFO,
   STEP_KINDS,
@@ -46,6 +46,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const card = courseCard(summary, byLine);
   const { progress: p, chapters: chs } = card;
   const sides = sidesTaught(op);
+  const sparrable = getClub(id) !== null;
   const punish = punishQuestions(op, op.orientation).length;
   const games = getCatalog().games.filter((g) => g.op === id);
   const sidelines = op.sidelines;
@@ -192,6 +193,21 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                   </Link>
                 </li>
               ))}
+              {sparrable
+                ? sides.map((s) => (
+                    <li key={`spar-${s}`}>
+                      <Link href={`/play/spar/${id}?side=${s}`} className="way">
+                        <span className="way__icon way__icon--gold">
+                          <Target size={20} />
+                        </span>
+                        <span>
+                          <b>Spar a club opponent{sides.length > 1 ? ` as ${s === 'white' ? 'White' : 'Black'}` : ''}</b>
+                          <span className="muted small">They play what club players play. Stay in your prep as long as you can.</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))
+                : null}
               <li>
                 <Link href={`/repertoire/${id}`} className="way">
                   <span className="way__icon way__icon--purple">

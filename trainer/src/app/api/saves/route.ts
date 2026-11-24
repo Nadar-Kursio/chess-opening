@@ -7,6 +7,7 @@ import { recordRush } from '@/lib/fun';
 import { dayIn, learnerTimezone, recordSession } from '@/lib/progress';
 import { Save } from '@/lib/saves';
 import { getSession } from '@/lib/session';
+import { recordSparBest } from '@/lib/sparBests';
 
 const OLDEST_PLAY_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
   }
   const result = await recordSession(user.id, session, { clientId: save.id, day });
   if (session.rush) await recordRush(user.id, save.id, day, session.rush);
+  if (session.mode === 'spar' && session.spar) await recordSparBest(user.id, session.openingId, session.spar);
   revalidatePath('/', 'layout');
   return Response.json(result);
 }
