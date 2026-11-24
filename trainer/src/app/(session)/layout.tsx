@@ -1,4 +1,5 @@
 import OutboxSync from '@/components/OutboxSync';
+import FunNews from '@/components/fun/FunNews';
 import { getSession } from '@/lib/session';
 
 export default async function SessionLayout({ children }: { children: React.ReactNode }) {
@@ -7,6 +8,7 @@ export default async function SessionLayout({ children }: { children: React.Reac
     <>
       {children}
       {session ? <OutboxSync userId={session.user.id} /> : null}
+      {session ? <FunNews /> : null}
     </>
   );
 }

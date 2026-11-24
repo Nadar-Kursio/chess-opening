@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, type ReactNode } from 'react';
+import Burst from '@/components/fun/Burst';
 import { Speaker, SpeakerOff } from '@/components/ui/icons';
 
 /* The session screen every mode shares: a top bar with the way out and the progress, the board,
@@ -92,6 +93,7 @@ export function SessionFrame({
         <div className="session__board">{board}</div>
         <aside className="session__side">{side}</aside>
       </main>
+      {tone === 'done' ? <Burst /> : null}
       <footer className={`session__foot session__foot--${tone}`} aria-live="polite">
         <div className="session__foot-inner">{footer}</div>
       </footer>

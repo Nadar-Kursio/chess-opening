@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import OutboxSync from '@/components/OutboxSync';
+import LevelChip from '@/components/fun/LevelChip';
 import { Flame } from '@/components/ui/icons';
 import { countDue, endOfDay } from '@/lib/cards';
 import { getPulse, learnerTimezone } from '@/lib/progress';
@@ -23,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
           <NavLinks due={due} />
           <div className="topbar__stats">
+            <LevelChip userId={user.id} />
             <span className={`stat-chip stat-chip--streak${pulse.streak ? '' : ' stat-chip--cold'}`} title="Day streak">
               <Flame size={18} />
               {pulse.streak}
