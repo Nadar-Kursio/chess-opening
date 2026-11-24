@@ -28,7 +28,14 @@ const SessionSave = z.object({
     })
     .optional(),
   /** A sparring game: the chair and how many of the learner's moves stayed in book. */
-  spar: z.object({ side: z.enum(['white', 'black']), depth: Count }).optional(),
+  spar: z
+    .object({
+      side: z.enum(['white', 'black']),
+      depth: Count,
+      /** The positions the game passed through, from the start: where trap baits are looked for. */
+      keys: z.array(PositionKey).max(200).optional(),
+    })
+    .optional(),
 });
 
 const GradeSave = z.object({

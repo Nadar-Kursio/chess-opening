@@ -1,12 +1,13 @@
 import 'server-only';
 import { cache } from 'react';
 import { badgeById, badgeStates, longestRun, newlyMet, tierCounts, tierName, type Emblem, type Totals, type Unlock } from './achievements';
-import { endOfDay } from './cards';
+import { endOfDay, fullCrowns } from './cards';
 import { courses } from './catalog';
 import { getOpening } from './content';
 import { chapters, courseProgress } from './course';
 import { query, queryOne, transaction } from './db';
 import { MASTERED_DAYS } from './memory';
+import { getPlayRecord } from './playRecord';
 import { dayIn, getProgress, learnerTimezone } from './progress';
 import { questById, questStates, questsFor, type Today } from './quests';
 import type { SessionSave } from './saves';
@@ -21,8 +22,8 @@ interface Clear {
   quest: string;
 }
 
-async function readTotals(userId: string) {
-  const [row, days, byLine] = await Promise.all([
+async function readTotals(userId: string, tz: string) {
+  const [row, days, byLine, play, crowns] = await Promise.all([
     queryOne<{
       moves: number;
       spar: number;
@@ -56,8 +57,10 @@ async function readTotals(userId: string) {
     ),
     query<{ day: string }>(`select distinct day from practice_sessions where user_id = $1`, [userId]),
     getProgress(userId),
+    getPlayRecord(userId),
+    fullCrowns(userId, tz),
   ]);
-  const r = row!;
+  const r = { ...row!, games_xp: play.xp };
   const coursesFinished = courses().filter((o) => {
     const chs = chapters(getOpening(o.id));
     return chs.length > 0 && courseProgress(chs, byLine.get(o.id) ?? new Map()).chaptersDone === chs.length;
@@ -75,6 +78,8 @@ async function readTotals(userId: string) {
       sparSessions: r.spar,
       gameSessions: r.games,
       questDays: 0,
+      fullCrowns: crowns,
+      trapsSprung: play.sprung,
     } satisfies Totals,
   };
 }
@@ -109,7 +114,7 @@ export const getFun = cache(async (userId: string) => {
   const tz = await learnerTimezone();
   const day = dayIn(tz);
   const [{ r, totals }, { today, hasDeck }, unlockRows, clears] = await Promise.all([
-    readTotals(userId),
+    readTotals(userId, tz),
     readToday(userId, tz, day),
     query<{ badge: string; tier: number; at: string }>(
       `select badge, tier, to_char(unlocked_at at time zone $2, 'YYYY-MM-DD') as at
@@ -147,6 +152,7 @@ function build(s: {
     recalled: s.r.recalled,
     longTerm: s.r.long_term,
     rushPoints: s.r.rush_points,
+    games: s.r.games_xp,
     questsCleared: s.clears.length,
     questDays,
     tiers,

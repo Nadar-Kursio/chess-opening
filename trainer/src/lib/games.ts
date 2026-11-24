@@ -1,5 +1,6 @@
 import { alternativesAt, lineSide, positionKey, sidesTaught, toMove, turnOf, type Tree, type TreeNode } from './course.ts';
 import { verdictOf, verdictWords } from './engineView.ts';
+import { baitsOf, trapsInGame, type TrapMeeting } from './gameTraps.ts';
 import { treeFor, yourAlternatives } from './recall.ts';
 import type { Colour, Opening, Ply, Severity, Turn } from './types.ts';
 
@@ -404,6 +405,21 @@ export interface Matched {
   game: ImportedGame;
   walk: Walk | null;
   deviation: Deviation | null;
+  /** Trap courses' baits the game reached, taken or not. */
+  traps: TrapMeeting[];
+}
+
+/** The positions a game passed through, from the start: what trap baits are looked up by. */
+export function gameKeys(op: Opening, game: Pick<ImportedGame, 'positions'>) {
+  return [positionKey(op.lines[0].plies[0]), ...(game.positions ?? []).map((p) => p.key)];
+}
+
+/** What a game earns XP for: the learner's own moves in a course they study, its end, a trap sprung. */
+export function gameFacts(m: Matched, studied: Set<string>) {
+  const w = m.walk && studied.has(m.walk.openingId) ? m.walk : null;
+  const you = turnOf(m.game.colour);
+  const bookMoves = w ? w.steps.filter((s, i) => i > 0 && s.book && (i % 2 === 1 ? 'w' : 'b') === you).length : 0;
+  return { bookMoves, reachedEnd: w?.outcome === 'end', sprung: m.traps.some((t) => t.outcome === 'sprung') };
 }
 
 export interface Forgotten extends Deviation {
@@ -462,10 +478,12 @@ export function buildReport(
   learned: Learned,
 ): { report: Report; matched: Matched[] } {
   const byId = new Map(openings.map((op) => [op.id, op]));
+  const baits = baitsOf(openings);
   const matched: Matched[] = games.map((game) => {
     const walk = matchGame(openings, studied, game.colour, game.moves, game.positions);
     const deviation = walk ? deviationOf(byId.get(walk.openingId)!, walk, learned.get(walk.openingId)) : null;
-    return { game, walk, deviation };
+    const traps = openings.length ? trapsInGame(baits, game.colour, gameKeys(openings[0], game)) : [];
+    return { game, walk, deviation, traps };
   });
 
   const groups = new Map<string, CourseReport>();

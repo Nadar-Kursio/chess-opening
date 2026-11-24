@@ -1,10 +1,15 @@
+import Link from 'next/link';
 import Badge from '@/components/fun/Badge';
 import { LevelRing } from '@/components/fun/LevelChip';
 import QuestCard from '@/components/fun/QuestCard';
+import { Trap } from '@/components/ui/icons';
+import { trapCourses } from '@/lib/catalog';
 import { syncFun } from '@/lib/fun';
+import { getPlayRecord } from '@/lib/playRecord';
 import { requirePageUser } from '@/lib/session';
-import { RANKS, XP, levelStart } from '@/lib/xp';
+import { GAME_MOVES_CAP, RANKS, XP, levelStart } from '@/lib/xp';
 import '@/app/fun.css';
+import '@/app/trapdex.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Badges' };
@@ -15,7 +20,8 @@ const n = (x: number) => x.toLocaleString('en-GB');
 
 export default async function AchievementsPage() {
   const user = await requirePageUser('/achievements');
-  const fun = await syncFun(user.id);
+  const [fun, play] = await Promise.all([syncFun(user.id), getPlayRecord(user.id)]);
+  const traps = trapCourses().length;
   const { level, badges, parts } = fun;
   const earned = badges.reduce((k, b) => k + b.tiers.filter((t) => t.unlocked).length, 0);
   const possible = badges.reduce((k, b) => k + b.tiers.length, 0);
@@ -104,6 +110,19 @@ export default async function AchievementsPage() {
         <aside className="fun-side">
           <QuestCard userId={user.id} />
 
+          <Link href="/traps/collection" className="card trapdex-link">
+            <span className="trap-games__icon" aria-hidden="true">
+              <Trap size={22} />
+            </span>
+            <span className="trapdex-link__text">
+              <b>Trap collection</b>
+              <span className="muted small">
+                {play.sprung} of {traps} traps sprung in your games
+              </span>
+            </span>
+            <span aria-hidden="true">→</span>
+          </Link>
+
           <section className="card xp-card" aria-labelledby="xp-title">
             <h3 id="xp-title">Where your XP comes from</h3>
             {parts.length ? (
@@ -123,7 +142,8 @@ export default async function AchievementsPage() {
             )}
             <p className="muted small">
               {XP.move} XP for every move you find, in any mode. Finishing a chapter step, a perfect quiz, Recall answers, Rush
-              points, quests and badges all add more.
+              points, quests and badges all add more. Each of your own games pays {XP.gameMove} XP a move in book (up to{' '}
+              {GAME_MOVES_CAP}), {XP.gameEnd} for playing a line to its end and {XP.gameTrap} for springing a trap.
             </p>
           </section>
 

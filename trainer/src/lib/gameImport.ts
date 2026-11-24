@@ -172,7 +172,7 @@ const toGame = (r: GameRow): ImportedGame => {
 
 const GAME_COLUMNS = `site, game_id, url, played_at, colour, result, opponent, opponent_rating, rating, speed, opening_name, moves`;
 
-async function getGames(userId: string) {
+export async function getGames(userId: string) {
   const rows = await query<GameRow>(
     `select ${GAME_COLUMNS} from imported_games where user_id = $1 order by played_at desc`,
     [userId],

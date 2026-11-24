@@ -1,20 +1,30 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { BoardArrow } from '@/components/Board';
-import { Play } from '@/components/ui/icons';
+import { Play, Trap } from '@/components/ui/icons';
 import { getOpening } from '@/lib/content';
 import { allOpenings, getGame, learnedLines } from '@/lib/gameImport';
 import { SITES } from '@/lib/gameSources';
-import { SITE_NAME, depthOf, deviationOf, exitKey, forgot, matchGame, moveNum, resolveSan, walkPlies, type Site } from '@/lib/games';
+import { baitsOf, trapsInGame, type TrapOutcome } from '@/lib/gameTraps';
+import { SITE_NAME, depthOf, deviationOf, exitKey, forgot, gameFacts, gameKeys, matchGame, moveNum, resolveSan, walkPlies, type Site } from '@/lib/games';
+import { trapTitle } from '@/lib/traps';
+import { gameXp } from '@/lib/xp';
 import { getSettings, learnerTimezone } from '@/lib/progress';
 import { isCard, treeFor } from '@/lib/recall';
 import { requirePageUser } from '@/lib/session';
 import GameBoard from '../../GameBoard';
 import { RESULT_LABEL, ResultChip, movesText, sideName, teachLink } from '../../parts';
 import '../../../../games.css';
+import '../../../../trapdex.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Your game' };
+
+const TRAP_WORDS: Record<TrapOutcome, (bait: string, missed?: string) => string> = {
+  sprung: (bait, missed) => `they took the bait with ${bait}${missed ? `, but ${missed} was the punishment` : ''}`,
+  caught: (bait) => `you took the bait with ${bait}`,
+  dodged: (bait) => `dodged, ${bait} was never played`,
+};
 
 export default async function GamePage({ params }: PageProps<'/games/[site]/[id]'>) {
   const { site, id } = await params;
@@ -34,6 +44,28 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
   const when = game.playedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz });
   const depth = walk ? depthOf(walk) : 0;
   const siteLink = game.site === 'lichess' ? `${game.url}#${depth}` : game.url;
+  const openings = allOpenings();
+  const baits = baitsOf(openings);
+  const traps = trapsInGame(baits, game.colour, gameKeys(openings[0], game));
+  const xp = gameXp(gameFacts({ game, walk, deviation, traps }, studied));
+  const extras =
+    traps.length || xp ? (
+      <div className="game-play">
+        {traps.map((t) => {
+          const bait = baits.find((b) => b.trapId === t.trapId)!;
+          return (
+            <Link key={t.trapId} href={`/openings/${t.trapId}`} className={`trap-pill trap-pill--${t.outcome} game-play__trap`}>
+              <Trap size={14} /> {trapTitle(getOpening(t.trapId).name)}: {TRAP_WORDS[t.outcome](bait.num, t.punished === false ? bait.punish?.num : undefined)}
+            </Link>
+          );
+        })}
+        {xp ? (
+          <Link href="/achievements" className="trap-pill game-play__xp">
+            +{xp} XP
+          </Link>
+        ) : null}
+      </div>
+    ) : null;
 
   const head = (
     <header className="game-head">
@@ -57,6 +89,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
           ← Your games
         </Link>
         {head}
+        {extras}
         <section className="card game-none">
           <h2>No course follows this game</h2>
           <p className="muted">
@@ -106,6 +139,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
         ← Your games
       </Link>
       {head}
+      {extras}
       <div className="game-view">
         <div className="game-view__board">
           <GameBoard
@@ -174,7 +208,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
                 {cover ? `, but the ${cover.name} course does` : ''}.
               </p>
               {cover ? (
-                <Link href={`/openings/${cover.id}`} className="btn btn--secondary">
+                <Link href={`/openings/${cover.id}`} className="btn btn--secondary game-cover-btn">
                   See the {cover.name}
                 </Link>
               ) : null}

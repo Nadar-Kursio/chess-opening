@@ -18,6 +18,9 @@ import { requirePageUser } from '@/lib/session';
 import { trapChip, trapView } from '@/lib/traps';
 import Overview from '@/components/lesson/Overview';
 import WinBar from '@/components/ui/WinBar';
+import Crown, { crownWords } from '@/components/ui/Crown';
+import { CROWN_LABEL, crownSummary } from '@/lib/crowns';
+import '@/app/crowns.css';
 import ResetCourse from './ResetCourse';
 import Sidelines from './Sidelines';
 import Traps from './Traps';
@@ -44,8 +47,9 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const op = getOpening(id);
   const summary = getCatalog().openings.find((o) => o.id === id)!;
   const [progress, pulse, tz] = await Promise.all([getProgress(user.id), getPulse(user.id), learnerTimezone(), syncDeck(user.id)]);
-  const { due, chapters: memory } = await courseMemory(user.id, id, endOfDay(tz));
   const byLine = progress.get(id) ?? new Map();
+  const learned = new Set([...byLine.values()].filter((l) => l.learned_at).map((l) => l.line_slug));
+  const { due, chapters: memory } = await courseMemory(user.id, id, endOfDay(tz), learned);
   const card = courseCard(summary, byLine);
   const { progress: p, chapters: chs } = card;
   const sides = sidesTaught(op);
@@ -53,6 +57,8 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const punish = punishQuestions(op, op.orientation).length;
   const games = getCatalog().games.filter((g) => g.op === id);
   const sidelines = op.sidelines;
+  const crowns = chs.map((ch) => memory.get(ch.slug)!.crown);
+  const crownSum = crownSummary(crowns);
   const traps = (op.traps ?? []).map((t) => trapView(op, t, getOpening(t.id), progress.get(t.id) ?? new Map(), byLine));
   const parents = (op.partOf ?? []).filter(hasOpening).map((pid) => ({ id: pid, name: getOpening(pid).name }));
   const nextHref = p.next ? `/openings/${id}/${p.next.slug}/${p.next.step}` : null;
@@ -90,6 +96,23 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                 {p.done} of {p.total} steps · {p.chaptersDone} of {chs.length} chapters mastered
               </span>
             </div>
+            <div className="crown-sum" aria-label={`Crowns: ${crownSum.levels} of ${crownSum.possible} levels`}>
+              <ol className="crown-sum__row">
+                {chs.map((ch, i) => (
+                  <li key={ch.slug} title={`${ch.name}. ${crownWords(crowns[i])}`}>
+                    <Crown crown={crowns[i]} size="sm" />
+                  </li>
+                ))}
+              </ol>
+              <span className="crown-sum__text">
+                <b>
+                  {crownSum.levels}/{crownSum.possible}
+                </b>{' '}
+                crown levels
+                {crownSum.full ? ` · ${crownSum.full} full crown${crownSum.full === 1 ? '' : 's'}` : ''}
+                {crownSum.fading ? <span className="crown-sum__fading"> · {crownSum.fading} fading</span> : null}
+              </span>
+            </div>
           </div>
           <div className="course-hero__actions">
             {nextHref && p.next ? (
@@ -123,6 +146,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
             const allDone = STEP_KINDS.every((k) => stepDone(lp, k));
             const firstGap = STEP_KINDS.find((k) => !stepDone(lp, k));
             const isNext = p.next?.slug === ch.slug;
+            const crown = memory.get(ch.slug)!.crown;
             return (
               <article key={ch.slug} className={`card chapter${isNext ? ' chapter--next' : ''}${allDone ? ' chapter--done' : ''}`}>
                 <div className="chapter__head">
@@ -148,8 +172,17 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                           · {memory.get(ch.slug)!.mastered}/{memory.get(ch.slug)!.total} in long-term memory
                         </span>
                       ) : null}
+                      {crown.level < crown.earned ? (
+                        <Link href={`/recall/session?course=${id}`} className="chip chip--fading">
+                          Fading: {crown.overdue} overdue
+                        </Link>
+                      ) : null}
                     </div>
                   </div>
+                  <span className="chapter__crown" title={crownWords(crown)}>
+                    <Crown crown={crown} label={crownWords(crown)} />
+                    <span className="chapter__crown-label">{CROWN_LABEL[crown.level]}</span>
+                  </span>
                 </div>
                 <p className="muted clamp-2" dangerouslySetInnerHTML={{ __html: ch.note }} />
                 {op.lines[ch.index].record ? <WinBar record={op.lines[ch.index].record!} /> : null}
