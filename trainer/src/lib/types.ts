@@ -145,6 +145,26 @@ export interface Opening {
   /** The eval bar, move marks and wrong-move verdicts are on for this course. */
   engineView?: boolean;
   sidelines?: Sidelines;
+  /** Trap courses that happen in this one, found by position at build time. */
+  traps?: CourseTrap[];
+  /** On a trap course: the repertoire courses it happens in. */
+  partOf?: string[];
+}
+
+/** A trap course seen from a repertoire course: set it when played from the same side, else watch for it. */
+export interface CourseTrap {
+  id: string;
+  name: string;
+  group: 'set' | 'watch';
+  /** The chapter that follows the trap deepest, where its chip goes. */
+  chapter: string;
+  reach: number;
+  /** Where the trap's lines part: the move that springs it or steps round it is played from here. */
+  moment: { fen: string; from: string | null; to: string | null; num: string; turn: Turn };
+  /** The trap course's first chapter taught from this course's side. */
+  learn?: string;
+  /** This course's sideline that leaves on the trap's road. */
+  sideline?: string;
 }
 
 export type SidelineKind = 'answer' | 'dodge' | 'set' | 'keep' | 'chapter';
@@ -178,6 +198,8 @@ export interface Sideline {
   play?: { from: string; to: string };
   yourMoves?: number;
   line?: Line;
+  /** The trap course this sideline is the way into, or round. */
+  trap?: string;
 }
 
 export interface Sidelines {

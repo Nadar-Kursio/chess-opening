@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import MiniBoard from '@/components/ui/MiniBoard';
-import { Book, Brain, Check, Flame, Play, Question, Retry, Shuffle, Swords, Target } from '@/components/ui/icons';
+import { Book, Brain, Check, Flame, Play, Question, Retry, Shuffle, Swords, Target, Trap } from '@/components/ui/icons';
 import { courseCard, sideLabel } from '@/lib/catalog';
 import { getCatalog, getClub, getOpening, hasOpening } from '@/lib/content';
 import {
@@ -15,10 +15,13 @@ import {
 import { courseMemory, endOfDay, syncDeck } from '@/lib/cards';
 import { getProgress, getPulse, learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
+import { trapChip, trapView } from '@/lib/traps';
 import Overview from '@/components/lesson/Overview';
 import WinBar from '@/components/ui/WinBar';
 import ResetCourse from './ResetCourse';
 import Sidelines from './Sidelines';
+import Traps from './Traps';
+import '@/app/traps.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +43,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const user = await requirePageUser(`/openings/${id}`);
   const op = getOpening(id);
   const summary = getCatalog().openings.find((o) => o.id === id)!;
-  const [progress, pulse, tz] = await Promise.all([getProgress(user.id, id), getPulse(user.id), learnerTimezone(), syncDeck(user.id)]);
+  const [progress, pulse, tz] = await Promise.all([getProgress(user.id), getPulse(user.id), learnerTimezone(), syncDeck(user.id)]);
   const { due, chapters: memory } = await courseMemory(user.id, id, endOfDay(tz));
   const byLine = progress.get(id) ?? new Map();
   const card = courseCard(summary, byLine);
@@ -50,6 +53,8 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const punish = punishQuestions(op, op.orientation).length;
   const games = getCatalog().games.filter((g) => g.op === id);
   const sidelines = op.sidelines;
+  const traps = (op.traps ?? []).map((t) => trapView(op, t, getOpening(t.id), progress.get(t.id) ?? new Map(), byLine));
+  const parents = (op.partOf ?? []).filter(hasOpening).map((pid) => ({ id: pid, name: getOpening(pid).name }));
   const nextHref = p.next ? `/openings/${id}/${p.next.slug}/${p.next.step}` : null;
 
   return (
@@ -60,6 +65,11 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
 
       <section className="card course-hero">
         <div className="course-hero__body">
+          {parents.map((parent) => (
+            <Link key={parent.id} href={`/openings/${parent.id}#trap-${id}`} className="trap-parent">
+              <Trap size={16} /> Part of your {parent.name} repertoire
+            </Link>
+          ))}
           <div className="chips">
             <span className={`chip chip--side-${op.orientation}`}>
               <img src={`/pieces/${op.orientation === 'white' ? 'w' : 'b'}P.svg`} alt="" />
@@ -124,6 +134,13 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                         <span className={`chip chip--side-${ch.side}`}>Taught as {ch.side === 'white' ? 'White' : 'Black'}</span>
                       ) : null}
                       {ch.tier ? <span className="chip chip--tier">{ch.tier}</span> : null}
+                      {traps
+                        .filter((t) => t.trap.chapter === ch.slug)
+                        .map((t) => (
+                          <a key={t.trap.id} href={`#trap-${t.trap.id}`} className={`chip trap-chip trap-chip--${t.trap.group}`}>
+                            <Trap size={14} /> {trapChip(t.trap)}
+                          </a>
+                        ))}
                       <span className="muted small">{ch.yourMoves} moves to learn</span>
                       {lp?.clean_runs ? <span className="muted small">· {lp.clean_runs} clean run{lp.clean_runs === 1 ? '' : 's'}</span> : null}
                       {memory.get(ch.slug)?.mastered ? (
@@ -243,6 +260,19 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
                   </span>
                 </Link>
               </li>
+              {traps.length ? (
+                <li>
+                  <a href="#traps" className="way">
+                    <span className="way__icon way__icon--red">
+                      <Trap size={20} />
+                    </span>
+                    <span>
+                      <b>Traps in this opening ({traps.length})</b>
+                      <span className="muted small">The ones to spring and the ones to see coming.</span>
+                    </span>
+                  </a>
+                </li>
+              ) : null}
               {sidelines ? (
                 <li>
                   <a href="#sidelines" className="way">
@@ -296,6 +326,14 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
         </aside>
       </div>
 
+      {traps.length ? (
+        <Traps
+          traps={traps}
+          orientation={op.orientation}
+          chapterOf={(slug) => chs.find((ch) => ch.slug === slug)}
+        />
+      ) : null}
+
       {sidelines ? (
         <Sidelines
           openingId={id}
@@ -312,6 +350,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
           chapters={chs.map((ch) => ({ slug: ch.slug, name: ch.name, index: ch.index }))}
           learned={[...byLine.values()].filter((l) => l.learned_at).map((l) => l.line_slug)}
           drilled={[...byLine.values()].filter((l) => l.drilled_at).map((l) => l.line_slug)}
+          traps={Object.fromEntries((op.traps ?? []).map((t) => [t.id, { name: t.name, group: t.group }]))}
         />
       ) : null}
     </main>

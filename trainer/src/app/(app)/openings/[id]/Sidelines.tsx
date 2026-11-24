@@ -3,15 +3,17 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Board from '@/components/Board';
-import { Check } from '@/components/ui/icons';
+import { Check, Trap } from '@/components/ui/icons';
 import { turnOf } from '@/lib/course';
 import { evalText } from '@/lib/engineView';
-import type { Colour, Sideline, SidelineKind, Sidelines as SidelineData } from '@/lib/types';
+import { trapTitle } from '@/lib/traps';
+import type { Colour, CourseTrap, Sideline, SidelineKind, Sidelines as SidelineData } from '@/lib/types';
 
 /* Where club players leave the chapters, and what to do then. Optional, so it stays out of the
    course's progress: most replies only need "keep your setup", and the few that need more say so. */
 
 type Row = Omit<Sideline, 'line'>;
+type TrapNames = Record<string, Pick<CourseTrap, 'name' | 'group'>>;
 
 const KIND_LABEL: Record<SidelineKind, string> = {
   answer: 'Needs an answer',
@@ -41,6 +43,7 @@ export default function Sidelines({
   chapters,
   learned,
   drilled,
+  traps,
 }: Pick<SidelineData, 'source' | 'scanned' | 'games' | 'elo' | 'depth' | 'moments' | 'coverage'> & {
   openingId: string;
   orientation: Colour;
@@ -48,6 +51,7 @@ export default function Sidelines({
   chapters: { slug: string; name: string; index: number }[];
   learned: string[];
   drilled: string[];
+  traps: TrapNames;
 }) {
   const [chapter, setChapter] = useState<string | null>(null);
   const [moment, setMoment] = useState<number | null>(null);
@@ -79,6 +83,11 @@ export default function Sidelines({
           <span className="sideline__tags">
             <span className={`chip chip--${s.kind}`}>{KIND_LABEL[s.kind]}</span>
             <span className="muted small">after {s.after}</span>
+            {s.trap && traps[s.trap] ? (
+              <span className="sideline__trap" title={trapTitle(traps[s.trap].name)}>
+                <Trap size={14} /> {trapTitle(traps[s.trap].name)}
+              </span>
+            ) : null}
           </span>
           <span>{s.short}</span>
         </span>
@@ -91,7 +100,7 @@ export default function Sidelines({
       </button>
       {s.slug === selected && open ? (
         <div className="sideline__inline">
-          <Detail s={s} openingId={openingId} orientation={orientation} chapters={chapters} learned={learned} drilled={drilled} />
+          <Detail s={s} openingId={openingId} orientation={orientation} chapters={chapters} learned={learned} drilled={drilled} traps={traps} />
         </div>
       ) : null}
     </article>
@@ -200,7 +209,7 @@ export default function Sidelines({
         </div>
         {current ? (
           <aside className="card sidelines__aside">
-            <Detail s={current} openingId={openingId} orientation={orientation} chapters={chapters} learned={learned} drilled={drilled} />
+            <Detail s={current} openingId={openingId} orientation={orientation} chapters={chapters} learned={learned} drilled={drilled} traps={traps} />
           </aside>
         ) : null}
       </div>
@@ -215,6 +224,7 @@ function Detail({
   chapters,
   learned,
   drilled,
+  traps,
 }: {
   s: Row;
   openingId: string;
@@ -222,7 +232,9 @@ function Detail({
   chapters: { slug: string; name: string; index: number }[];
   learned: string[];
   drilled: string[];
+  traps: TrapNames;
 }) {
+  const trap = s.trap ? traps[s.trap] : undefined;
   const target = chapters.find((ch) => ch.slug === s.target);
   const hasLearned = learned.includes(s.slug);
   return (
@@ -272,6 +284,15 @@ function Detail({
           </>
         )}
       </div>
+      {trap ? (
+        <Link className="sideline-detail__trap" href={`/openings/${s.trap}`}>
+          <Trap size={16} />
+          <span>
+            {trap.group === 'set' ? 'The trap this sets: ' : 'The trap this dodges: '}
+            <b>{trapTitle(trap.name)}</b>
+          </span>
+        </Link>
+      ) : null}
     </div>
   );
 }
