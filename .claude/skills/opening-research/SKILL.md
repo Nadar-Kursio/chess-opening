@@ -371,7 +371,7 @@ than the bare characters.
 
 ## Writing for the trainer
 
-The course app in `trainer/` (new.chesslab.dev) turns every line into a
+The course app in `trainer/` (chesslab.dev) turns every line into a
 **chapter** the learner works through four times: Learn (each move's note shown
 *before* they play it), Drill (their moves, with hints), Test (from memory,
 notes held back) and Quiz, and afterwards Recall asks every move again on a

@@ -1,8 +1,13 @@
-// Proxies new.chesslab.dev to the tunnel origin. The origin only answers requests carrying the
+// Proxies chesslab.dev to the tunnel origin. The origin only answers requests carrying the
 // edge secret (trainer/src/proxy.ts), so the kursio.dev hostname is not a second way in.
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // The app's first address. Sign-in cookies belong to one host, so send everyone to the one
+    // the app now names itself by rather than serving it twice.
+    if (url.hostname === 'new.chesslab.dev') {
+      return Response.redirect(`https://chesslab.dev${url.pathname}${url.search}`, 301);
+    }
     const target = new URL(url.pathname + url.search, env.ORIGIN);
     const headers = new Headers(request.headers);
     // Next compares a Server Action's Origin with the forwarded host, and the app builds its

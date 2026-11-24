@@ -5,9 +5,9 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_BUILD_DIR ?? '.next',
   poweredByHeader: false,
-  // The edge Worker forwards new.chesslab.dev to the tunnel origin; Server Actions posted from
+  // The edge Worker forwards chesslab.dev to the tunnel origin; Server Actions posted from
   // the public origin must be accepted there.
-  experimental: { serverActions: { allowedOrigins: ['new.chesslab.dev'] } },
+  experimental: { serverActions: { allowedOrigins: ['chesslab.dev'] } },
 };
 
 export default nextConfig;

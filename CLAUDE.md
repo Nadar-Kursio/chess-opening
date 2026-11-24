@@ -1,6 +1,6 @@
 # chess-opening
 
-An interactive opening course, live at https://chesslab.dev. Two halves with a
+An interactive opening course. Two halves with a
 one-way pipe: `src/` is the Python content compiler — authoring, engine
 verification, derivation — and `web/` is the Next.js site (static export) that
 consumes the JSON it emits. The wiki's Architecture page explains the moving
@@ -78,7 +78,7 @@ System `python3` has no `python-chess`; use the venv.
 
 ## The trainer
 
-`trainer/` is a third piece: the account-backed course app at https://new.chesslab.dev (Next.js
+`trainer/` is a third piece: the account-backed course app, and what https://chesslab.dev serves (Next.js
 server, Better Auth, Postgres on the shared Kursio RDS). It reads the same emitted JSON, copied in
 by `npm run content`. `trainer/README.md` has the commands and the production layout; the rules
 above (no chess computed client-side, data-only openings, tokens for every colour and size —
@@ -87,5 +87,6 @@ above (no chess computed client-side, data-only openings, tokens for every colou
 ## Deploying
 
 Push to `main`; CI runs the tests, builds, and ships `web/out` to
-https://chesslab.dev. Every pull request gets the whole site at
+https://chesslab.pages.dev. The trainer at https://chesslab.dev deploys from the machine with
+`npm run deploy:prod` (see `trainer/README.md`). Every pull request gets the whole static site at
 `https://<branch>.chesslab.pages.dev`, posted as a comment on the PR.
