@@ -1,5 +1,8 @@
 import { notFound } from 'next/navigation';
 import SparSession from '@/components/session/SparSession';
+import { allOpenings } from '@/lib/gameImport';
+import { baitsOf } from '@/lib/gameTraps';
+import { trapName } from '@/lib/traps';
 import { getClub, getOpening } from '@/lib/content';
 import { sidesTaught } from '@/lib/course';
 import { getSettings } from '@/lib/progress';
@@ -22,12 +25,17 @@ export default async function SparPage({ params, searchParams }: PageProps<'/pla
   const asked = (await searchParams).side;
   const side: Colour = sides.includes(asked as Colour) ? (asked as Colour) : sides[0];
   const [settings, records] = await Promise.all([getSettings(user.id), getSparRecords(user.id)]);
+  const book = sparBook(op, side, club);
+  const traps = baitsOf(allOpenings())
+    .filter((b) => b.setter === side && book.tree.nodes[b.key])
+    .map((b) => ({ id: b.trapId, name: trapName(getOpening(b.trapId).name), taken: b.taken, num: b.num }));
   return (
     <SparSession
       openingId={id}
       course={op.name}
       side={side}
-      book={sparBook(op, side, club)}
+      book={book}
+      traps={traps}
       // Chosen here, so the page the server draws is the one the browser hydrates.
       opponent={pickOpponent(Math.random)}
       best={records.bests.get(`${id}|${side}`) ?? 0}

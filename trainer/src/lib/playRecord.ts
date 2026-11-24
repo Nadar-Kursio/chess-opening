@@ -117,3 +117,12 @@ export async function recordSparTraps(userId: string, clientId: string, openingI
     [userId, clientId, met.map((m) => m.trapId), openingId, side, met.map((m) => m.outcome), met.map((m) => m.punished), at],
   );
 }
+
+/** The learner's course a trap happens in, by the build's relation: one they study first, else the first listed. */
+export function trapHome(trapId: string, studied: Set<string>) {
+  if (!hasOpening(trapId)) return null;
+  const parents = (getOpening(trapId).partOf ?? []).filter(hasOpening).map((id) => getOpening(id));
+  const course = parents.find((op) => studied.has(op.id)) ?? parents[0];
+  const link = course?.traps?.find((t) => t.id === trapId);
+  return course && link ? { course, link } : null;
+}

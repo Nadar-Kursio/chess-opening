@@ -1,0 +1,326 @@
+/* Traps met in real play: the section on /games and the collection at /traps/collection.
+   Sprung is gold, sprung on you is red and dodged is blue, here and on every pill. */
+
+.trap-games {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.trap-games__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.trap-games__titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 var(--trap-title-min);
+  min-width: 0;
+}
+.trap-games__icon,
+.trapdex-hero__icon {
+  width: var(--trap-badge);
+  height: var(--trap-badge);
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+}
+.trap-games__totals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.trap-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--trap-soft);
+  --trap-soft: var(--gold-soft);
+  --trap-ink: var(--gold-ink);
+}
+.trap-total--caught,
+.trap-pill.trap-pill--caught {
+  --trap-soft: var(--red-soft);
+  --trap-ink: var(--red-ink);
+}
+.trap-total--dodged,
+.trap-pill.trap-pill--dodged {
+  --trap-soft: var(--blue-soft);
+  --trap-ink: var(--blue-ink);
+}
+.trap-total b {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+  color: var(--trap-ink);
+}
+.trap-total span {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.trap-meets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--trap-row-min)), 1fr));
+  gap: var(--space-3);
+}
+.trap-meet {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+.trap-meet__board {
+  width: var(--trap-board-sm);
+  flex: none;
+}
+.trap-meet__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
+}
+.trap-meet__body h3 {
+  font-size: var(--text-md);
+  margin: 0;
+}
+.trap-meet__outcomes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.trap-pill {
+  --trap-soft: var(--gold-soft);
+  --trap-ink: var(--gold-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--trap-soft);
+  color: var(--trap-ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.trap-meet__score {
+  display: inline-flex;
+  gap: var(--space-1);
+  color: var(--ink-soft);
+}
+.trap-meet__w {
+  color: var(--green-ink);
+}
+.trap-meet__l {
+  color: var(--red-ink);
+}
+.trap-meet__note {
+  margin: 0;
+  color: var(--gold-ink);
+}
+.trap-meet__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.games-xp {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--purple-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+.games-xp b {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--purple);
+}
+
+/* ---------- the collection ---------- */
+
+.trapdex {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.trapdex h1,
+.trapdex h2 {
+  margin: 0;
+}
+.trapdex-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+.trapdex-hero__icon {
+  width: var(--trap-badge-lg);
+  height: var(--trap-badge-lg);
+}
+.trapdex-hero__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1 1 var(--narrow);
+  min-width: 0;
+}
+.trapdex-hero__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: var(--narrow);
+}
+.trapdex-hero__progress b {
+  font-family: var(--font-display);
+  color: var(--gold-ink);
+}
+.trapdex-hero__badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--ink);
+  text-decoration: none;
+  max-width: var(--side);
+}
+.trapdex-hero__badge > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.trapdex-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--trap-slot-min)), 1fr));
+  gap: var(--space-4);
+}
+.trap-slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: var(--border) dashed var(--line-strong);
+  box-shadow: none;
+  background: var(--surface-2);
+}
+.trap-slot--got {
+  border: var(--border) solid var(--tier-gold-deep);
+  background: var(--surface);
+  box-shadow: var(--card-shadow), 0 0 0 var(--ring) var(--gold-soft);
+}
+.trap-slot__board {
+  position: relative;
+  width: 100%;
+  max-width: var(--trap-slot-board);
+  align-self: center;
+}
+.trap-slot:not(.trap-slot--got) .trap-slot__board .mini {
+  filter: grayscale(1) blur(var(--cover-blur));
+  opacity: 0.45;
+}
+.trap-slot__count {
+  position: absolute;
+  top: calc(var(--space-2) * -1);
+  right: calc(var(--space-2) * -1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--tier-gold);
+  color: var(--tier-gold-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  box-shadow: var(--card-shadow);
+}
+.trap-slot__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  flex: 1;
+}
+.trap-slot__body h2 {
+  font-size: var(--text-lg);
+}
+.trap-slot__body p {
+  margin: 0;
+}
+.trap-slot__body .btn {
+  margin-top: auto;
+}
+.trap-slot__caught {
+  color: var(--red-ink);
+}
+.trapdex-foot {
+  text-align: center;
+}
+.trapdex .move {
+  font-family: var(--font-display);
+}
+
+/* The collection's card beside the badges. */
+.trapdex-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink);
+  text-decoration: none;
+}
+.trapdex-link__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+
+/* A single game: the traps it met and the XP it earned, under its title. */
+.game-play {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.game-play__trap,
+.game-play__xp {
+  text-decoration: none;
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-3);
+}
+.game-play__xp {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+/* A trap course's name runs long: let the button wrap on a phone. */
+.game-cover-btn {
+  white-space: normal;
+  max-width: 100%;
+  text-align: center;
+}

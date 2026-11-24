@@ -218,8 +218,8 @@
   --trap-row-min: 440px;
   --trap-badge: 36px;
   /* chapter crowns and the trap collection */
-  --crown-sm: 22px;
-  --crown-md: 36px;
+  --crown-sm: 26px;
+  --crown-md: 40px;
   --crown-lg: 56px;
   --crown-label: 56px;
   --crown-off: #e4e9f1;
@@ -229,6 +229,10 @@
   --crown-jewel: #f5b83d;
   --crown-gem: #e5484d;
   --crown-lost: #e5484d;
+  --trap-title-min: 220px;
+  --trap-badge-lg: 56px;
+  --trap-slot-min: 220px;
+  --trap-slot-board: 200px;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 120ms;

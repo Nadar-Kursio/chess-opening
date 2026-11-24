@@ -32,6 +32,8 @@ interface Props {
   sound: SoundSet;
   coordinates: boolean;
   engineView?: boolean;
+  /** Traps this course can set from the learner's chair, by the position their bait reaches. */
+  traps?: { id: string; name: string; taken: string; num: string }[];
 }
 
 interface Played {
@@ -48,7 +50,7 @@ type Outcome =
 const SEV_WORD = { playable: 'A sideline the course knows', inaccuracy: 'An inaccuracy', blunder: 'A blunder' } as const;
 const THINK_MS = [550, 1200];
 
-export default function SparSession({ openingId, course, side, book, opponent: first, best: startBest, closeHref, sound, coordinates, engineView = false }: Props) {
+export default function SparSession({ openingId, course, side, book, opponent: first, best: startBest, closeHref, sound, coordinates, engineView = false, traps = [] }: Props) {
   const { tree, choices } = book;
   const make = useMessages();
   const you = tree.side;
@@ -134,6 +136,10 @@ export default function SparSession({ openingId, course, side, book, opponent: f
       setFlash(null);
       setTone('idle');
       setPlayed((list) => [...list, { num: move.num, share, forced: choice.forced }]);
+      const sprung = traps.find((t) => t.taken === ('fen' in move ? move.fen + you : move.next));
+      const bait = () => {
+        if (sprung) say({ kind: 'info', title: 'They took the bait', text: `${move.num} walks into ${sprung.name}. It goes into your trap collection.` });
+      };
       if ('fen' in move) {
         trail.current = [...trail.current, move.fen + you];
         setLeft(move);
@@ -142,6 +148,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
           title: `${opponent.name} plays ${move.num}`,
           text: `${share !== null ? `${share}% of club players choose it here. ` : ''}${move.known ? 'The course mentions it but has no answer yet.' : 'Your course has nothing for it yet.'}`,
         });
+        bait();
         finish({ kind: 'left', leave: move, share }, tally, depth);
         return;
       }
@@ -162,6 +169,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
                 : `${share}% of club players choose it here.`
         }${intoSideline ? ' Your course covers it as a sideline.' : ''}`,
       });
+      bait();
     }, wait);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps

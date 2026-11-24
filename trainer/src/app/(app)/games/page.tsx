@@ -1,14 +1,19 @@
 import Link from 'next/link';
 import { Play, Swords } from '@/components/ui/icons';
+import { trapCourses } from '@/lib/catalog';
 import { getOpening } from '@/lib/content';
 import { REIMPORT_MS, loadReport } from '@/lib/gameImport';
 import { SITES } from '@/lib/gameSources';
 import { SITE_NAME, depthOf, practiceKeys, scorePct, type CourseReport, type Departure, type Forgotten, type Matched } from '@/lib/games';
-import { learnerTimezone } from '@/lib/progress';
+import { playFrom, sparTraps } from '@/lib/playRecord';
+import { getProgress, learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
+import { trapEntries } from '@/lib/trapAlbum';
 import Accounts, { type AccountView } from './Accounts';
 import { PositionBoard, ResultChip, TallyBar, movesText, plural, sideName, teachLink } from './parts';
+import TrapsSection from './TrapsSection';
 import '../../games.css';
+import '../../trapdex.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Your games' };
@@ -30,7 +35,15 @@ function ago(at: Date, now: number) {
 
 export default async function GamesPage() {
   const user = await requirePageUser('/games');
-  const [{ accounts, report, matched }, tz] = await Promise.all([loadReport(user.id), learnerTimezone()]);
+  const [{ accounts, report, matched, studied }, tz, spar, progress] = await Promise.all([
+    loadReport(user.id),
+    learnerTimezone(),
+    sparTraps(user.id),
+    getProgress(user.id),
+  ]);
+  const play = playFrom(matched, studied, spar);
+  const trapOps = trapCourses().map((o) => getOpening(o.id));
+  const entries = trapEntries(trapOps, play.traps);
   const now = Date.now();
   const views: AccountView[] = SITES.map((site) => {
     const a = accounts.find((x) => x.site === site);
@@ -94,6 +107,16 @@ export default async function GamesPage() {
               </p>
             </>
           )}
+          {play.xp ? (
+            <Link href="/achievements" className="games-xp">
+              <span>
+                <b>+{play.xp.toLocaleString('en-GB')} XP</b> from your games
+              </span>
+              <span className="muted small">
+                Earned by {plural(play.paid, 'game')}: moves in book, lines played to the end, traps sprung
+              </span>
+            </Link>
+          ) : null}
         </div>
         {inPrep ? (
           <div className="games-hero__stats">
@@ -109,6 +132,10 @@ export default async function GamesPage() {
         ) : null}
         <Accounts accounts={views} />
       </section>
+
+      {report.games || play.traps.length ? (
+        <TrapsSection entries={entries} studied={studied} progress={progress} total={trapOps.length} date={date} />
+      ) : null}
 
       {mine.map((c) => (
         <CourseSection key={`${c.openingId}|${c.side}`} c={c} date={date} />

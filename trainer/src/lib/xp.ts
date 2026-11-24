@@ -41,13 +41,14 @@ export const XP = {
   quest: 15,
   questDay: 50,
   tier: { bronze: 20, silver: 50, gold: 100 } satisfies Record<Tier, number>,
-  gameMove: 2,
-  gameEnd: 20,
-  gameTrap: 50,
+  gameMove: 1,
+  gameEnd: 15,
+  gameTrap: 40,
 } as const;
 
-/** Book moves a single game is paid for: past this, a long game in the course is still one game. */
-export const GAME_MOVES_CAP = 12;
+/** Book moves a single game is paid for: past this, a long game in the course is still one game.
+    Kept low with the bonuses, since a first import brings up to a hundred games at once. */
+export const GAME_MOVES_CAP = 10;
 
 /** What one imported game earns: its own moves in book, reaching the course's end, a trap sprung. */
 export function gameXp(g: { bookMoves: number; reachedEnd: boolean; sprung: boolean }) {
