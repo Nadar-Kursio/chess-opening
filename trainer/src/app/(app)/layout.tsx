@@ -5,7 +5,7 @@ import { Flame } from '@/components/ui/icons';
 import { countDue, endOfDay } from '@/lib/cards';
 import { getPulse, learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
-import NavLinks from './NavLinks';
+import NavLinks, { TabBar } from './NavLinks';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePageUser('/');
@@ -40,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       <div className="app__main">{children}</div>
+      <TabBar due={due} />
       <OutboxSync userId={user.id} showWaiting />
     </div>
   );
