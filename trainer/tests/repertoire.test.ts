@@ -166,6 +166,9 @@ test('club files are read by position key or FEN, and a strange shape gives noth
   assert.equal(byMove.d5, 60);
   assert.equal(byMove.Nf6, 30);
   assert.equal(byMove.g6, 0, 'a course move nobody played reads as rare');
+  const listed = clubIndex({ positions: { [afterD4]: [['d5', 60, 'd7d5', '', 0], ['Nf6', 30, 'g8f6', '', 0]] } });
+  assert.equal(listed.get(afterD4)?.get('d5'), 60);
+  assert.equal(listed.get(afterD4)?.get('Nf6'), 30);
   assert.equal(clubIndex({ rows: [] }).size, 0);
   assert.equal(clubIndex(null).size, 0);
 });

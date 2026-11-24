@@ -105,7 +105,11 @@ export function clubIndex(raw: unknown): ClubIndex {
     const key = /^[.pnbrqkPNBRQK]{64}[wb]$/.test(where) ? where : keyFromFen(where);
     if (!key || !replies || typeof replies !== 'object') continue;
     const counts = new Map<string, number>();
-    for (const [san, v] of Object.entries(replies as Record<string, unknown>)) {
+    // club-moves.py writes each reply as [san, games, uci, ...]; older club-stats output keys them by SAN.
+    const pairs = Array.isArray(replies)
+      ? replies.map((r) => (Array.isArray(r) ? [String(r[0]), r[1]] : ['', null]))
+      : Object.entries(replies as Record<string, unknown>);
+    for (const [san, v] of pairs) {
       const n =
         typeof v === 'number'
           ? v
