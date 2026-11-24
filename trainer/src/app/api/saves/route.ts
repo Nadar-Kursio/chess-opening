@@ -3,6 +3,7 @@ import { gradeCards } from '@/lib/cards';
 import { getOpening, hasOpening } from '@/lib/content';
 import { lineBySlug } from '@/lib/course';
 import { transaction } from '@/lib/db';
+import { recordRush } from '@/lib/fun';
 import { dayIn, learnerTimezone, recordSession } from '@/lib/progress';
 import { Save } from '@/lib/saves';
 import { getSession } from '@/lib/session';
@@ -37,7 +38,11 @@ export async function POST(request: Request) {
   if (session.lineSlug && !lineBySlug(getOpening(session.openingId), session.lineSlug)) {
     return new Response('No such chapter', { status: 400 });
   }
+  if (session.rush && session.rush.scope !== 'all' && !hasOpening(session.rush.scope)) {
+    return new Response('No such course', { status: 400 });
+  }
   const result = await recordSession(user.id, session, { clientId: save.id, day });
+  if (session.rush) await recordRush(user.id, save.id, day, session.rush);
   revalidatePath('/', 'layout');
   return Response.json(result);
 }
