@@ -62,6 +62,12 @@ export function getOpening(id: string): Opening {
   return op;
 }
 
+/** A course's club numbers (`club/<id>.json`) as the scripts wrote them; null when there are none. */
+export function getClub(id: string): unknown {
+  const file = path.join('club', `${id}.json`);
+  return existsSync(path.join(ROOT, file)) ? JSON.parse(read(file)) : null;
+}
+
 const games = new Map<string, Game>();
 
 export function getGame(id: string): Game | null {

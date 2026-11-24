@@ -167,7 +167,7 @@ export function SessionBoard({
 }
 
 /** White's share of the position, drawn from the side of the board White sits on. */
-function EvalBar({ score, orientation }: { score: Pick<Ply, 'ev' | 'mate'> | null; orientation: Turn }) {
+export function EvalBar({ score, orientation }: { score: Pick<Ply, 'ev' | 'mate'> | null; orientation: Turn }) {
   const share = score ? evalShare(score) : 50;
   return (
     <div

@@ -54,7 +54,7 @@ interface Edge {
   move: { from: string; to: string };
 }
 
-interface Paths {
+export interface Paths {
   tree: Tree;
   /** The move that reaches each position, so any position has a path back to the start. */
   parent: Map<string, Edge>;
@@ -63,7 +63,7 @@ interface Paths {
 
 const cache = new WeakMap<Opening, Map<Colour, Paths>>();
 
-function pathsFor(op: Opening, side: Colour): Paths {
+export function pathsFor(op: Opening, side: Colour): Paths {
   let bySide = cache.get(op);
   if (!bySide) cache.set(op, (bySide = new Map()));
   let paths = bySide.get(side);
@@ -121,7 +121,7 @@ function pathsFor(op: Opening, side: Colour): Paths {
 }
 
 /** The side whose tree holds `key` as a position the learner moves from, if either does. */
-function sideOf(op: Opening, key: string): Colour | null {
+export function sideOf(op: Opening, key: string): Colour | null {
   for (const side of ['white', 'black'] as Colour[]) {
     const node = pathsFor(op, side).tree.nodes[key];
     if (node && node.toMove === turnOf(side) && node.moves.length) return side;

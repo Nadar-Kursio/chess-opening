@@ -116,6 +116,39 @@
   --recall-icon: 48px;
   --gutter: 16px;
 
+  /* repertoire explorer and stats: how well a position is remembered, weakest to strongest (one
+     hue, validated as an ordinal ramp), practice volume (a second one-hue ramp), and chart chrome */
+  --lvl-new: #7cc796;
+  --lvl-learning: #3fa766;
+  --lvl-familiar: #23804a;
+  --lvl-mastered: #145c33;
+  --weak: #e5484d;
+  --act-1: #84aff6;
+  --act-2: #4f8ef5;
+  --act-3: #2b68cf;
+  --act-4: #1b4790;
+  --viz-series: #2f72dd;
+  --viz-wash: rgba(47, 114, 221, 0.1);
+  --viz-grid: #e8ecf2;
+  --viz-axis: #cdd5e1;
+  --lvl-dot: 12px;
+  --weak-mark: 8px;
+  --club-meter: 36px;
+  --club-meter-h: 4px;
+  --bmap-cell: 14px;
+  --bmap-gap: 3px;
+  --bmap-label: 72px;
+  --rep-panel: 440px;
+  --chart-h: 168px;
+  --chart-axis: 28px;
+  --chart-bar: 24px;
+  --chart-line: 2px;
+  --chart-dot: 8px;
+  --cal-cell: 11px;
+  --cal-gap: 3px;
+  --weak-board: 132px;
+  --tip-max: 220px;
+
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 120ms;
   --mid: 220ms;
@@ -148,5 +181,24 @@
     --card-shadow: none;
     --black-piece-chip: #0b0f18;
     color-scheme: dark;
+  }
+}
+
+/* repertoire explorer and stats, dark: the same ramps stepped for the dark surface, strongest lightest */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --lvl-new: #1f5a3a;
+    --lvl-learning: #2b8452;
+    --lvl-familiar: #45b071;
+    --lvl-mastered: #86dca6;
+    --weak: #ff6b70;
+    --act-1: #2b58a8;
+    --act-2: #3f7be0;
+    --act-3: #6ea3f7;
+    --act-4: #a9cbff;
+    --viz-series: #4f8ff5;
+    --viz-wash: rgba(79, 143, 245, 0.12);
+    --viz-grid: #222b3d;
+    --viz-axis: #3a4660;
   }
 }
