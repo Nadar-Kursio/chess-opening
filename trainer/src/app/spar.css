@@ -38,6 +38,10 @@
   padding-left: var(--space-4);
   border-left: var(--ring) solid var(--green);
 }
+/* The shared grid's columns are wider than a 320px phone. */
+.spar-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--side) - var(--space-6))), 1fr));
+}
 .spar-card {
   display: flex;
   gap: var(--space-4);
@@ -303,6 +307,8 @@
   border: var(--border) solid var(--line);
   background: var(--surface);
   box-shadow: 0 var(--press) 0 var(--line);
+  color: var(--ink);
+  text-decoration: none;
   transition: transform var(--fast) var(--ease);
 }
 .spar-next:hover {

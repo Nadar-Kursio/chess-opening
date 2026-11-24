@@ -120,11 +120,32 @@ export function choiceAt(tree: Tree, key: string, club: ClubMove[] | undefined, 
   if (opening.has(key) && course.length === 1) return { forced: true, total, replies: [reply(course[0], 1)], out: [] };
   if (total < THIN) return { thin: true, total, replies: course.map((e) => reply(e, e.w)), out: [] };
   const goes = new Set(course.map((e) => e.from + e.to));
-  return {
-    total,
-    replies: course.filter((e) => gamesOf(e) > 0).map((e) => reply(e, gamesOf(e))),
-    out: counted.filter((m) => !goes.has(m[2])),
-  };
+  const replies = course.filter((e) => gamesOf(e) > 0).map((e) => reply(e, gamesOf(e)));
+  const out: ClubMove[] = [];
+  for (const m of counted) {
+    if (goes.has(m[2])) continue;
+    // A move order the course doesn't write down can still reach a position it teaches.
+    const next = afterKey(node, m[3]);
+    if (tree.nodes[next]?.moves.length && !node.moves.some((e) => e.from + e.to === m[2])) {
+      replies.push({ san: m[0], num: `${nextNumber(node.num, node.toMove)}${m[0]}`, from: m[2].slice(0, 2), to: m[2].slice(2, 4), games: m[1], w: m[1], next });
+    } else {
+      out.push(m);
+    }
+  }
+  return { total, replies, out };
+}
+
+const FILES = 'abcdefgh';
+
+/** The board a move reaches, laid out from the squares it changes. */
+function applyDiff(fen: string, diff: string) {
+  const board = fen.split('');
+  for (let i = 0; i + 3 <= diff.length; i += 3) board[(8 - Number(diff[i + 1])) * 8 + FILES.indexOf(diff[i])] = diff[i + 2];
+  return board.join('');
+}
+
+function afterKey(node: Tree['nodes'][string], diff: string) {
+  return applyDiff(node.fen, diff) + (node.toMove === 'w' ? 'b' : 'w');
 }
 
 export type Drawn = { kind: 'on'; reply: Reply } | { kind: 'off'; move: ClubMove };
@@ -146,23 +167,17 @@ export function pickReply(choice: Choice, rand: () => number): Drawn {
     : { kind: 'on', reply: choice.replies[choice.replies.length - 1] };
 }
 
-const FILES = 'abcdefgh';
-
-/** The move that leaves the course, with the board it reaches laid out from the shipped squares. */
+/** The move that leaves the course, with the board it reaches. */
 export function leaving(tree: Tree, key: string, [san, games, uci, diff, check]: ClubMove): Leave {
   const node = tree.nodes[key];
   const edge = node.moves.find((e) => e.from + e.to === uci);
-  const board = node.fen.split('');
-  for (let i = 0; i + 3 <= diff.length; i += 3) {
-    board[(8 - Number(diff[i + 1])) * 8 + FILES.indexOf(diff[i])] = diff[i + 2];
-  }
   return {
     san,
     num: edge?.num ?? `${nextNumber(node.num, node.toMove)}${san}`,
     from: uci.slice(0, 2),
     to: uci.slice(2, 4),
     games,
-    fen: board.join(''),
+    fen: applyDiff(node.fen, diff),
     check: check === 1,
     known: !!edge,
     sev: edge?.sev,

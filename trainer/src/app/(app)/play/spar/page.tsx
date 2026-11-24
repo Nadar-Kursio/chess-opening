@@ -61,7 +61,7 @@ export default async function SparHub() {
       <section className="section">
         <h2 className="section__title">Pick a course</h2>
         {rows.length ? (
-          <div className="grid-cards">
+          <div className="grid-cards spar-grid">
             {rows.map((r) => (
               <Link key={r.key} href={r.href} className="card spar-card">
                 <div className="spar-card__board">

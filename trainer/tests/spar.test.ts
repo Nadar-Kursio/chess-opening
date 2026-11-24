@@ -92,6 +92,24 @@ test('the draw lands in proportion to the counts', () => {
   assert.ok(Math.abs(seen.get('c5')! / 10_000 - 0.04) < 0.015);
 });
 
+test('a move order the course never wrote down still counts when it reaches a position the course teaches', () => {
+  const c6 = 'a'.repeat(10) + '.' + 'a'.repeat(7) + 'p' + 'a'.repeat(45);
+  const transposed: Tree = {
+    ...tree,
+    nodes: {
+      ...tree.nodes,
+      [`${c6}w`]: { fen: c6, toMove: 'w', from: 'c7', to: 'c6', num: '1...c6', moves: [{ san: 'Bf4', num: '2.Bf4', from: 'c1', to: 'f4', next: 'end', w: 3 }] },
+    },
+  };
+  const choice = choiceAt(transposed, 'd4', [...club, ['c6', 8, 'c7c6', 'c7.c6p', 0]], new Set());
+  const reply = choice.replies.find((r) => r.san === 'c6');
+  assert.ok(reply, 'played on, not out of prep');
+  assert.equal(reply.next, `${c6}w`);
+  assert.equal(reply.num, '1...c6');
+  assert.equal(reply.w, 8);
+  assert.ok(!choice.out.some((m) => m[0] === 'c6'));
+});
+
 test('too few club games and the opponent follows the course instead', () => {
   const few: ClubMove[] = [['c5', THIN - 1, 'c7c5', 'c7.c5p', 0]];
   const choice = choiceAt(tree, 'd4', few, new Set());
