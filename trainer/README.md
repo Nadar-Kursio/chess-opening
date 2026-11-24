@@ -48,7 +48,7 @@ npm test                  # course model against trainer/content (or CONTENT_DIR
 | Server   | `next start` on :3020, systemd user unit `chesslab-trainer` (`deploy/systemd/`) |
 | Database | `chesslab` on the shared Kursio RDS instance, role `chesslab`, over TLS |
 | Settings | `.env.production.local` from `npm run env:prod` (Secrets Manager `chesslab/db-credentials`, `chesslab/app-secrets`) |
-| Network  | Worker `chesslab-trainer-edge` (`deploy/edge/`) on the custom domain → tunnel `chesslab` (`deploy/cloudflared/`, unit `chesslab-tunnel`) → :3020 |
+| Network  | Worker `chesslab-trainer-edge` (`deploy/edge/`) on a `chesslab.dev/*` route (and the new.chesslab.dev custom domain, which redirects) → tunnel `chesslab` (`deploy/cloudflared/`, unit `chesslab-tunnel`) → :3020 |
 
 The Worker exists because the tunnel's origin certificate covers `kursio.dev` only, so
 `chesslab.dev` can't be a CNAME to the tunnel without a new `cloudflared tunnel login`. The
