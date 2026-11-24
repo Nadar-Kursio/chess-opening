@@ -120,6 +120,16 @@ export function pathsFor(op: Opening, side: Colour): Paths {
   return paths;
 }
 
+/** The course's tree from one chair, built once per course. */
+export function treeFor(op: Opening, side: Colour) {
+  return pathsFor(op, side).tree;
+}
+
+/** The authored moves the course chose against, at a position where the learner moves. */
+export function yourAlternatives(op: Opening, side: Colour, key: string) {
+  return pathsFor(op, side).alternatives.get(key) ?? [];
+}
+
 /** The side whose tree holds `key` as a position the learner moves from, if either does. */
 export function sideOf(op: Opening, key: string): Colour | null {
   for (const side of ['white', 'black'] as Colour[]) {

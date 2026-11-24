@@ -39,6 +39,22 @@ export async function introduce(client: PoolClient, userId: string, openingId: s
   );
 }
 
+/**
+ * Makes positions due now: moves the learner missed in a real game, where a reminder can't wait
+ * for the schedule. Only the due date moves; the next answer in Recall is what grades them.
+ */
+export async function bringForward(client: PoolClient, userId: string, openingId: string, keys: string[], now = new Date()) {
+  if (!keys.length) return 0;
+  const { rowCount } = await client.query(
+    `insert into review_cards (user_id, opening_id, position_key, due)
+     select $1, $2, unnest($3::text[]), $4
+     on conflict (user_id, opening_id, position_key) do update set due = excluded.due
+       where review_cards.due > excluded.due`,
+    [userId, openingId, keys, now],
+  );
+  return rowCount ?? 0;
+}
+
 export interface Graded {
   key: string;
   /** Days until the card is asked again. */
