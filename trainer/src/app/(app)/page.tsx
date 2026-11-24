@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import QuestCard from '@/components/fun/QuestCard';
 import CourseCard from '@/components/ui/CourseCard';
 import MiniBoard from '@/components/ui/MiniBoard';
 import { Flame, Play, Retry } from '@/components/ui/icons';
@@ -114,6 +115,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <QuestCard userId={user.id} wide />
 
       <section className="section">
         <h2 className="section__title">Your repertoire</h2>

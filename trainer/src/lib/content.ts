@@ -2,6 +2,7 @@ import 'server-only';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { positionKey } from './course';
+import type { ClubBook } from './spar';
 import type { Catalog, Game, MoveScore, Opening, Ply, Sidelines } from './types';
 
 /* The course is the JSON src/build.py emits, copied into CONTENT_DIR by scripts/content.sh.
@@ -60,6 +61,17 @@ export function getOpening(id: string): Opening {
     openings.set(id, op);
   }
   return op;
+}
+
+const clubs = new Map<string, ClubBook | null>();
+
+/** What club players play wherever the sparring partner moves; null for a course without the file. */
+export function getClub(id: string): ClubBook | null {
+  if (!clubs.has(id)) {
+    const file = path.join('club', `${id}.json`);
+    clubs.set(id, hasOpening(id) && existsSync(path.join(ROOT, file)) ? (JSON.parse(read(file)) as ClubBook) : null);
+  }
+  return clubs.get(id)!;
 }
 
 const games = new Map<string, Game>();

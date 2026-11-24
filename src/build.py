@@ -750,6 +750,65 @@ def build_coaching(op, errors, evals):
     return out
 
 
+def opponent_keys(record):
+    """Every position the trainer's opponent moves in, keyed as the trainer keys a position."""
+    keys = set()
+    sets = record.get("branchsets") or []
+    sidelines = (record.get("coaching") or {}).get("sidelines") or {}
+    walks = [(line, line.get("side", record["orientation"])) for line in record["lines"]]
+    walks += [(item["line"], record["orientation"]) for item in sidelines.get("items", []) if item.get("line")]
+    for line, side in walks:
+        learner = side[0]
+        for i, p in enumerate(line["plies"]):
+            mover = "w" if i == 0 else ("b" if p["turn"] == "w" else "w")
+            if mover == learner:
+                continue
+            keys.add(p["fen"] + mover)
+            for br in sets[p["bx"]] if p.get("bx") is not None else []:
+                for bp in br["plies"]:
+                    after = "b" if bp["turn"] == "w" else "w"
+                    if after != learner:
+                        keys.add(bp["fen"] + after)
+    return keys
+
+
+def build_club(record, errors, warnings):
+    """What club players play wherever the trainer's sparring partner moves, from club-moves.py.
+
+    Each move ships with its square pair and the squares it changes, as square and what stands
+    there after ("e1.g1Kh1.f1R"), because a move the course has no answer to still has to be
+    shown and the browser can't play it out itself. The starting position is never counted (the
+    stream is filtered on first moves)."""
+    data = load_generated("club", record["id"])
+    if not data:
+        return None
+    positions = {}
+    for epd, moves in data["positions"].items():
+        board = chess.Board(epd + " 0 1")
+        before = board_array(board)
+        key = before + ("w" if board.turn == chess.WHITE else "b")
+        out = []
+        for san, n in moves.items():
+            try:
+                move = board.parse_san(san)
+            except ValueError as e:
+                errors.append(f"club/{record['id']}: {san} from {epd}: {e}")
+                continue
+            after = board.copy()
+            after.push(move)
+            uci = chess.square_name(move.from_square) + chess.square_name(move.to_square)
+            reached = board_array(after)
+            diff = "".join(f"{'abcdefgh'[i % 8]}{8 - i // 8}{reached[i]}"
+                           for i in range(64) if reached[i] != before[i])
+            out.append([board.san(move), n, uci, diff, 1 if after.is_check() else 0])
+        positions[key] = out
+    missing = opponent_keys(record) - positions.keys() - {board_array(chess.Board()) + "w"}
+    if missing:
+        warnings.append(f"club/{record['id']}: {len(missing)} positions the opponent moves in have "
+                        f"no club counts, re-run club-moves.py")
+    return {**{k: data[k] for k in ("source", "generated", "scanned", "games", "elo")}, "positions": positions}
+
+
 def build_openings(games, evals):
     errors = []
     warnings = []
@@ -769,6 +828,9 @@ def build_openings(games, evals):
         coaching = build_coaching(op, errors, evals)
         if coaching:
             record["coaching"] = coaching
+        club = build_club(record, errors, warnings)
+        if club:
+            record["club"] = club
         errors.extend(branches.unused(op["id"]))
         warnings.extend(branches.dead(op["id"]))
         # After the lines, because a deviation's positions are only built when a
@@ -985,10 +1047,13 @@ def emit_files():
             [line["moves"] for line in with_deep_line(raw[op["id"]])],
             lambda message: print("  lesson:", message))
         print(f"  lesson: {op['id']}: {on_board} of {found} notation runs on a board")
-        course = {k: v for k, v in op.items() if k != "coaching"}
+        course = {k: v for k, v in op.items() if k not in ("coaching", "club")}
         files[f"openings/{op['id']}.json"] = compact({**course, "lesson": lesson})
         if op.get("coaching"):
             files[f"coaching/{op['id']}.json"] = compact(op["coaching"])
+        # Its own file, not coaching/: that file is what switches the engine view on.
+        if op.get("club"):
+            files[f"club/{op['id']}.json"] = compact(op["club"])
     # Structures are shared reference content, so all of them ship — but the
     # derived back-references must only name openings the new site has pages
     # for, or the structure card would link into a 404.
