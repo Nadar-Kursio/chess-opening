@@ -1,5 +1,6 @@
 import { signOut } from '@/app/auth-actions';
-import { Flame } from '@/components/ui/icons';
+import Link from 'next/link';
+import { Board, Book, Flame, Target } from '@/components/ui/icons';
 import { courseCard, courses } from '@/lib/catalog';
 import { sampleClips } from '@/lib/narration';
 import { getProgress, getPulse, getSettings, getTotals } from '@/lib/progress';
@@ -74,6 +75,56 @@ export default async function ProfilePage() {
           </ul>
         </section>
       ) : null}
+
+      <section className="card">
+        <h2>Your progress</h2>
+        <ul className="ways">
+          <li>
+            <Link href="/stats" className="way">
+              <span className="way__icon way__icon--blue">
+                <Target size={20} />
+              </span>
+              <span>
+                <b>Stats</b>
+                <span className="muted small">Moves found, accuracy, memory health and your weakest positions</span>
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/achievements" className="way">
+              <span className="way__icon way__icon--gold">
+                <Flame size={20} />
+              </span>
+              <span>
+                <b>Achievements</b>
+                <span className="muted small">Badges for streaks, milestones and personal bests</span>
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/repertoire" className="way">
+              <span className="way__icon way__icon--green">
+                <Book size={20} />
+              </span>
+              <span>
+                <b>Repertoire</b>
+                <span className="muted small">Every move your courses teach, as a tree, with how well you know each one</span>
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/games" className="way">
+              <span className="way__icon way__icon--purple">
+                <Board size={20} />
+              </span>
+              <span>
+                <b>Your games</b>
+                <span className="muted small">Import from Lichess or Chess.com and see where you left your prep</span>
+              </span>
+            </Link>
+          </li>
+        </ul>
+      </section>
 
       <section className="card">
         <h2>Settings</h2>

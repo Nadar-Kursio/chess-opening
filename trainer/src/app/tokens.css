@@ -110,6 +110,11 @@
   --wave-bar: 3px;
   --wave-height: 14px;
   --nav-badge: 20px;
+  /* Play hub and the phone tab bar */
+  --tabbar: 64px;
+  --tabbar-icon: 24px;
+  --play-card-min: 260px;
+  --on-accent: #ffffff;
   --strength-bar: 10px;
   --strength-swatch: 12px;
   --forecast: 96px;

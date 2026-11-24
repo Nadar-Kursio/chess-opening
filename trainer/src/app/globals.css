@@ -639,7 +639,7 @@ a.card:hover {
 }
 .grid-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(var(--side) - var(--space-6)), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--side) - var(--space-6))), 1fr));
   gap: var(--space-4);
 }
 
@@ -1123,6 +1123,7 @@ a.card:hover {
 .profile-head > div {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .stats {
   display: grid;
@@ -2662,6 +2663,27 @@ a.card:hover {
   :root {
     --header: 56px;
   }
+  .goal {
+    gap: var(--space-3);
+  }
+  .goal__ring {
+    width: calc(var(--tap) * 2);
+  }
+  .goal > div:last-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
+  .week__dot {
+    width: 100%;
+    max-width: calc(var(--icon) + var(--space-2));
+    height: auto;
+    aspect-ratio: 1;
+  }
   h1 {
     font-size: var(--text-2xl);
   }
@@ -2673,9 +2695,6 @@ a.card:hover {
   }
   .nav__link {
     padding: var(--space-2) var(--space-3);
-  }
-  .nav__link:last-child {
-    display: none;
   }
   .stat-chip--goal {
     display: none;

@@ -99,3 +99,16 @@ export const ChevronRight = ({ size = 20, className }: P) => (
     <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+
+export const Board = ({ size = 20, className }: P) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+    <rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="currentColor" strokeWidth="2" />
+    <path d="M3.5 12h8.5V3.5M12 12h8.5v8.5H12z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+  </svg>
+);
+
+export const Bolt = ({ size = 20, className }: P) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+    <path d="M13.5 2.5L5 13.5h6l-1 8 8.5-11h-6z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);
