@@ -138,33 +138,55 @@ class Tree:
         return shared
 
 
+def club_window(op_id):
+    """The months of club games a course's numbers come from, as (since, until).
+
+    CLUB_MONTHS=2026-10 or 2026-08:2026-10 when asked for; otherwise the window the course's
+    committed club file was made from, so regenerating one file never quietly mixes in a newer
+    month; otherwise (None, None), the latest month the explorer has."""
+    asked = os.environ.get("CLUB_MONTHS")
+    if asked:
+        since, _, until = asked.partition(":")
+        return since, until or since
+    committed = generated("club", op_id) or {}
+    return tuple(committed["window"]) if committed.get("window") else (None, None)
+
+
 def club_counts(op_id, source="design"):
     """Club move counts by position, and a sentence saying where they came from.
 
-    Two files can hold them. .engine/club/<id>.json (club-stats.py) has every position in the
-    first moves of games in this opening, so a reply the course doesn't answer yet can be
-    followed. src/content/club/<id>.json (club-moves.py) is committed and is what the sparring
-    partner plays from, but only holds positions the course already reaches, from every game that
-    reaches them. `spar` reads it alone, exactly what the trainer has. `design` (what sidelines.py decides with) takes whichever file has more games at
-    each position: club-stats.py keeps only games where the course's side plays its --must moves,
-    so a sideline where the learner answers differently (1.d4 b6 2.e4 in the London) is thin
-    there and thick in the other. Shares are taken within one position, so mixing the two per
-    position is sound."""
-    files = {"content": os.path.join(ROOT, "src", "content", "club", f"{op_id}.json"),
-             "engine": os.path.join(ROOT, ".engine", "club", f"{op_id}.json")}
-    order = {"design": ["engine", "content"], "spar": ["content"]}[source]
-    counts, used = {}, []
-    for name in order:
-        if not os.path.exists(files[name]):
-            continue
-        with open(files[name], encoding="utf-8") as f:
-            data = json.load(f)
-        for epd, moves in data["positions"].items():
-            if not moves:
-                continue
-            if epd not in counts or (source == "design" and sum(moves.values()) > sum(counts[epd].values())):
-                counts[epd] = Counter(moves)
-        used.append(f"{os.path.relpath(files[name], ROOT)} ({data['source']}, {data['games']:,} games)")
-    if not used:
-        raise SystemExit(f"no club counts for {op_id}: run club-stats.py (see the skill) first")
-    return counts, " and ".join(used)
+    `design` (what coverage.py, sidelines.py and trap-scan.py decide with) asks the Lichess
+    explorer, a position at a time and cached (_lichess.Club): every game in the course's window,
+    whichever move order reached the position, so a reply the course doesn't answer yet can be
+    followed as far as anyone played it. `spar` reads src/content/club/<id>.json (club-moves.py)
+    alone, which is exactly what the trainer's sparring partner has. Both answer .get(epd) with a
+    Counter of SAN to games, or None."""
+    if source == "design":
+        from _lichess import Club
+        club = Club(*club_window(op_id))
+        return club, club.source
+    data = generated("club", op_id)
+    if not data:
+        raise SystemExit(f"no src/content/club/{op_id}.json: run club-moves.py (see the skill) first")
+    counts = {epd: Counter(moves) for epd, moves in data["positions"].items() if moves}
+    return counts, f"src/content/club/{op_id}.json ({data['source']}, {data['games']:,} games)"
+
+
+def club_header(op_id, club=None):
+    """What a generated file says about its club numbers: source, window, scanned, games, elo.
+
+    `scanned` is every game in the window (the starting position's count) and `games` the ones
+    that reach the position every chapter from the course's chair shares, 1.d4 for the London."""
+    from _lichess import Club, RATINGS
+    club = club or Club(*club_window(op_id))
+    op = opening(op_id)
+    side = colour(op["orientation"])
+    lines = [line["moves"].split() for line in op["lines"] if colour(line.get("side", op["orientation"])) == side]
+    board = chess.Board()
+    for i in range(min(map(len, lines)) if lines else 0):
+        if len({line[i] for line in lines}) > 1:
+            break
+        board.push_san(lines[0][i])
+    return {"source": club.source, "window": [club.since, club.until],
+            "scanned": club.games(chess.Board().epd()), "games": club.games(board.epd()),
+            "elo": [RATINGS[0], RATINGS[-1] + 200]}

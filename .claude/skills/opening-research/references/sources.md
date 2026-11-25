@@ -104,7 +104,12 @@ Two concrete examples from the session:
 
 ## Game scores: PGN only
 
-`scripts/fetch-games.py` pulls a player archive from pgnmentor.com and filters it
+The first place to look is the Lichess masters explorer: `dossier.py` and
+`explorer.py` list the best-known master games in each position they report, and
+`dossier.py --pgn <id>` prints one. That covers most model games, with the event,
+round and site in the tags.
+
+For a particular player's games, `scripts/fetch-games.py` pulls a player archive from pgnmentor.com and filters it
 by ECO, opponent, year, result and length. Player names are the file names on
 <https://www.pgnmentor.com/files.html> (`Karpov`, `Morphy`, `Capablanca`,
 `Rubinstein`, `Kramnik`, `Alekhine`, `Tarrasch`, `Marshall`, `Spielmann`,
@@ -117,14 +122,10 @@ Archives are cached under `.engine/pgn/` after the first fetch, so filtering the
 same player again is free. `--headers` prints every PGN tag: Round and Site are
 the two a `note` needs before it can say "the sixteenth game of the match".
 
-pgnmentor also publishes archives **by variation** rather than by player, under
-`openings/` on the same page — `RuyLopezMarshall`, `RuyLopezBerlin`,
-`RuyLopezOther5` and so on. `scripts/explorer.py` fetches those (into
-`.engine/openings/`) and counts them, which is where a `record` comes from and the
-cheapest way to find out what is actually played in a position. The per-variation
-files partition an opening between them, so fetch the whole family — the fifteen
-`RuyLopez*` files are the Ruy Lopez, and a subset silently under-counts every
-position that lives in the file you left out.
+What is played in a position, and the `record` win bar, come from the masters
+explorer (`scripts/explorer.py`), not from these archives: pgnmentor's
+per-variation files follow the ECO split rather than a repertoire, and at the Jobava
+London's main position they held 165 games where the explorer has 1,446.
 
 Cross-check what you pull: the header should agree with the event and year you
 expect, and the ECO code should match the line you are illustrating. A game whose

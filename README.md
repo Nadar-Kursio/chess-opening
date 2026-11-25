@@ -50,12 +50,13 @@ check marker the move does not earn, a malformed win-rate record, or a missing
 line slug. It then derives everything the site must never compute for itself:
 board layouts, legal-move lists (the drill's answer key and the board's move
 dots), arrow/tactics annotations, and the Stockfish evals attached from
-`src/content/evals/`. The `opening-research` skill documents how content is
-researched and verified before it is written down at all.
+`src/content/evals/`. The `new-course` skill ships a course end to end, and the
+`opening-research` skill documents how content is researched and verified before
+it is written down at all.
 
 The site ships only the openings named in `PORTED` in `src/build.py`. Adding
-one is data-only: author a `slug` per line, append the id, re-run the evals
-script if the opening is scored. If the app needs code for a new opening, that
+one is data-only: author a `slug` per line, append the id, and run the skill's
+`generate.py <id>` for the eval bar and the trainer's data. If the app needs code for a new opening, that
 is a bug in the app.
 
 ## Working on it

@@ -3,7 +3,8 @@
 
     .venv/bin/python3 .claude/skills/opening-research/scripts/sidelines.py london
 
-Needs .engine/club/<opening>.json from club-stats.py. Writes
+Club counts come from the Lichess explorer (_course.club_counts: a token in
+~/.config/lichess-token, answers cached under .engine/lichess/). Writes
 src/content/sidelines/<opening>.json, which the build reads. Generated: never
 edit it, re-run this.
 
@@ -54,7 +55,7 @@ import chess                                            # noqa: E402
 import chess.engine                                     # noqa: E402
 from _engine import ROOT, engine_path                   # noqa: E402
 from engine.marks import INACCURACY                     # noqa: E402
-from _course import THIN, Tree, club_counts, move_label  # noqa: E402
+from _course import THIN, Tree, club_counts, club_header, move_label  # noqa: E402
 from coverage import analyse                            # noqa: E402
 
 MATE = 10000
@@ -154,10 +155,9 @@ def main():
 
     from importlib import import_module
     op = import_module(f"content.openings.{args.opening}").OPENING
-    with open(os.path.join(ROOT, ".engine", "club", f"{args.opening}.json"), encoding="utf-8") as f:
-        club = json.load(f)
-    positions = club["positions"]
     design, _ = club_counts(args.opening, "design")
+    positions = design
+    club = club_header(args.opening, design)
     learner = chess.WHITE if op["orientation"] == "white" else chess.BLACK
     sign = 1 if learner == chess.WHITE else -1
 

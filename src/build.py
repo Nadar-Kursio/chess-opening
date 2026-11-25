@@ -916,6 +916,54 @@ def exit_answers(op_id, errors):
     return out
 
 
+def course_gaps(op):
+    """What a ported course is missing that nothing else would mention.
+
+    No evals file at all reads as a clean build ("0 positions missing"), and a deviation's
+    `line` that stops on the opponent's move leaves the learner's next move untaught, which the
+    sparring partner then meets as the end of the prep."""
+    out = []
+    if not load_generated("evals", op["id"]):
+        out.append(f"evals/{op['id']}: no file, so no eval bar and no move marks: run position-evals.py "
+                   f"(generate.py runs it with the rest)")
+    if op.get("section") == "traps":
+        return out
+    learner = chess.WHITE if op["orientation"] == "white" else chess.BLACK
+    taught, ends = set(), []
+    for line in with_deep_line(op):
+        board = chess.Board()
+        for san in line["moves"].split():
+            if board.turn == learner:
+                taught.add(board.epd())
+            board.push_san(san)
+    for prefix, entries in (op.get("branches") or {}).items():
+        base = chess.Board()
+        for san in prefix.split():
+            base.push_san(san)
+        if base.turn == learner:
+            continue
+        for br in entries:
+            board = base.copy()
+            for san in [br["san"]] + br.get("line", "").split():
+                if board.turn == learner:
+                    taught.add(board.epd())
+                board.push_san(san)
+            if br.get("line") and board.turn == learner:
+                ends.append((base, br, board.epd()))
+    for item in (load_generated("sidelines", op["id"]) or {}).get("sidelines", []):
+        board = chess.Board()
+        for san in (item["moves"] + " " + item["reply"] + " " + item.get("line", "")).split():
+            if board.turn == learner:
+                taught.add(board.epd())
+            board.push_san(san)
+    for base, br, end in ends:
+        if end not in taught:
+            out.append(f"{op['id']}: the deviation {san_with_number(base, br['san'])} ends its line on the "
+                       f"opponent's move, at a position the course never teaches: add the learner's reply, "
+                       f"or end the line a move earlier")
+    return out
+
+
 def build_openings(games, evals):
     errors = []
     warnings = []
@@ -927,6 +975,7 @@ def build_openings(games, evals):
         lines = with_deep_line(op)
         if op["id"] in PORTED:
             errors.extend(slug_errors(op["id"], lines))
+            warnings.extend(course_gaps(op))
         record = {k: v for k, v in op.items() if k not in ("deep", "branches", "games")}
         record["lines"] = [build_line(op["id"], i, line, errors, branches, notes, evals)
                            for i, line in enumerate(lines)]
