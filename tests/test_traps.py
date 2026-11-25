@@ -162,7 +162,8 @@ class TestRealCatalogue(unittest.TestCase):
     def test_the_london(self):
         traps = self.traps("london")
         self.assertEqual({k: t["group"] for k, t in traps.items()},
-                         {"londonb2": "set", "londonh5hunt": "watch", "englundtrap": "watch"})
+                         {"londonb2": "set", "londonh5hunt": "watch", "englundtrap": "watch",
+                          "jobavafork": "set", "jobavaqa5": "watch"})
         self.assertEqual(traps["londonb2"]["chapter"], "c5-challenge")
         self.assertEqual(traps["londonh5hunt"]["sideline"], "leaves-2-h5")
         self.assertEqual(traps["englundtrap"]["sideline"], "leaves-1-e5")

@@ -13,12 +13,12 @@ from importlib import import_module
 ORDER = [
     "italian", "ruylopez", "scotch", "fourknights",
     "sicilian", "french", "carokann", "scandinavian",
-    "queensgambit", "slav", "london",
+    "queensgambit", "slav", "london", "jobava",
     "catalan", "nimzo", "kid",
     "scholarsmate", "friedliver",
     "londonb2", "londonh5hunt", "portuguesepin", "timmanknight",
     "legalsmate", "blackburneshilling", "siberiantrap", "magnussmith",
-    "englundtrap", "elephanttrap", "noahsark", "fishingpole",
+    "englundtrap", "elephanttrap", "noahsark", "fishingpole", "jobavafork", "jobavaqa5",
 ]
 
 

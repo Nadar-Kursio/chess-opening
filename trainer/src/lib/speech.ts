@@ -26,6 +26,7 @@ export const NARRATED: Record<string, readonly Voice[]> = {
   scandinavian: ['brian', 'amy', 'matthew'],
   sicilian: ['brian', 'amy', 'matthew'],
   queensgambit: ['brian', 'amy', 'matthew'],
+  jobava: ['brian'],
 };
 
 /** The voices to try for a course, best first: the learner's own if the course has it, then Brian. */
