@@ -353,7 +353,10 @@ def main():
                     continue
                 auto = moves[i + 1] if i + 1 < len(moves) else None
                 for reply, count in sorted(counts.items(), key=lambda kv: -kv[1]):
-                    if reply == san or count < RARE_ENOUGH:
+                    # A share as well as a count: with a month of games behind a position nearly
+                    # every legal move has RARE_ENOUGH of them, and a reply under SET_SHARE is one
+                    # a learner will hardly meet, so it isn't worth teaching even as a dodge.
+                    if reply == san or count < RARE_ENOUGH or count / total < SET_SHARE:
                         continue
                     result = board.copy()
                     result.push_san(reply)
