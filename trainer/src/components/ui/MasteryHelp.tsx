@@ -32,9 +32,9 @@ export default function MasteryHelp() {
           </li>
         ))}
         <li className="mastery-help__fading">
-          <Crown level={3} fading size="sm" />
+          <Crown level={2} fading size="sm" />
           <b>Fading</b>
-          <span>Overdue moves cost a level, and another each week they wait. Review them to win it back.</span>
+          <span>Overdue moves drop the crown a level, and another each week they wait. Review them to win it back.</span>
         </li>
       </ol>
       <p className="muted small">

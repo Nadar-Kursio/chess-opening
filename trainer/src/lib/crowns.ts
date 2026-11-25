@@ -7,8 +7,9 @@ export { CROWN_NAME, CROWN_RULE, MAX_CROWN, type CrownLevel } from './crownLevel
    Recall cards. Each level asks something of every move in the chapter, so the crown follows the
    weakest of them, and a chapter whose cards are left overdue fades until Recall asks them again.
    Chapters share their opening moves, so an overdue move fades only the chapter it belongs to: the
-   earliest learned chapter in the course that plays it. Pure, so tests/crowns.test.ts checks the
-   rules. */
+   one the learner learned first. The level is cheap and read on every page; the forecast (when the
+   next level could come) replays the scheduler, so only the course page asks for it. Pure, so
+   tests/crowns.test.ts checks the rules. */
 
 /** A card holds for this long (FSRS stability, days) to count as remembered for a week. */
 export const FAMILIAR_DAYS = 7;
@@ -34,6 +35,9 @@ export interface Crown {
   due: number;
   /** Moves the next level still needs. */
   toGo: number;
+}
+
+export interface CrownForecast {
   /** The review that could earn the next level, if every review from now on is on time and right. */
   eta: Date | null;
   /** The highest level the review at `eta` could bring. */
@@ -42,96 +46,127 @@ export interface Crown {
   nextReview: Date | null;
 }
 
-const NEW: Crown = { level: 0, earned: 0, overdue: 0, due: 0, toGo: 0, eta: null, reach: 0, nextReview: null };
+const NEW: Crown = { level: 0, earned: 0, overdue: 0, due: 0, toGo: 0 };
 
 const daysFrom = (at: Date, day: CrownDay) => Math.max(0, Math.floor((at.getTime() - day.start.getTime()) / DAY_MS));
 
 const moves = (n: number) => `${n} move${n === 1 ? '' : 's'}`;
 
-/** The `n`th soonest any of `cards` reaches `stability`. */
-function nthReady(cards: CrownCard[], stability: number, n: number, now: Date) {
-  const at = cards.map((c) => readyBy(c, stability, now).getTime()).sort((a, b) => a - b);
-  return new Date(at[Math.min(n, at.length) - 1]);
+function chapterCards(keys: string[], cards: Map<string, CrownCard>) {
+  const unique = [...new Set(keys)];
+  return { total: unique.length, mine: unique.map((k) => cards.get(k)).filter((c): c is CrownCard => !!c) };
 }
 
 /**
  * The crown for one chapter. `keys` are the positions its Learn introduces, `cards` the learner's
  * cards by position, and `owned` the keys whose overdue cards fade this chapter (all of them unless
- * an earlier chapter plays the same move).
+ * a chapter learned earlier plays the same move).
  */
 export function crownOf(learned: boolean, keys: string[], cards: Map<string, CrownCard>, day: CrownDay, owned: string[] = keys): Crown {
-  const unique = [...new Set(keys)];
-  if (!learned || !unique.length) return NEW;
-  const mine = unique.map((k) => cards.get(k)).filter((c): c is CrownCard => !!c);
-  const total = unique.length;
+  if (!learned) return NEW;
+  const { total, mine } = chapterCards(keys, cards);
+  // Nothing for Recall to ask: learning it is all there is.
+  if (!total) return { ...NEW, level: 1, earned: 1 };
   const answered = mine.filter((c) => c.reps > 0);
   const half = Math.ceil(total / 2);
+  const weak = answered.filter((c) => c.stability < FAMILIAR_DAYS).length;
+  const longTerm = answered.filter((c) => c.stability >= MASTERED_DAYS).length;
 
-  const weak = answered.filter((c) => c.stability < FAMILIAR_DAYS);
-  const shortTerm = answered.filter((c) => c.stability < MASTERED_DAYS);
-  const longTerm = total - shortTerm.length;
   let earned: CrownLevel;
   let toGo: number;
   if (answered.length < total) {
     earned = 1;
     toGo = total - answered.length;
-  } else if (weak.length) {
+  } else if (weak) {
     earned = 2;
-    toGo = weak.length;
+    toGo = weak;
   } else if (longTerm < half) {
     earned = 3;
     toGo = half - longTerm;
-  } else if (shortTerm.length) {
+  } else if (longTerm < total) {
     earned = 4;
-    toGo = shortTerm.length;
+    toGo = total - longTerm;
   } else {
     earned = 5;
     toGo = 0;
   }
 
-  // Cards reviewed together grow together, so the review that earns the next level often earns the
-  // one after it too: `reach` is the highest level that same day brings.
-  let eta: Date | null = null;
-  let reach: CrownLevel = earned;
-  if (earned >= 2 && earned < MAX_CROWN) {
-    const ready = (pool: CrownCard[], stability: number, n: number) => (n > 0 ? nthReady(pool, stability, n, day.now).getTime() : day.now.getTime());
-    const solid = ready(weak, FAMILIAR_DAYS, weak.length);
-    const strong = Math.max(solid, ready(shortTerm, MASTERED_DAYS, half - longTerm));
-    const at = [0, 0, 0, solid, strong, Math.max(strong, ready(shortTerm, MASTERED_DAYS, shortTerm.length))];
-    eta = new Date(at[earned + 1]);
-    const etaDay = daysFrom(eta, day);
-    reach = (earned + 1) as CrownLevel;
-    while (reach < MAX_CROWN && daysFrom(new Date(at[reach + 1]), day) === etaDay) reach = (reach + 1) as CrownLevel;
-  }
-
   const dayEnd = day.start.getTime() + DAY_MS;
   const due = mine.filter((c) => c.due.getTime() < dayEnd).length;
-  const upcoming = mine.map((c) => c.due.getTime()).filter((t) => t >= dayEnd);
-  const nextReview = upcoming.length ? new Date(Math.min(...upcoming)) : null;
-  const base = { earned, due, toGo, eta, reach, nextReview };
-
   const late = [...new Set(owned)].map((k) => cards.get(k)).filter((c): c is CrownCard => !!c && c.due < day.start);
-  if (!late.length) return { ...base, level: earned, overdue: 0 };
+  if (!late.length) return { level: earned, earned, overdue: 0, due, toGo };
   const oldest = Math.min(...late.map((c) => c.due.getTime()));
   const weeks = Math.floor((day.start.getTime() - oldest) / (OVERDUE_STEP_DAYS * DAY_MS));
-  return { ...base, level: Math.max(1, earned - 1 - weeks) as CrownLevel, overdue: late.length };
+  return { level: Math.max(1, earned - 1 - weeks) as CrownLevel, earned, overdue: late.length, due, toGo };
+}
+
+/** When a card first reaches a stability, replayed once per card and stability however many chapters share it. */
+export function readyTimes(day: CrownDay) {
+  const memo = new Map<CrownCard, Map<number, number>>();
+  return (c: CrownCard, stability: number) => {
+    let byStability = memo.get(c);
+    if (!byStability) memo.set(c, (byStability = new Map()));
+    let at = byStability.get(stability);
+    if (at === undefined) byStability.set(stability, (at = readyBy(c, stability, day.now).getTime()));
+    return at;
+  };
+}
+
+/**
+ * When the chapter's next level could come, and how far that review could take it. Cards reviewed
+ * together grow together, so the review that earns the next level often earns the one after it too.
+ */
+export function crownForecast(
+  crown: Crown,
+  keys: string[],
+  cards: Map<string, CrownCard>,
+  day: CrownDay,
+  ready = readyTimes(day),
+): CrownForecast {
+  const { total, mine } = chapterCards(keys, cards);
+  const dayEnd = day.start.getTime() + DAY_MS;
+  const upcoming = mine.map((c) => c.due.getTime()).filter((t) => t >= dayEnd);
+  const nextReview = upcoming.length ? new Date(Math.min(...upcoming)) : null;
+  const { earned } = crown;
+  if (earned < 2 || earned === MAX_CROWN) return { eta: null, reach: earned, nextReview };
+
+  const answered = mine.filter((c) => c.reps > 0);
+  const byTime = (a: number, b: number) => a - b;
+  const weak = answered.filter((c) => c.stability < FAMILIAR_DAYS).map((c) => ready(c, FAMILIAR_DAYS)).sort(byTime);
+  const shortTerm = answered.filter((c) => c.stability < MASTERED_DAYS).map((c) => ready(c, MASTERED_DAYS)).sort(byTime);
+  const nth = (at: number[], n: number) => (n > 0 ? at[Math.min(n, at.length) - 1] : day.now.getTime());
+  const solid = nth(weak, weak.length);
+  const strong = Math.max(solid, nth(shortTerm, Math.ceil(total / 2) - (total - shortTerm.length)));
+  const at = [0, 0, 0, solid, strong, Math.max(strong, nth(shortTerm, shortTerm.length))];
+
+  const eta = new Date(at[earned + 1]);
+  const etaDay = daysFrom(eta, day);
+  let reach = (earned + 1) as CrownLevel;
+  while (reach < MAX_CROWN && daysFrom(new Date(at[reach + 1]), day) === etaDay) reach = (reach + 1) as CrownLevel;
+  return { eta, reach, nextReview };
 }
 
 export interface CrownChapter {
   slug: string;
   keys: string[];
-  learned: boolean;
+  /** When the learner finished its Learn step, or null. */
+  learnedAt: Date | null;
 }
 
-/** Every chapter's crown in a course, in course order: each shared move belongs to the earliest learned chapter that plays it. */
+/**
+ * Every chapter's crown in a course, in course order. Each shared move belongs to the chapter the
+ * learner learned first (course order breaks a tie), so learning another chapter later never moves
+ * a fade from one chapter to another.
+ */
 export function courseCrowns(chapters: CrownChapter[], cards: Map<string, CrownCard>, day: CrownDay) {
+  const learned = chapters
+    .map((ch, i) => ({ ch, i }))
+    .filter(({ ch }) => ch.learnedAt)
+    .sort((a, b) => a.ch.learnedAt!.getTime() - b.ch.learnedAt!.getTime() || a.i - b.i);
   const owner = new Map<string, string>();
-  for (const ch of chapters) {
-    if (!ch.learned) continue;
-    for (const k of ch.keys) if (!owner.has(k)) owner.set(k, ch.slug);
-  }
+  for (const { ch } of learned) for (const k of ch.keys) if (!owner.has(k)) owner.set(k, ch.slug);
   return new Map(
-    chapters.map((ch) => [ch.slug, crownOf(ch.learned, ch.keys, cards, day, ch.keys.filter((k) => owner.get(k) === ch.slug))]),
+    chapters.map((ch) => [ch.slug, crownOf(!!ch.learnedAt, ch.keys, cards, day, ch.keys.filter((k) => owner.get(k) === ch.slug))]),
   );
 }
 
@@ -148,9 +183,12 @@ function whenNext(at: Date | null, day: CrownDay) {
   return days <= 1 ? ' The next is due tomorrow.' : ` The next is due in ${days} days.`;
 }
 
+export type CrownView = Crown & CrownForecast;
+
 /** What the chapter's crown needs next, in words, and the session that gets it there. */
-export function crownStep(c: Crown, day: CrownDay): CrownStep {
+export function crownStep(c: CrownView, day: CrownDay): CrownStep {
   if (c.level === 0) return { title: 'Not learned yet', detail: 'Finish Learn to earn the first crown.', action: null };
+  if (c.level === 1 && !c.toGo) return { title: CROWN_NAME[1], detail: 'This chapter has no moves for Recall to ask.', action: null };
   if (c.level < c.earned) {
     return {
       title: `Fading: ${moves(c.overdue)} overdue`,
@@ -177,7 +215,7 @@ export function crownStep(c: Crown, day: CrownDay): CrownStep {
 }
 
 /** A crown in one line, for a title or a screen reader. */
-export function crownWords(c: Crown, day: CrownDay) {
+export function crownWords(c: CrownView, day: CrownDay) {
   const step = crownStep(c, day);
   const head = c.level ? `${CROWN_NAME[c.level]}, crown ${c.level} of ${MAX_CROWN}` : 'New, no crown yet';
   return step.title === CROWN_NAME[c.level] ? `${head}. ${step.detail}` : `${head}. ${step.title}. ${step.detail}`;

@@ -195,23 +195,34 @@ function LevelUp({ item, onClose }: { item: Extract<Shown, { kind: 'level' }>; o
   );
 }
 
+/** No timer: it stays until dismissed, and takes focus so a screen reader reads it out. */
 function Mastered({ item, onClose }: { item: Extract<Shown, { kind: 'crown' }>; onClose: () => void }) {
-  useAutoClose(onClose, LEVEL_MS);
+  const nice = useRef<HTMLButtonElement>(null);
+  useEffect(() => nice.current?.focus(), []);
   return (
-    <div className="level-up" role="dialog" aria-modal="false" aria-labelledby="mastered-title">
+    <div
+      className="level-up"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="mastered-eyebrow mastered-title"
+      aria-describedby="mastered-text"
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+    >
       <Burst big />
       <div className="level-up__card level-up__card--crown">
         <Crown level={MAX_CROWN} size="xl" rise />
-        <span className="toast__eyebrow">Chapter mastered</span>
+        <span id="mastered-eyebrow" className="toast__eyebrow">
+          Chapter mastered
+        </span>
         <h2 id="mastered-title">{item.chapter}</h2>
-        <p className="muted">
+        <p id="mastered-text" className="muted">
           Every move of this {item.course} chapter is in long-term memory. Answer when Recall asks and the crown stays.
         </p>
         <div className="level-up__actions">
           <Link href={chapterHref(item)} className="btn btn--secondary" onClick={onClose}>
             See the course
           </Link>
-          <button type="button" className="btn btn--primary" onClick={onClose}>
+          <button ref={nice} type="button" className="btn btn--primary" onClick={onClose}>
             Nice
           </button>
         </div>

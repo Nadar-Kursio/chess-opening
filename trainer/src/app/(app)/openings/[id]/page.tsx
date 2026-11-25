@@ -49,7 +49,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
   const summary = getCatalog().openings.find((o) => o.id === id)!;
   const [progress, pulse, tz] = await Promise.all([getProgress(user.id), getPulse(user.id), learnerTimezone(), syncDeck(user.id)]);
   const byLine = progress.get(id) ?? new Map();
-  const learned = new Set([...byLine.values()].filter((l) => l.learned_at).map((l) => l.line_slug));
+  const learned = new Map([...byLine.values()].filter((l) => l.learned_at).map((l) => [l.line_slug, new Date(l.learned_at!)]));
   const { due, day, crowns: crownBySlug } = await courseMemory(user.id, id, tz, learned);
   const card = courseCard(summary, byLine);
   const { progress: p, chapters: chs } = card;
@@ -178,7 +178,7 @@ export default async function CoursePage({ params }: PageProps<'/openings/[id]'>
               step.action === 'answer' && !stepDone(lp, 'drill')
                 ? { href: `/openings/${id}/${ch.slug}/drill`, label: 'Drill it' }
                 : step.action
-                  ? { href: chapterRecall(ch.slug), label: fading || !crown.due ? 'Review now' : `Review ${crown.due}` }
+                  ? { href: chapterRecall(ch.slug), label: fading || !crown.due ? 'Review now' : `Review ${crown.due} move${crown.due === 1 ? '' : 's'}` }
                   : null;
             return (
               <article
