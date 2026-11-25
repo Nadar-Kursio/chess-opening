@@ -105,7 +105,7 @@ export default async function SparHub() {
         </ul>
         {sample ? (
           <p className="muted small spar-source">
-            Moves come from {sample.source}, players rated {sample.elo[0]} to {sample.elo[1]}, bullet left out: a sample of{' '}
+            Moves come from {sample.source}, players rated {sample.elo[0]} to {sample.elo[1]}, bullet left out:{' '}
             {games(sample.scanned)} games.
           </p>
         ) : null}

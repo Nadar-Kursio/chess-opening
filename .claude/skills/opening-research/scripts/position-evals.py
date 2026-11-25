@@ -165,9 +165,9 @@ def main():
 
     def flush():
         os.makedirs(os.path.dirname(args.cache), exist_ok=True)
-        with open(args.cache + ".tmp", "w", encoding="utf-8") as f:
+        with open(f"{args.cache}.{os.getpid()}.tmp", "w", encoding="utf-8") as f:
             json.dump(cache, f)
-        os.replace(args.cache + ".tmp", args.cache)
+        os.replace(f"{args.cache}.{os.getpid()}.tmp", args.cache)
 
     eng = chess.engine.SimpleEngine.popen_uci(engine_path())
     eng.configure({"Threads": args.threads, "Hash": 1024})

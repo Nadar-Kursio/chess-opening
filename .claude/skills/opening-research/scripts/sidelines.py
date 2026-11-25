@@ -3,7 +3,8 @@
 
     .venv/bin/python3 .claude/skills/opening-research/scripts/sidelines.py london
 
-Needs .engine/club/<opening>.json from club-stats.py. Writes
+Club counts come from the Lichess explorer (_course.club_counts: a token in
+~/.config/lichess-token, answers cached under .engine/lichess/). Writes
 src/content/sidelines/<opening>.json, which the build reads. Generated: never
 edit it, re-run this.
 
@@ -54,14 +55,14 @@ import chess                                            # noqa: E402
 import chess.engine                                     # noqa: E402
 from _engine import ROOT, engine_path                   # noqa: E402
 from engine.marks import INACCURACY                     # noqa: E402
-from _course import THIN, Tree, club_counts, move_label  # noqa: E402
+from _course import THIN, Tree, club_counts, club_header, move_label  # noqa: E402
 from coverage import analyse                            # noqa: E402
 
 MATE = 10000
 MOVES = 5           # opponent moves per chapter on the page
 COMMON = 0.03       # share of the position's games
 ENOUGH = 25         # games, below which a percentage is noise
-PLENTY = 2000       # games that matter however small their share of a huge position
+PLENTY = 0.015      # of the course's games: a reply that matters however small its share of a huge position
 SET_SHARE = 0.01    # a one-off blunder isn't a trap to set
 RARE_ENOUGH = 20    # games for a rare reply that might still be a trap
 TRAP = 150
@@ -98,9 +99,9 @@ class Search:
             self.cache[key] = [info["score"].white().score(mate_score=MATE), [m.uci() for m in info.get("pv", [])]]
             # Through a temporary file: a run stopped mid-write (by pid, as the skill says) must not
             # leave half a cache that every later run fails to read.
-            with open(self.path + ".tmp", "w", encoding="utf-8") as f:
+            with open(f"{self.path}.{os.getpid()}.tmp", "w", encoding="utf-8") as f:
                 json.dump(self.cache, f)
-            os.replace(self.path + ".tmp", self.path)
+            os.replace(f"{self.path}.{os.getpid()}.tmp", self.path)
         ev, pv = self.cache[key]
         return ev, [chess.Move.from_uci(m) for m in pv]
 
@@ -154,10 +155,9 @@ def main():
 
     from importlib import import_module
     op = import_module(f"content.openings.{args.opening}").OPENING
-    with open(os.path.join(ROOT, ".engine", "club", f"{args.opening}.json"), encoding="utf-8") as f:
-        club = json.load(f)
-    positions = club["positions"]
     design, _ = club_counts(args.opening, "design")
+    positions = design
+    club = club_header(args.opening, design)
     learner = chess.WHITE if op["orientation"] == "white" else chess.BLACK
     sign = 1 if learner == chess.WHITE else -1
 
@@ -242,7 +242,7 @@ def main():
         reply_move = after.parse_san(reply)
         after.push(reply_move)
         share = count / total
-        common = (share >= COMMON and count >= ENOUGH) or count >= PLENTY
+        common = (share >= COMMON and count >= ENOUGH) or count >= PLENTY * club["games"]
         entry = {"moves": " ".join(moves), "reply": reply, "pct": round(100 * share),
                  "games": count, "at": total, "chapter": chapter, "moment": moment}
         target = owner.get(after.epd())

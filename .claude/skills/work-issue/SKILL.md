@@ -74,8 +74,9 @@ and will not find one.
 ## 4. Do the work
 
 Content — variations, deviations, severities, plans, model games — goes through
-the `opening-research` skill. Do not shortcut it. Severities come from the engine
-and game scores from pgnmentor; a claim that sounds right is not a verified claim,
+the `opening-research` skill (a whole new course, through `new-course`). Do not
+shortcut it. Severities come from the engine, club numbers, records and game
+scores from the Lichess explorer; a claim that sounds right is not a verified claim,
 and prose about chess is the easiest thing in this repo to get confidently wrong.
 
 Anything else follows the conventions already in `CLAUDE.md` and the surrounding
