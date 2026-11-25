@@ -253,16 +253,18 @@ export function sparBook(op: Opening, side: Colour, club: ClubBook): SparBook {
 }
 
 /** The book as the sparring page sends it: only what the game reads. The board takes moves only
-    where the learner is to move, so only there does a position keep its legal moves and verdicts;
-    a position's note is said after the learner's move into it, so only those keep theirs. */
+    where the learner is to move, so only there does a position keep its legal moves; a position's
+    note is said after the learner's move into it, so only those keep theirs. The wrong-move
+    verdicts (a score for every legal move, most of the book) come a position at a time from
+    /api/spar/[id]/verdicts as the learner reaches it. */
 export function forBrowser(book: SparBook): SparBook {
   const you = book.tree.side;
   const nodes: Tree['nodes'] = {};
-  for (const [key, { legal, verdicts, note, moves, ...node }] of Object.entries(book.tree.nodes)) {
+  for (const [key, { legal, verdicts: _verdicts, note, moves, ...node }] of Object.entries(book.tree.nodes)) {
     const mine = node.toMove === you;
     nodes[key] = {
       ...node,
-      ...(mine ? { legal, verdicts } : { note }),
+      ...(mine ? { legal } : { note }),
       moves: moves.map(({ why: _why, ...edge }) => edge),
     };
   }

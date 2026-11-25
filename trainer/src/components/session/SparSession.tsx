@@ -10,7 +10,7 @@ import { usePacked } from '@/lib/usePacked';
 import '@/app/loader.css';
 import { play, type SoundSet } from '@/lib/sound';
 import { LIVES, answerTo, leaving, pickOpponent, pickReply, shareOf, type EngineAnswer, type Leave, type Opponent, type SparBook } from '@/lib/spar';
-import type { Colour } from '@/lib/types';
+import type { Colour, Ply } from '@/lib/types';
 import { Coach, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 import { squareIndex } from './LineSession';
 import { SessionBoard, useMoveReview, type BoardStep } from './SessionBoard';
@@ -216,6 +216,20 @@ function SparGame({ openingId, course, side, book, opponent: first, best: startB
     if (yourTurn && asked.current.key !== key) asked.current = { key, at: performance.now(), graded: false };
   }, [yourTurn, key]);
 
+  // A wrong move's verdict, fetched while the learner thinks. Not there in time, or not at all,
+  // and the coach just says it isn't the course's move.
+  const verdicts = useRef<Record<string, Ply['verdicts'] | null>>({});
+  useEffect(() => {
+    if (!yourTurn || key in verdicts.current) return;
+    verdicts.current[key] = null;
+    fetch(`/api/spar/${openingId}/verdicts?key=${encodeURIComponent(key)}`, { redirect: 'manual' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((scored: Ply['verdicts'] | null) => {
+        if (scored) verdicts.current[key] = scored;
+      })
+      .catch(() => {});
+  }, [yourTurn, key, openingId]);
+
   /** The first try at a position is the one Recall hears about. */
   const grade = (hit: boolean) => {
     if (asked.current.key !== key || asked.current.graded) return;
@@ -248,7 +262,7 @@ function SparGame({ openingId, course, side, book, opponent: first, best: startB
     }
 
     grade(false);
-    const verdict = verdictOf(node, from, to);
+    const verdict = verdictOf({ verdicts: node.verdicts ?? verdicts.current[key] ?? undefined }, from, to);
     const words = verdict && verdictWords(verdict, node, expected.num);
     const fine = verdict?.sev === 'good';
     const lost = fine ? 0 : 1;

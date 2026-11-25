@@ -65,6 +65,18 @@ export function getOpening(id: string): Opening {
   return op;
 }
 
+const verdictMaps = new Map<string, Coaching['verdicts']>();
+
+/** Every legal move's score from one position the learner is asked, by the trainer's position key;
+    null where the course has none. Sparring fetches these a position at a time. */
+export function getVerdicts(id: string, key: string) {
+  if (!verdictMaps.has(id)) {
+    const file = path.join('coaching', `${id}.json`);
+    verdictMaps.set(id, existsSync(path.join(ROOT, file)) ? (JSON.parse(read(file)) as Coaching).verdicts : undefined);
+  }
+  return verdictMaps.get(id)?.[key] ?? null;
+}
+
 const clubs = new Map<string, ClubBook | null>();
 
 /** What club players play wherever the sparring partner moves; null for a course without the file. */
