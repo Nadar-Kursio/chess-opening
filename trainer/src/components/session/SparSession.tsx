@@ -442,7 +442,7 @@ function Recap({
 
   const study = line
     ? outcome.kind === 'lives'
-      ? { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.name}`, why: 'The chapter with the move you missed.' }
+      ? { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.sideline ? 'the ' : ''}${line.name}`, why: 'The chapter with the move you missed.' }
       : line.sideline
         ? { href: `/openings/${openingId}/${line.slug}/learn`, label: `Learn the ${line.name}`, why: 'The game went down this sideline. Its lesson shows the ideas.' }
         : line.deviation
