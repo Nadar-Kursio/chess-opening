@@ -148,9 +148,9 @@ def main():
                 print(f"  [{i}/{len(searched)}] {d['where']}", flush=True)
         finally:
             eng.quit()
-            with open(args.cache + ".tmp", "w", encoding="utf-8") as f:
+            with open(f"{args.cache}.{os.getpid()}.tmp", "w", encoding="utf-8") as f:
                 json.dump(cache, f)
-            os.replace(args.cache + ".tmp", args.cache)
+            os.replace(f"{args.cache}.{os.getpid()}.tmp", args.cache)
 
     lines = [f"{op['name']} ({args.opening}): {checked} moves checked against Lichess cloud analyses of depth "
              f"{args.min_depth}+, {len(disputes)} in another band, {len(searched)} searched at depth {args.deep}", ""]

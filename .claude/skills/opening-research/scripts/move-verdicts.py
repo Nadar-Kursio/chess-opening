@@ -171,9 +171,9 @@ def main():
             for i, (epd, out) in enumerate(pool.imap_unordered(score_position, [(e, args.depth, args.screen) for e in todo]), 1):
                 cache[f"{epd}|{args.depth}"] = out
                 if i % 10 == 0 or i == len(todo):
-                    with open(CACHE + ".tmp", "w", encoding="utf-8") as f:
+                    with open(f"{CACHE}.{os.getpid()}.tmp", "w", encoding="utf-8") as f:
                         json.dump(cache, f)
-                    os.replace(CACHE + ".tmp", CACHE)
+                    os.replace(f"{CACHE}.{os.getpid()}.tmp", CACHE)
                     left = (len(todo) - i) * (time.time() - started) / i
                     print(f"  {i}/{len(todo)}, {int(left // 60)} min left", flush=True)
     if args.limit:

@@ -99,9 +99,9 @@ class Search:
             self.cache[key] = [info["score"].white().score(mate_score=MATE), [m.uci() for m in info.get("pv", [])]]
             # Through a temporary file: a run stopped mid-write (by pid, as the skill says) must not
             # leave half a cache that every later run fails to read.
-            with open(self.path + ".tmp", "w", encoding="utf-8") as f:
+            with open(f"{self.path}.{os.getpid()}.tmp", "w", encoding="utf-8") as f:
                 json.dump(self.cache, f)
-            os.replace(self.path + ".tmp", self.path)
+            os.replace(f"{self.path}.{os.getpid()}.tmp", self.path)
         ev, pv = self.cache[key]
         return ev, [chess.Move.from_uci(m) for m in pv]
 
