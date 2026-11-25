@@ -1,11 +1,13 @@
 import 'server-only';
 import type { PoolClient } from 'pg';
+import { cache } from 'react';
 import { courses } from './catalog';
-import { MAX_CROWN, crownOf } from './crowns';
+import { MAX_CROWN, courseCrowns, type Crown, type CrownDay } from './crowns';
 import { getOpening, hasOpening } from './content';
 import { query, transaction } from './db';
 import { MASTERED_DAYS, daysUntil, newCard, ratingFor, recallOdds, review, strengthOf, type CardState, type Strength } from './memory';
 import { courseCards, isCard, lineCards, type Due } from './recall';
+import type { Opening } from './types';
 
 /* The learner's deck: reading and writing review_cards. What a card is and how it's scheduled live
    in recall.ts and memory.ts; this file only stores them. */
@@ -275,31 +277,37 @@ export async function forecast(userId: string, tz: string, days = 7, now = new D
   return counts;
 }
 
-/**
- * A course's cards due before `before` (the end of the learner's day), and per chapter how many
- * positions are in long-term memory and the crown its cards hold. `learned` is the chapters done Learn for.
- */
-export async function courseMemory(userId: string, openingId: string, before: Date, learned: Set<string>) {
-  const op = getOpening(openingId);
-  const rows = await cardsOf(userId, openingId);
-  const strong = new Set(rows.filter((c) => strengthOf(c) === 'mastered').map((c) => c.position_key));
-  const due = rows.filter((c) => c.due < before).length;
-  const byKey = new Map(rows.map((c) => [c.position_key, c]));
-  const dayStart = new Date(before.getTime() - 86_400_000);
-  const chapters = new Map(
-    op.lines.map((l) => {
-      const keys = lineCards(op, l.slug);
-      return [
-        l.slug,
-        { mastered: keys.filter((k) => strong.has(k)).length, total: keys.length, crown: crownOf(learned.has(l.slug), keys, byKey, dayStart) },
-      ];
-    }),
+/** Every chapter's crown in one course, from the learner's cards there. */
+function crownsIn(op: Opening, learned: Set<string>, cards: Map<string, CardRow>, day: CrownDay) {
+  return courseCrowns(
+    op.lines.map((l) => ({ slug: l.slug, keys: lineCards(op, l.slug), learned: learned.has(l.slug) })),
+    cards,
+    day,
   );
-  return { due, chapters };
 }
 
-/** Chapters at the full crown right now, across every course: what the crown badge counts. */
-export async function fullCrowns(userId: string, tz: string) {
+/** The learner's day as crowns read it: when it began, and now. */
+export function crownDay(tz: string, now = new Date()): CrownDay {
+  return { start: new Date(endOfDay(tz, now).getTime() - 86_400_000), now };
+}
+
+/**
+ * A course's cards due before the end of the learner's day, and each chapter's crown.
+ * `learned` is the chapters done Learn for.
+ */
+export async function courseMemory(userId: string, openingId: string, tz: string, learned: Set<string>) {
+  const day = crownDay(tz);
+  const rows = await cardsOf(userId, openingId);
+  const dayEnd = day.start.getTime() + 86_400_000;
+  const due = rows.filter((c) => c.due.getTime() < dayEnd).length;
+  return { due, day, crowns: crownsIn(getOpening(openingId), learned, new Map(rows.map((c) => [c.position_key, c])), day) };
+}
+
+/**
+ * The crowns of every course the learner has learned a chapter of, by course and chapter. Read once
+ * per request: the badges and the crown news both want it.
+ */
+export const learnedCrowns = cache(async (userId: string, tz: string) => {
   const [cards, learned] = await Promise.all([
     cardsOf(userId),
     query<{ opening_id: string; line_slug: string }>(
@@ -307,20 +315,31 @@ export async function fullCrowns(userId: string, tz: string) {
       [userId],
     ),
   ]);
-  const dayStart = new Date(endOfDay(tz).getTime() - 86_400_000);
+  const day = crownDay(tz);
   const byCourse = new Map<string, Map<string, CardRow>>();
   for (const c of cards) {
     let m = byCourse.get(c.opening_id);
     if (!m) byCourse.set(c.opening_id, (m = new Map()));
     m.set(c.position_key, c);
   }
-  let full = 0;
+  const slugs = new Map<string, Set<string>>();
   for (const { opening_id: id, line_slug: slug } of learned) {
-    if (!hasOpening(id) || !byCourse.has(id)) continue;
-    const op = getOpening(id);
-    // Sidelines have Learn and Drill only, so no crown.
-    if (!op.lines.some((l) => l.slug === slug)) continue;
-    if (crownOf(true, lineCards(op, slug), byCourse.get(id)!, dayStart).level === MAX_CROWN) full++;
+    if (!hasOpening(id)) continue;
+    let set = slugs.get(id);
+    if (!set) slugs.set(id, (set = new Set()));
+    set.add(slug);
+  }
+  // Sidelines have Learn and Drill only, so no crown: crownsIn reads the course's chapters alone.
+  const out = new Map<string, Map<string, Crown>>();
+  for (const [id, set] of slugs) out.set(id, crownsIn(getOpening(id), set, byCourse.get(id) ?? new Map(), day));
+  return out;
+});
+
+/** Chapters at the full crown right now, across every course: what the crown badge counts. */
+export async function fullCrowns(userId: string, tz: string) {
+  let full = 0;
+  for (const crowns of (await learnedCrowns(userId, tz)).values()) {
+    for (const c of crowns.values()) if (c.level === MAX_CROWN) full++;
   }
   return full;
 }

@@ -8,16 +8,16 @@ import { createEmptyCard, fsrs, generatorParameters, Rating, State, type Card, t
    first graded attempt of a learner's day counts — repeating a line the same afternoon is practice,
    not evidence that it's remembered. */
 
-const scheduler = fsrs(
-  generatorParameters({
-    request_retention: 0.9,
-    maximum_interval: 365,
-    enable_fuzz: true,
-    // Whole days only: a web course isn't opened every ten minutes, and a miss is re-asked inside
-    // the session instead of on a minutes-long learning step.
-    enable_short_term: false,
-  }),
-);
+const PARAMS = {
+  request_retention: 0.9,
+  maximum_interval: 365,
+  // Whole days only: a web course isn't opened every ten minutes, and a miss is re-asked inside
+  // the session instead of on a minutes-long learning step.
+  enable_short_term: false,
+};
+const scheduler = fsrs(generatorParameters({ ...PARAMS, enable_fuzz: true }));
+// Forecasts use the same model without the fuzz, so a projection doesn't shift between page loads.
+const planner = fsrs(generatorParameters({ ...PARAMS, enable_fuzz: false }));
 
 /** Found, but only after this long: still recalled, not yet fluent. */
 export const SLOW_MS = 15_000;
@@ -100,4 +100,21 @@ export function recallOdds(c: CardState, now: Date) {
 /** Whole days from `now` until the card is due, at least one. */
 export function daysUntil(c: Pick<CardState, 'due'>, now: Date) {
   return Math.max(1, Math.round((c.due.getTime() - now.getTime()) / DAY_MS));
+}
+
+/**
+ * When the card first reaches `stability` days if, from `now` on, every review happens on its due
+ * day and the move is found first time: the review that gets it there, or `now` if it already has.
+ */
+export function readyBy(c: CardState, stability: number, now: Date) {
+  if (c.reps > 0 && c.stability >= stability) return now;
+  let card = c;
+  let at = c.due > now ? c.due : now;
+  // Each on-time Good review multiplies stability, so a handful of steps reaches any target here.
+  for (let i = 0; i < 16; i++) {
+    card = fromFsrs(planner.next(toFsrs(card, at), at, Rating.Good).card);
+    if (card.stability >= stability) return at;
+    at = card.due;
+  }
+  return at;
 }

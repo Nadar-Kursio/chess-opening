@@ -134,7 +134,7 @@ export const BADGES: BadgeDef[] = [
     name: 'Crowned',
     emblem: 'jewels',
     metric: 'fullCrowns',
-    tiers: [{ goal: 1, label: 'Earn the full crown on a chapter' }],
+    tiers: [{ goal: 1, label: 'Master a chapter: every move in long-term memory' }],
   },
   {
     id: 'traps',

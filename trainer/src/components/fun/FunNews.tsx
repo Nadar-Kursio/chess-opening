@@ -5,20 +5,27 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { claimNews } from '@/app/fun-actions';
 import type { News } from '@/lib/fun';
+import { CROWN_NAME, MAX_CROWN, type CrownLevel } from '@/lib/crownLevels';
 import { savedSessions, subscribeOutbox } from '@/lib/outbox';
+import Crown from '@/components/ui/Crown';
 import Badge from './Badge';
 import Burst from './Burst';
 import '@/app/fun.css';
+import '@/app/crowns.css';
 
-/* Asks the server what's new (badges, quests, a level) on every page and after every saved
-   session, and shows each once: a toast for most, a card of its own for a new level. `refresh`
-   re-renders the page behind it, so the header's level catches up. */
+/* Asks the server what's new (badges, quests, a level, a chapter's crown) on every page and after
+   every saved session, and shows each once: a toast for most, a card of its own for a new level or
+   a Mastered chapter. `refresh` re-renders the page behind it, so the header's level catches up. */
 
 const TOAST_MS = 5500;
 const LEVEL_MS = 7000;
 const ASK_DELAY_MS = 300;
 
 type Shown = News & { id: number };
+type Card = Extract<Shown, { kind: 'level' }> | Extract<Shown, { kind: 'crown' }>;
+
+const isCard = (n: Shown): n is Card => n.kind === 'level' || (n.kind === 'crown' && n.level === MAX_CROWN && !n.back);
+const chapterHref = (n: Extract<News, { kind: 'crown' }>) => `/openings/${n.openingId}#chapter-${n.slug}`;
 
 export default function FunNews({ refresh = false }: { refresh?: boolean }) {
   const path = usePathname();
@@ -50,12 +57,13 @@ export default function FunNews({ refresh = false }: { refresh?: boolean }) {
   }, [path, saved, refresh, router]);
 
   const dismiss = (id: number) => setItems((list) => list.filter((i) => i.id !== id));
-  const level = items.find((i) => i.kind === 'level');
-  const toasts = items.filter((i) => i.kind !== 'level').slice(0, 3);
+  const card = items.find(isCard);
+  const toasts = items.filter((i) => !isCard(i)).slice(0, 3);
 
   return (
     <>
-      {level && level.kind === 'level' ? <LevelUp key={level.id} item={level} onClose={() => dismiss(level.id)} /> : null}
+      {card?.kind === 'level' ? <LevelUp key={card.id} item={card} onClose={() => dismiss(card.id)} /> : null}
+      {card?.kind === 'crown' ? <Mastered key={card.id} item={card} onClose={() => dismiss(card.id)} /> : null}
       {toasts.length ? (
         <div className="toasts" role="status">
           {toasts.map((t) => (
@@ -113,6 +121,20 @@ function Toast({ item, onClose }: { item: Shown; onClose: () => void }) {
           <span>New quests tomorrow.</span>
         </span>
       </>
+    ) : item.kind === 'crown' ? (
+      <>
+        <Crown level={item.level} size="md" rise />
+        <span className="toast__text">
+          <span className="toast__eyebrow">{item.back ? 'Crown restored' : 'Crown up'}</span>
+          <b>
+            {item.chapter} {item.back ? 'is back to' : 'is now'} {item.name}
+          </b>
+          <span>
+            {item.course}
+            {item.level < MAX_CROWN ? ` · Next: ${CROWN_NAME[(item.level + 1) as CrownLevel]}` : ''}
+          </span>
+        </span>
+      </>
     ) : item.kind === 'welcome' ? (
       <>
         <span className="toast__icon toast__icon--level" aria-hidden="true">
@@ -132,9 +154,9 @@ function Toast({ item, onClose }: { item: Shown; onClose: () => void }) {
       </>
     ) : null;
   return (
-    <div className={`toast toast--${item.kind}`}>
-      {item.kind === 'quest' || item.kind === 'quests' ? <Burst /> : null}
-      <Link href="/achievements" className="toast__body" onClick={onClose}>
+    <div className={`toast toast--${item.kind}${item.kind === 'crown' ? ` toast--crown-${item.level}` : ''}`}>
+      {item.kind === 'quest' || item.kind === 'quests' || (item.kind === 'crown' && !item.back) ? <Burst /> : null}
+      <Link href={item.kind === 'crown' ? chapterHref(item) : '/achievements'} className="toast__body" onClick={onClose}>
         {body}
       </Link>
       <button type="button" className="toast__close" onClick={onClose} aria-label="Dismiss">
@@ -163,6 +185,31 @@ function LevelUp({ item, onClose }: { item: Extract<Shown, { kind: 'level' }>; o
         <div className="level-up__actions">
           <Link href="/achievements" className="btn btn--secondary" onClick={onClose}>
             See badges
+          </Link>
+          <button type="button" className="btn btn--primary" onClick={onClose}>
+            Nice
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Mastered({ item, onClose }: { item: Extract<Shown, { kind: 'crown' }>; onClose: () => void }) {
+  useAutoClose(onClose, LEVEL_MS);
+  return (
+    <div className="level-up" role="dialog" aria-modal="false" aria-labelledby="mastered-title">
+      <Burst big />
+      <div className="level-up__card level-up__card--crown">
+        <Crown level={MAX_CROWN} size="xl" rise />
+        <span className="toast__eyebrow">Chapter mastered</span>
+        <h2 id="mastered-title">{item.chapter}</h2>
+        <p className="muted">
+          Every move of this {item.course} chapter is in long-term memory. Answer when Recall asks and the crown stays.
+        </p>
+        <div className="level-up__actions">
+          <Link href={chapterHref(item)} className="btn btn--secondary" onClick={onClose}>
+            See the course
           </Link>
           <button type="button" className="btn btn--primary" onClick={onClose}>
             Nice

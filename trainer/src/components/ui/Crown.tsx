@@ -1,45 +1,67 @@
-import { CROWN_LABEL, MAX_CROWN, type Crown as CrownState } from '@/lib/crowns';
+import { CROWN_NAME, MAX_CROWN, type CrownLevel } from '@/lib/crownLevels';
 
-/* A chapter's crown: five points, a jewel on each, lit left to right as the level rises. Jewels
-   the chapter earned but lost to overdue cards stay as hollow rings until Recall wins them back.
-   At the full crown the whole crown turns gold. Colours are classes in crowns.css. */
+/* The mastery mark: a crown in its level's colour with the level number on it, the same everywhere
+   it appears. New is an empty grey crown; Mastered is gold with a spark. A chapter fading from
+   overdue cards keeps the level it holds now and wears a red down-arrow until Recall wins it back.
+   `rise` plays the level-up (crowns.css, stilled for reduced motion). */
 
-const TIPS: [number, number][] = [
-  [4, 10],
-  [12, 7],
-  [20, 4],
-  [28, 7],
-  [36, 10],
-];
-
-export default function Crown({ crown, size = 'md', label }: { crown: CrownState; size?: 'sm' | 'md' | 'lg'; label?: string }) {
-  const { level, earned } = crown;
+export default function Crown({
+  level,
+  fading = false,
+  size = 'md',
+  rise = false,
+  label,
+}: {
+  level: CrownLevel;
+  fading?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  rise?: boolean;
+  label?: string;
+}) {
   return (
     <svg
-      viewBox="0 0 40 30"
-      className={`crown crown--${size} crown--l${level}${level < earned ? ' crown--fading' : ''}`}
+      viewBox="0 0 48 44"
+      className={`crown crown--${size} crown--l${level}${fading ? ' crown--fading' : ''}${rise ? ' crown--rise' : ''}`}
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
     >
-      <path className="crown__body" d="M6 22.5L4 10l7 6 1-9 5.5 7L20 4l2.5 10L28 7l1 9 7-6-2 12.5z" />
-      <rect className="crown__band" x="5.5" y="22.5" width="29" height="5" rx="1.5" />
-      {level === MAX_CROWN ? <path className="crown__shine" d="M8 19.5h24" /> : null}
-      {TIPS.map(([x, y], i) => (
-        <circle
-          key={x}
-          cx={x}
-          cy={y}
-          r="2.8"
-          className={`crown__jewel${i < level ? ' crown__jewel--on' : i < earned ? ' crown__jewel--lost' : ''}`}
-        />
-      ))}
+      <g className="crown__shape">
+        <path className="crown__body" d="M8.5 36L5 14.5l11 8.5L24 9.5l8 13.5 11-8.5L39.5 36z" />
+        <circle className="crown__ball" cx="5" cy="13" r="3.4" />
+        <circle className="crown__ball" cx="24" cy="7.5" r="3.8" />
+        <circle className="crown__ball" cx="43" cy="13" r="3.4" />
+        <rect className="crown__band" x="7" y="32.5" width="34" height="7.5" rx="2.5" />
+        {level === MAX_CROWN ? <path className="crown__shine" d="M11.5 29.5l-1.6-9" /> : null}
+        {level ? (
+          <text className="crown__num" x="24" y="30.5" textAnchor="middle">
+            {level}
+          </text>
+        ) : null}
+      </g>
+      {level === MAX_CROWN ? <path className="crown__spark" d="M40 0.5l1.4 3.6 3.6 1.4-3.6 1.4L40 10.5l-1.4-3.6L35 5.5l3.6-1.4z" /> : null}
+      {fading ? (
+        <g className="crown__fade">
+          <circle cx="40.5" cy="36" r="7.5" />
+          <path d="M40.5 32v7.5M37.3 36.6l3.2 3.2 3.2-3.2" />
+        </g>
+      ) : null}
     </svg>
   );
 }
 
-/** What a crown means, for a title or a screen reader. */
-export function crownWords(crown: CrownState) {
-  const head = crown.level ? `Crown ${crown.level} of ${MAX_CROWN}: ${CROWN_LABEL[crown.level]}` : 'No crown yet';
-  return crown.next ? `${head}. ${crown.next}.` : `${head}.`;
+/** Five steps to Mastered: held ones in the level's colour, ones lost to overdue cards marked. */
+export function CrownSteps({ level, earned }: { level: CrownLevel; earned: CrownLevel }) {
+  return (
+    <span className={`crown-steps crown-steps--l${level}`} aria-hidden="true">
+      {Array.from({ length: MAX_CROWN }, (_, i) => (
+        <span key={i} className={`crown-steps__step${i < level ? ' crown-steps__step--on' : i < earned ? ' crown-steps__step--lost' : ''}`} />
+      ))}
+    </span>
+  );
+}
+
+/** The level's name in its own colour. */
+export function CrownName({ level }: { level: CrownLevel }) {
+  return <span className={`crown-name crown-name--l${level}`}>{CROWN_NAME[level]}</span>;
 }

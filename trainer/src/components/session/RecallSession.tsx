@@ -29,6 +29,9 @@ interface Props {
   againHref: string;
   sound: SoundSet;
   coordinates: boolean;
+  /** Shown when there's nothing to ask. Here rather than in the page, so the refresh that follows
+      saving the round can't swap its summary for it. */
+  empty?: React.ReactNode;
 }
 
 type Phase = 'replay' | 'ask' | 'reveal' | 'answered' | 'done';
@@ -82,7 +85,7 @@ function opening(run: Queued): Omit<Msg, 'id'> {
   };
 }
 
-export default function RecallSession({ runs, remaining: left, title, closeHref, againHref, sound, coordinates }: Props) {
+export default function RecallSession({ runs, remaining: left, title, closeHref, againHref, sound, coordinates, empty }: Props) {
   // Saving the round revalidates the page with a fresh one: hold the round this one started with.
   const [queue, setQueue] = useState<Queued[]>(runs);
   const [remaining] = useState(left);
@@ -293,7 +296,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
 
   usePrimaryKey(phase === 'answered' ? advance : phase === 'done' && remaining > 0 ? () => (window.location.href = againHref) : null);
 
-  if (!run) return null;
+  if (!run) return empty ?? null;
   const hits = answers.filter((a) => a.hit).length;
   const orientation = flipped ? otherTurn(run.side) : run.side;
   const arrows: BoardArrow[] =

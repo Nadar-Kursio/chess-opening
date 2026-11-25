@@ -217,18 +217,45 @@
   --trap-board-sm: 84px;
   --trap-row-min: 440px;
   --trap-badge: 36px;
-  /* chapter crowns and the trap collection */
-  --crown-sm: 26px;
-  --crown-md: 40px;
-  --crown-lg: 56px;
-  --crown-label: 56px;
-  --crown-off: #e4e9f1;
-  --crown-off-edge: #cdd5e1;
-  --crown-body: #fff3d9;
-  --crown-edge: #d0901a;
-  --crown-jewel: #f5b83d;
-  --crown-gem: #e5484d;
-  --crown-lost: #e5484d;
+  /* chapter crowns: one colour per mastery level, New to Mastered. Fills carry a white number
+     at 4.5:1 or better; Mastered is gold with a dark number. `soft`/`ink` are the level's chip. */
+  --crown-sm: 32px;
+  --crown-md: 52px;
+  --crown-lg: 64px;
+  --crown-xl: 120px;
+  --crown-label: 72px;
+  --crown-stroke: 2.5px;
+  --crown-num-size: 17px;
+  --crown-step: 6px;
+  --crown-num: #ffffff;
+  --crown-0: #e4e9f1;
+  --crown-0-edge: #b9c3d3;
+  --crown-0-soft: #eef1f6;
+  --crown-0-ink: #76829a;
+  --crown-1: #2f6fe0;
+  --crown-1-edge: #1f4fa8;
+  --crown-1-soft: #e5efff;
+  --crown-1-ink: #1d58b8;
+  --crown-2: #23874c;
+  --crown-2-edge: #17613a;
+  --crown-2-soft: #e2f5e9;
+  --crown-2-ink: #1f7a44;
+  --crown-3: #7a4ce6;
+  --crown-3-edge: #5631b3;
+  --crown-3-soft: #efe9ff;
+  --crown-3-ink: #5b34c4;
+  --crown-4: #d2501a;
+  --crown-4-edge: #943407;
+  --crown-4-soft: #ffece2;
+  --crown-4-ink: #a8400f;
+  --crown-5: #f7c843;
+  --crown-5-edge: #c98d10;
+  --crown-5-soft: #fff3d9;
+  --crown-5-ink: #9a6408;
+  --crown-5-num: #6e4a04;
+  --crown-spark: #f5b83d;
+  --crown-glow: rgba(247, 200, 67, 0.45);
+  --mastery-help: 420px;
   --trap-title-min: 220px;
   --trap-badge-lg: 56px;
   --trap-slot-min: 220px;
@@ -270,11 +297,21 @@
     --toast-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
     --scrim: rgba(0, 0, 0, 0.55);
     /* chapter crowns */
-    --crown-off: #263145;
-    --crown-off-edge: #3a4660;
-    --crown-body: #3a2f16;
-    --crown-edge: #f5b83d;
-    --crown-lost: #ff8f93;
+    --crown-0: #263145;
+    --crown-0-edge: #4a5672;
+    --crown-0-soft: #1e2738;
+    --crown-0-ink: #8590a8;
+    --crown-1-soft: #19294a;
+    --crown-1-ink: #8fb8ff;
+    --crown-2-soft: #183527;
+    --crown-2-ink: #6fd69b;
+    --crown-3-soft: #2a2148;
+    --crown-3-ink: #b9a0ff;
+    --crown-4-soft: #3a2216;
+    --crown-4-ink: #ffa877;
+    --crown-5-soft: #3a2f16;
+    --crown-5-ink: #ffcf6b;
+    --crown-glow: rgba(247, 200, 67, 0.3);
     color-scheme: dark;
   }
 }

@@ -1,8 +1,10 @@
 import 'server-only';
+import type { PoolClient } from 'pg';
 import { cache } from 'react';
 import { badgeById, badgeStates, longestRun, newlyMet, tierCounts, tierName, type Emblem, type Totals, type Unlock } from './achievements';
-import { endOfDay, fullCrowns } from './cards';
+import { endOfDay, fullCrowns, learnedCrowns } from './cards';
 import { courses } from './catalog';
+import { CROWN_NAME, crownRises, type CrownLevel, type CrownsSeen } from './crowns';
 import { getOpening } from './content';
 import { chapters, courseProgress } from './course';
 import { query, queryOne, transaction } from './db';
@@ -203,7 +205,42 @@ export type News =
   | { kind: 'level'; level: number; name: string }
   | { kind: 'badge'; badge: string; name: string; label: string; tier: Tier; emblem: Emblem }
   | { kind: 'quest'; title: string }
-  | { kind: 'quests' };
+  | { kind: 'quests' }
+  | { kind: 'crown'; openingId: string; slug: string; course: string; chapter: string; level: CrownLevel; name: string; back: boolean };
+
+/**
+ * Chapters whose crown went up since the learner last looked. The first look only remembers what
+ * they hold. The row is swapped only if nobody changed it since it was read, so a second tab
+ * asking at the same moment gets nothing twice.
+ */
+async function crownNews(client: PoolClient, userId: string, tz: string): Promise<News[]> {
+  const current = new Map<string, CrownLevel>();
+  for (const [id, crowns] of await learnedCrowns(userId, tz)) {
+    for (const [slug, c] of crowns) current.set(`${id}/${slug}`, c.level);
+  }
+  const { rows } = await client.query<{ levels: CrownsSeen }>(`select levels from crown_seen where user_id = $1`, [userId]);
+  if (!rows.length) {
+    await client.query(`insert into crown_seen (user_id, levels) values ($1, $2::jsonb) on conflict do nothing`, [
+      userId,
+      JSON.stringify(crownRises({}, current).next),
+    ]);
+    return [];
+  }
+  const seen = rows[0].levels;
+  const { rises, next, changed } = crownRises(seen, current);
+  if (!changed) return [];
+  const swapped = await client.query(
+    `update crown_seen set levels = $2::jsonb, updated_at = now() where user_id = $1 and levels = $3::jsonb`,
+    [userId, JSON.stringify(next), JSON.stringify(seen)],
+  );
+  if (!swapped.rowCount) return [];
+  return rises.map(({ key, level, back }) => {
+    const [openingId, slug] = key.split('/');
+    const op = getOpening(openingId);
+    const chapter = op.lines.find((l) => l.slug === slug)?.name ?? slug;
+    return { kind: 'crown', openingId, slug, course: op.name, chapter, level, name: CROWN_NAME[level], back };
+  });
+}
 
 /**
  * What the learner hasn't been told yet, each item handed out once: claiming a row and reading it
@@ -213,7 +250,9 @@ export type News =
 export async function takeNews(userId: string): Promise<{ news: News[]; fun: Fun }> {
   const fun = await syncFun(userId);
   const { level } = fun;
+  const tz = await learnerTimezone();
   const news = await transaction(async (client) => {
+    const crowns = await crownNews(client, userId, tz);
     const fresh = await client.query(
       `insert into fun_state (user_id, level_seen) values ($1, $2) on conflict do nothing`,
       [userId, level.level],
@@ -224,7 +263,7 @@ export async function takeNews(userId: string): Promise<{ news: News[]; fun: Fun
       const badges = fun.badges.reduce((n, b) => n + b.tiers.filter((t) => t.unlocked).length, 0);
       return level.level > 1 || badges ? [{ kind: 'welcome', level: level.level, name: level.name, badges } as News] : [];
     }
-    const out: News[] = [];
+    const out: News[] = [...crowns];
     const up = await client.query(
       `update fun_state set level_seen = $2, updated_at = now() where user_id = $1 and level_seen < $2`,
       [userId, level.level],
