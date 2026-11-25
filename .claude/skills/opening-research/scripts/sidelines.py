@@ -74,6 +74,7 @@ LEARNER_MOVES = 3
 # How far below the engine's best a club move may be and still be the reply a lesson expects.
 CLUB_SLACK = INACCURACY  # "holds up" means what the move marks mean by it
 CLUB_TRIES = 3      # most common club moves tried at a position, most common first
+WALK_REACH = 0.001  # the walk past the chapters stops where fewer of the course's games than this go
 CLUB_COMMON = 0.25  # a top move this share of club players choose is expected whatever it costs
 
 
@@ -364,8 +365,10 @@ def main():
             board.push_san(san)
 
     # Off the chapters: mistakes players make after sidelines the course knows about.
-    def walk(board, moves, depth):
+    def walk(board, moves, depth, reach=1.0):
         epd = board.epd()
+        if reach < WALK_REACH:
+            return
         counts = positions.get(epd)
         if not counts or depth > MOVES:
             return
@@ -377,7 +380,7 @@ def main():
                 if san in studied_moves.get(epd, ()) or san == course_move.get(epd):
                     b = board.copy()
                     b.push_san(san)
-                    walk(b, moves + [san], depth)
+                    walk(b, moves + [san], depth, reach)
             return
         for reply, count in sorted(counts.items(), key=lambda kv: -kv[1]):
             # By share as well as count: with a whole month of the explorer behind every
@@ -392,7 +395,7 @@ def main():
                 item = build_item(board, moves, reply, count, total, None, None, course_move.get(epd))
                 if item and item["kind"] == "set":
                     add(item, board)
-            walk(b, moves + [reply], depth + 1)
+            walk(b, moves + [reply], depth + 1, reach * count / total)
 
     walk(chess.Board(), [], 0)
 
