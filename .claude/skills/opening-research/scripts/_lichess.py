@@ -263,6 +263,7 @@ class Cloud:
         self.asked = 0
         self.patient = patient
         self.resting = 0
+        self.skipped = 0
 
     def known(self, epd):
         """The cached analysis, without asking Lichess."""
@@ -272,10 +273,12 @@ class Cloud:
     def lookup(self, epd):
         if epd not in self.store:
             if time.time() < self.resting:
+                self.skipped += 1
                 return None
             try:
                 reply = _get(CLOUD, {"fen": _fen(epd), "multiPv": 1}, patient=self.patient)
             except Busy:
+                self.skipped += 1
                 self.resting = time.time() + REST
                 print(f"  the cloud is resting for {REST // 60} min: walking on masters and club moves",
                       file=sys.stderr, flush=True)

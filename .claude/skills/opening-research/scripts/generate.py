@@ -23,7 +23,7 @@ Lichess.
   evals       src/content/evals/<id>.json             engine       yes
   verdicts    src/content/verdicts/<id>.json          engine       yes
   exits       src/content/exits/<id>.json             engine       yes
-  crosscheck  .engine/crosscheck/<id>.txt (a report)  engine, net  yes
+  crosscheck  .engine/crosscheck/<id>.txt (a report)  engine, net  its own, for the engine part
 
 Each step is skipped when nothing it reads has changed since it last succeeded: the course's
 content (the OPENING data itself, so reformatting the module costs nothing), the generated files
@@ -56,6 +56,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LOCK = os.path.join(os.path.dirname(ROOT) if os.path.basename(os.path.dirname(ROOT)) == ".worktrees"
                     else os.path.join(ROOT, ".worktrees"), ".heavy.lock")
 STATE = os.path.join(ROOT, ".engine", "generate")
+INCOMPLETE = 3      # crosscheck.py's "report written, some positions unchecked"
 
 
 def steps(op_id, args, trap):
@@ -74,8 +75,8 @@ def steps(op_id, args, trap):
         ("verdicts", "move-verdicts.py", [op_id, "--workers", threads], [own("verdicts")], [own("sidelines")], True),
         ("exits", "exits.py", [op_id, "--games", str(args.exit_games), "--threads", threads], [own("exits")],
          [own("sidelines"), own("club")], True),
-        ("crosscheck", "crosscheck.py", [op_id, "--threads", threads],
-         [os.path.join(".engine", "crosscheck", f"{op_id}.txt")], [own("evals"), own("sidelines")], True),
+        ("crosscheck", "crosscheck.py", [op_id, "--threads", threads, "--lock", LOCK],
+         [os.path.join(".engine", "crosscheck", f"{op_id}.txt")], [own("evals"), own("sidelines")], False),
     ]
     if trap:
         chain = [s for s in chain if s[0] in ("evals", "crosscheck")]
@@ -195,6 +196,9 @@ def main():
             log(f"{name}: running" + (f" after {waited / 60:.1f} min in the queue" if locked else ""))
             began = time.time()
             result = subprocess.run(["nice", "-n", "10" if locked else "5"] + argv, cwd=ROOT)
+        if name == "crosscheck" and result.returncode == INCOMPLETE:
+            log(f"{name}: incomplete, the cloud asked for a pause; the next run checks the rest")
+            continue
         if result.returncode:
             log(f"failed: {name} exited {result.returncode} after {int(time.time() - began)} s")
             sys.exit(result.returncode)
