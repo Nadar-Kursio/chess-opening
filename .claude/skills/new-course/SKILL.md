@@ -159,7 +159,9 @@ re-run. Generating before the lines settle only means generating twice.
 cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/generate.py <id> --background
 ```
 
-It prints a pid and a log, `.engine/generate/<id>.log`, and runs: sidelines (the
+It prints a pid and a log, `.engine/generate/<id>.log`, and runs: the dossier on the
+course's own moves first, without the engine lock, so every explorer answer the later
+steps need is cached before any of them holds the box's engine; then sidelines (the
 course's exits from the chapters, grown at positions 1%+ of games reach), the committed
 club counts the sparring partner plays from, the eval bar at depth 20, the wrong-move
 verdicts, the engine's answer to every club move that leaves the course, and the cloud

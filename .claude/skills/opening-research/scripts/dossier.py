@@ -292,7 +292,7 @@ def report(walk, args, out):
             say(f"          game {g['id']}  {g['white']} - {g['black']}, {g['year']} ({g['result']})")
     say()
 
-    say(f"TRAPS (candidates; trap-scan.py checks each at depth 20)")
+    say("TRAPS (candidates; trap-scan.py checks each at depth 20)")
     found = False
     for epd, node in sorted(nodes.items(), key=lambda kv: -kv[1]["reach"]):
         if node["turn"] == "opponent" and node["cloud"][0] is not None:

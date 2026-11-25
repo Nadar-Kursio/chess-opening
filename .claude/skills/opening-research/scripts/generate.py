@@ -11,7 +11,13 @@ before the eval bar, the verdicts and the exits that read them, and the cloud cr
 A trap course (section "traps") has no club data or sidelines: it needs the evals and the
 cross-check only.
 
+The dossier goes first, without the lock, because the explorer is slow (roughly 20 to 30
+requests a minute) and sidelines.py asks it about every position it judges: walked first,
+those answers are cached, and the engine steps never hold the box's lock while waiting on
+Lichess.
+
   step        writes                                  needs        lock
+  dossier     .engine/dossier/<id>.txt                net          no
   sidelines   src/content/sidelines/<id>.json         engine, net  yes
   club        src/content/club/<id>.json              net          no
   evals       src/content/evals/<id>.json             engine       yes
@@ -58,6 +64,7 @@ def steps(op_id, args, trap):
     own = lambda folder: os.path.join("src", "content", folder, f"{op_id}.json")   # noqa: E731
     threads = str(args.threads)
     chain = [
+        ("dossier", "dossier.py", [op_id], [os.path.join(".engine", "dossier", f"{op_id}.txt")], [], False),
         ("sidelines", "sidelines.py", [op_id, "--threads", threads, "--reach", str(args.reach),
                                        "--share", str(args.share), "--moves", str(args.moves)],
          [own("sidelines")], [], True),
