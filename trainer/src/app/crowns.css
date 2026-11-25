@@ -1,4 +1,30 @@
-/* Chapter crowns: the mark on each chapter card and the row in the course header. */
+/* Chapter crowns: the mastery mark, the chapter's next step, the course summary, the explainer and
+   the level-up. Each level's colours are set once on the mark's custom properties. */
+
+.crown--l0 {
+  --c: var(--crown-0);
+  --c-edge: var(--crown-0-edge);
+}
+.crown--l1 {
+  --c: var(--crown-1);
+  --c-edge: var(--crown-1-edge);
+}
+.crown--l2 {
+  --c: var(--crown-2);
+  --c-edge: var(--crown-2-edge);
+}
+.crown--l3 {
+  --c: var(--crown-3);
+  --c-edge: var(--crown-3-edge);
+}
+.crown--l4 {
+  --c: var(--crown-4);
+  --c-edge: var(--crown-4-edge);
+}
+.crown--l5 {
+  --c: var(--crown-5);
+  --c-edge: var(--crown-5-edge);
+}
 
 .crown {
   display: block;
@@ -7,55 +33,178 @@
 }
 .crown--sm {
   width: var(--crown-sm);
-  height: calc(var(--crown-sm) * 0.75);
+  height: calc(var(--crown-sm) * 44 / 48);
 }
 .crown--md {
   width: var(--crown-md);
-  height: calc(var(--crown-md) * 0.75);
+  height: calc(var(--crown-md) * 44 / 48);
 }
 .crown--lg {
   width: var(--crown-lg);
-  height: calc(var(--crown-lg) * 0.75);
+  height: calc(var(--crown-lg) * 44 / 48);
+}
+.crown--xl {
+  width: var(--crown-xl);
+  height: calc(var(--crown-xl) * 44 / 48);
 }
 .crown__body,
-.crown__band {
-  fill: var(--crown-off);
-  stroke: var(--crown-off-edge);
-  stroke-width: 1.5;
+.crown__ball {
+  fill: var(--c);
+  stroke: var(--c-edge);
+  stroke-width: var(--crown-stroke);
   stroke-linejoin: round;
 }
-.crown__jewel {
-  fill: var(--crown-off);
-  stroke: var(--crown-off-edge);
-  stroke-width: 1.2;
+.crown__band {
+  fill: var(--c-edge);
 }
-.crown:not(.crown--l0) .crown__body,
-.crown:not(.crown--l0) .crown__band {
-  fill: var(--crown-body);
-  stroke: var(--crown-edge);
+.crown--l0 .crown__body,
+.crown--l0 .crown__ball {
+  stroke-dasharray: 3 2.5;
 }
-.crown__jewel--on {
-  fill: var(--crown-jewel);
-  stroke: var(--crown-edge);
+.crown__num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--crown-num-size);
+  fill: var(--crown-num);
 }
-.crown__jewel--lost {
-  fill: none;
-  stroke: var(--crown-lost);
-  stroke-dasharray: 2 1.6;
-}
-.crown--l5 .crown__body,
-.crown--l5 .crown__band {
-  fill: var(--tier-gold);
-  stroke: var(--tier-gold-deep);
-}
-.crown--l5 .crown__jewel--on {
-  fill: var(--crown-gem);
-  stroke: var(--tier-gold-deep);
+.crown--l5 .crown__num {
+  fill: var(--crown-5-num);
 }
 .crown__shine {
   stroke: var(--badge-shine);
-  stroke-width: 2;
+  stroke-width: var(--crown-stroke);
   stroke-linecap: round;
+}
+.crown__spark {
+  fill: var(--crown-spark);
+}
+.crown__fade circle {
+  fill: var(--red);
+  stroke: var(--surface);
+  stroke-width: var(--crown-stroke);
+}
+.crown__fade path {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: var(--crown-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The level-up: the crown drops in, overshoots and settles, then its number pops. */
+.crown--rise .crown__shape {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+  animation: crown-rise 900ms var(--ease) both;
+}
+.crown--rise .crown__num {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: crown-num 1100ms var(--ease) both;
+}
+.crown--rise .crown__spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: crown-spark 1400ms var(--ease) both;
+}
+.crown--rise.crown--l5 {
+  filter: drop-shadow(0 0 var(--space-3) var(--crown-glow));
+}
+@keyframes crown-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(-30%) scale(0.4) rotate(-14deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0) scale(1.16) rotate(5deg);
+  }
+  72% {
+    transform: scale(0.95) rotate(-2deg);
+  }
+}
+@keyframes crown-num {
+  0%,
+  45% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.5);
+  }
+}
+@keyframes crown-spark {
+  0%,
+  50% {
+    opacity: 0;
+    transform: scale(0) rotate(-90deg);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1.4) rotate(20deg);
+  }
+}
+
+/* ---------- names and steps ---------- */
+
+.crown-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+.crown-name--l0 {
+  color: var(--crown-0-ink);
+}
+.crown-name--l1 {
+  color: var(--crown-1-ink);
+}
+.crown-name--l2 {
+  color: var(--crown-2-ink);
+}
+.crown-name--l3 {
+  color: var(--crown-3-ink);
+}
+.crown-name--l4 {
+  color: var(--crown-4-ink);
+}
+.crown-name--l5 {
+  color: var(--crown-5-ink);
+}
+
+.crown-steps {
+  display: flex;
+  gap: var(--space-1);
+}
+.crown-steps__step {
+  flex: 1;
+  height: var(--crown-step);
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+}
+.crown-steps--l1 .crown-steps__step--on {
+  background: var(--crown-1);
+}
+.crown-steps--l2 .crown-steps__step--on {
+  background: var(--crown-2);
+}
+.crown-steps--l3 .crown-steps__step--on {
+  background: var(--crown-3);
+}
+.crown-steps--l4 .crown-steps__step--on {
+  background: var(--crown-4);
+}
+.crown-steps--l5 .crown-steps__step--on {
+  background: var(--crown-5);
+}
+.crown-steps__step--lost {
+  background: repeating-linear-gradient(-45deg, var(--red) 0 var(--space-1), transparent 0 var(--space-2));
+}
+
+/* ---------- the chapter card ---------- */
+
+/* The summary, the toasts and Recall link to a chapter: land it below the sticky header. */
+.chapters .chapter {
+  scroll-margin-top: calc(var(--header) + var(--space-3));
 }
 
 .chapter__head .chapter__titles {
@@ -68,30 +217,117 @@
   gap: var(--space-1);
   flex: none;
   min-width: var(--crown-label);
+  margin: calc(var(--space-1) * -1) calc(var(--space-1) * -1) 0 0;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
-.chapter__crown-label {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: var(--muted);
-  white-space: nowrap;
+.chapter__crown:hover {
+  background: var(--surface-2);
 }
-.chapter--done .chapter__crown-label,
-.chapter__crown:has(.crown--l5) .chapter__crown-label {
-  color: var(--gold-ink);
-}
-.chip--fading {
-  background: var(--red-soft);
-  color: var(--red-ink);
-  text-decoration: none;
+.chapter__crown:focus-visible,
+.mastery-sum__chapter:focus-visible,
+.mastery-sum__help:focus-visible {
+  outline: var(--ring) solid var(--blue);
+  outline-offset: var(--hairline);
 }
 
-.crown-sum {
+.mastery-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.mastery-step--l1 {
+  background: var(--crown-1-soft);
+}
+.mastery-step--l2 {
+  background: var(--crown-2-soft);
+}
+.mastery-step--l3 {
+  background: var(--crown-3-soft);
+}
+.mastery-step--l4 {
+  background: var(--crown-4-soft);
+}
+.mastery-step--l5 {
+  background: var(--crown-5-soft);
+}
+.mastery-step--fading {
+  background: var(--red-soft);
+}
+.mastery-step__body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2) var(--space-3);
 }
-.crown-sum__row {
+.mastery-step__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 calc(var(--crown-label) * 3);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.mastery-step__text b {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--ink);
+}
+.mastery-step--fading .mastery-step__text b {
+  color: var(--red-ink);
+}
+.mastery-step--l0 .mastery-step__text b {
+  color: var(--muted);
+}
+
+/* ---------- the course summary ---------- */
+
+.mastery-sum {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+.mastery-sum__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
+}
+.mastery-sum__title {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+.mastery-sum__title b {
+  font-size: var(--text-xl);
+  color: var(--crown-5-ink);
+}
+.mastery-sum__help {
+  padding: var(--space-2) 0;
+  border: 0;
+  background: none;
+  color: var(--blue-ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+  cursor: pointer;
+}
+.mastery-sum__row {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -99,15 +335,188 @@
   flex-wrap: wrap;
   gap: var(--space-1);
 }
-.crown-sum__text {
-  color: var(--muted);
+.mastery-sum__chapter {
+  display: block;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+.mastery-sum__chapter:hover {
+  background: var(--surface-3);
+}
+.mastery-sum__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.mastery-sum__fading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--red-soft);
+  color: var(--red-ink);
   font-size: var(--text-sm);
 }
-.crown-sum__text b {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  color: var(--gold-ink);
+
+/* ---------- How mastery works ---------- */
+
+.mastery-help {
+  width: min(var(--mastery-help), calc(100vw - 2 * var(--gutter)));
+  max-height: calc(100dvh - 2 * var(--gutter));
+  overflow: auto;
+  padding: var(--space-4) var(--space-5);
+  border: var(--border) solid var(--line);
+  border-bottom-width: var(--press);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--toast-shadow);
 }
-.crown-sum__fading {
+.mastery-help:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: mastery-pop var(--slow) var(--ease);
+}
+@keyframes mastery-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+.mastery-help::backdrop {
+  background: var(--scrim);
+}
+.mastery-help h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+.mastery-help p {
+  margin: 0;
+}
+.mastery-help__ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.mastery-help__ladder li {
+  display: grid;
+  grid-template-columns: var(--crown-sm) var(--crown-label) minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-items: center;
+}
+.mastery-help__ladder span {
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+.mastery-help__fading b {
+  font-family: var(--font-display);
   color: var(--red-ink);
+}
+
+/* ---------- the level-up toast and the Mastered card ---------- */
+
+.toast--crown-1 {
+  border-color: var(--crown-1);
+}
+.toast--crown-2 {
+  border-color: var(--crown-2);
+}
+.toast--crown-3 {
+  border-color: var(--crown-3);
+}
+.toast--crown-4 {
+  border-color: var(--crown-4);
+}
+.toast--crown-5,
+.level-up__card--crown {
+  border-color: var(--crown-5);
+}
+.toast--crown .toast__eyebrow {
+  color: var(--ink-soft);
+}
+.level-up__card--crown .crown {
+  margin-bottom: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crown--rise .crown__shape,
+  .crown--rise .crown__num,
+  .crown--rise .crown__spark,
+  .mastery-help:popover-open {
+    animation: none;
+  }
+}
+
+/* ---------- the badges page ---------- */
+
+.crown-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.crown-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
+}
+.crown-card__head h3 {
+  margin: 0;
+}
+.crown-card__courses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.crown-card__course {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--ink);
+  text-decoration: none;
+}
+.crown-card__course:hover {
+  background: var(--surface-3);
+}
+.crown-card__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+}
+.crown-card__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---------- the repertoire index ---------- */
+
+.rep-card__crowns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.rep-card__crowns .muted {
+  margin-left: var(--space-1);
 }

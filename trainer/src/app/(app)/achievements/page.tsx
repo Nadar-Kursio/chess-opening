@@ -2,14 +2,21 @@ import Link from 'next/link';
 import Badge from '@/components/fun/Badge';
 import { LevelRing } from '@/components/fun/LevelChip';
 import QuestCard from '@/components/fun/QuestCard';
+import Crown from '@/components/ui/Crown';
 import { Trap } from '@/components/ui/icons';
+import MasteryHelp, { MasteryHelpButton } from '@/components/ui/MasteryHelp';
+import { learnedCrowns } from '@/lib/cards';
 import { trapCourses } from '@/lib/catalog';
+import { getOpening } from '@/lib/content';
+import { CROWN_NAME, MAX_CROWN } from '@/lib/crowns';
 import { syncFun } from '@/lib/fun';
 import { getPlayRecord } from '@/lib/playRecord';
+import { learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import { GAME_MOVES_CAP, RANKS, XP, levelStart } from '@/lib/xp';
 import '@/app/fun.css';
 import '@/app/trapdex.css';
+import '@/app/crowns.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Badges' };
@@ -20,7 +27,15 @@ const n = (x: number) => x.toLocaleString('en-GB');
 
 export default async function AchievementsPage() {
   const user = await requirePageUser('/achievements');
-  const [fun, play] = await Promise.all([syncFun(user.id), getPlayRecord(user.id)]);
+  const [fun, play, crownsByCourse] = await Promise.all([
+    syncFun(user.id),
+    getPlayRecord(user.id),
+    learnerTimezone().then((tz) => learnedCrowns(user.id, tz)),
+  ]);
+  const crownCourses = [...crownsByCourse].map(([id, crowns]) => {
+    const op = getOpening(id);
+    return { id, name: op.name, chapters: op.lines.map((l) => ({ slug: l.slug, name: l.name, level: crowns.get(l.slug)!.level })) };
+  });
   const traps = trapCourses().length;
   const { level, badges, parts } = fun;
   const earned = badges.reduce((k, b) => k + b.tiers.filter((t) => t.unlocked).length, 0);
@@ -123,6 +138,36 @@ export default async function AchievementsPage() {
             <span aria-hidden="true">→</span>
           </Link>
 
+          <section className="card crown-card" aria-labelledby="crowns-title">
+            <div className="crown-card__head">
+              <h3 id="crowns-title">Chapter crowns</h3>
+              <MasteryHelpButton className="mastery-sum__help">How mastery works</MasteryHelpButton>
+            </div>
+            {crownCourses.length ? (
+              <ul className="crown-card__courses">
+                {crownCourses.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/openings/${c.id}`} className="crown-card__course">
+                      <span className="crown-card__name">
+                        <b>{c.name}</b>
+                        <span className="muted small">
+                          {c.chapters.filter((ch) => ch.level === MAX_CROWN).length} of {c.chapters.length} mastered
+                        </span>
+                      </span>
+                      <span className="crown-card__row">
+                        {c.chapters.map((ch) => (
+                          <Crown key={ch.slug} level={ch.level} size="sm" label={`${ch.name}: ${CROWN_NAME[ch.level]}`} />
+                        ))}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted small">Learn a chapter to earn its first crown. It grows as the moves settle into memory.</p>
+            )}
+          </section>
+
           <section className="card xp-card" aria-labelledby="xp-title">
             <h3 id="xp-title">Where your XP comes from</h3>
             {parts.length ? (
@@ -165,6 +210,7 @@ export default async function AchievementsPage() {
           </section>
         </aside>
       </div>
+      <MasteryHelp />
     </main>
   );
 }

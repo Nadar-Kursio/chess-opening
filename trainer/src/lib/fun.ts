@@ -1,8 +1,10 @@
 import 'server-only';
+import type { PoolClient } from 'pg';
 import { cache } from 'react';
 import { badgeById, badgeStates, longestRun, newlyMet, tierCounts, tierName, type Emblem, type Totals, type Unlock } from './achievements';
-import { endOfDay, fullCrowns } from './cards';
+import { endOfDay, fullCrowns, learnedCrowns, type LearnedCrowns } from './cards';
 import { courses } from './catalog';
+import { CROWN_NAME, crownRises, type CrownLevel, type CrownsSeen } from './crowns';
 import { getOpening } from './content';
 import { chapters, courseProgress } from './course';
 import { query, queryOne, transaction } from './db';
@@ -22,7 +24,7 @@ interface Clear {
   quest: string;
 }
 
-async function readTotals(userId: string, tz: string) {
+async function readTotals(userId: string, tz: string, known?: LearnedCrowns) {
   const [row, days, byLine, play, crowns] = await Promise.all([
     queryOne<{
       moves: number;
@@ -58,7 +60,7 @@ async function readTotals(userId: string, tz: string) {
     query<{ day: string }>(`select distinct day from practice_sessions where user_id = $1`, [userId]),
     getProgress(userId),
     getPlayRecord(userId),
-    fullCrowns(userId, tz),
+    fullCrowns(userId, tz, known),
   ]);
   const r = { ...row!, games_xp: play.xp };
   const coursesFinished = courses().filter((o) => {
@@ -109,12 +111,15 @@ async function readToday(userId: string, tz: string, day: string): Promise<{ tod
   return { today, hasDeck };
 }
 
-/** Everything the header, Home and the badges page show: one read per request. */
-export const getFun = cache(async (userId: string) => {
+/**
+ * Everything the header, Home and the badges page show: one read per request. `crowns` saves reading
+ * the deck again when the caller already has the crown levels.
+ */
+export const getFun = cache(async (userId: string, crowns?: LearnedCrowns) => {
   const tz = await learnerTimezone();
   const day = dayIn(tz);
   const [{ r, totals }, { today, hasDeck }, unlockRows, clears] = await Promise.all([
-    readTotals(userId, tz),
+    readTotals(userId, tz, crowns),
     readToday(userId, tz, day),
     query<{ badge: string; tier: number; at: string }>(
       `select badge, tier, to_char(unlocked_at at time zone $2, 'YYYY-MM-DD') as at
@@ -175,8 +180,8 @@ export type Fun = ReturnType<typeof build>;
  * Stores badge tiers and quests earned since the last look, and returns the state including them.
  * Inserting is idempotent, so two tabs syncing at once store each one once.
  */
-export async function syncFun(userId: string): Promise<Fun> {
-  let fun = await getFun(userId);
+export async function syncFun(userId: string, crowns?: LearnedCrowns): Promise<Fun> {
+  let fun = await getFun(userId, crowns);
   // Clearing quests can complete the quest badge, so quests go in first.
   const cleared = fun.quests.filter((q) => q.done && !fun.clears.some((c) => c.day === fun.day && c.quest === q.id));
   if (cleared.length) {
@@ -203,17 +208,54 @@ export type News =
   | { kind: 'level'; level: number; name: string }
   | { kind: 'badge'; badge: string; name: string; label: string; tier: Tier; emblem: Emblem }
   | { kind: 'quest'; title: string }
-  | { kind: 'quests' };
+  | { kind: 'quests' }
+  | { kind: 'crown'; openingId: string; slug: string; course: string; chapter: string; level: CrownLevel; name: string; back: boolean };
+
+/**
+ * Chapters whose crown went up since the learner last looked. The first look only remembers what
+ * they hold. `seen` was read before `current` was worked out, and the row is swapped only if it
+ * still holds `seen`: a claim whose levels are older than the row it would replace can't record a
+ * false fall, and a second tab asking at the same moment gets nothing twice.
+ */
+async function crownNews(client: PoolClient, userId: string, seen: CrownsSeen | null, current: Map<string, CrownLevel>): Promise<News[]> {
+  if (!seen) {
+    await client.query(`insert into crown_seen (user_id, levels) values ($1, $2::jsonb) on conflict do nothing`, [
+      userId,
+      JSON.stringify(crownRises({}, current).next),
+    ]);
+    return [];
+  }
+  const { rises, next, changed } = crownRises(seen, current);
+  if (!changed) return [];
+  const swapped = await client.query(
+    `update crown_seen set levels = $2::jsonb, updated_at = now() where user_id = $1 and levels = $3::jsonb`,
+    [userId, JSON.stringify(next), JSON.stringify(seen)],
+  );
+  if (!swapped.rowCount) return [];
+  return rises.map(({ key, level, back }) => {
+    const [openingId, slug] = key.split('/');
+    const op = getOpening(openingId);
+    const chapter = op.lines.find((l) => l.slug === slug)?.name ?? slug;
+    return { kind: 'crown', openingId, slug, course: op.name, chapter, level, name: CROWN_NAME[level], back };
+  });
+}
 
 /**
  * What the learner hasn't been told yet, each item handed out once: claiming a row and reading it
  * are one statement, so a second tab asking at the same moment gets nothing twice. A learner seen
  * here for the first time gets one welcome instead of a toast for everything already earned.
+ * Everything read from the pool is read before the transaction takes its connection.
  */
 export async function takeNews(userId: string): Promise<{ news: News[]; fun: Fun }> {
-  const fun = await syncFun(userId);
+  const tz = await learnerTimezone();
+  const seen = await queryOne<{ levels: CrownsSeen }>(`select levels from crown_seen where user_id = $1`, [userId]);
+  const crowns = await learnedCrowns(userId, tz);
+  const current = new Map<string, CrownLevel>();
+  for (const [id, byChapter] of crowns) for (const [slug, c] of byChapter) current.set(`${id}/${slug}`, c.level);
+  const fun = await syncFun(userId, crowns);
   const { level } = fun;
   const news = await transaction(async (client) => {
+    const crownItems = await crownNews(client, userId, seen?.levels ?? null, current);
     const fresh = await client.query(
       `insert into fun_state (user_id, level_seen) values ($1, $2) on conflict do nothing`,
       [userId, level.level],
@@ -224,7 +266,7 @@ export async function takeNews(userId: string): Promise<{ news: News[]; fun: Fun
       const badges = fun.badges.reduce((n, b) => n + b.tiers.filter((t) => t.unlocked).length, 0);
       return level.level > 1 || badges ? [{ kind: 'welcome', level: level.level, name: level.name, badges } as News] : [];
     }
-    const out: News[] = [];
+    const out: News[] = [...crownItems];
     const up = await client.query(
       `update fun_state set level_seen = $2, updated_at = now() where user_id = $1 and level_seen < $2`,
       [userId, level.level],

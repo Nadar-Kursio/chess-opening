@@ -1,13 +1,17 @@
 import Link from 'next/link';
+import Crown from '@/components/ui/Crown';
 import MiniBoard from '@/components/ui/MiniBoard';
 import { LevelLegend, MemoryBar, WeakMark } from '@/components/ui/Memory';
-import { endOfDay, syncDeck } from '@/lib/cards';
+import { endOfDay, learnedCrowns, syncDeck } from '@/lib/cards';
 import { courseCard, courses, sideLabel } from '@/lib/catalog';
+import { getOpening } from '@/lib/content';
+import { CROWN_NAME, MAX_CROWN } from '@/lib/crowns';
 import { tallyTotal } from '@/lib/mastery';
 import { learnerTimezone } from '@/lib/progress';
 import { courseTallies, deckFacts } from '@/lib/repertoireData';
 import { requirePageUser } from '@/lib/session';
 import '../../repertoire.css';
+import '@/app/crowns.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Repertoire' };
@@ -17,7 +21,8 @@ export default async function RepertoireIndex() {
   const tz = await learnerTimezone();
   await syncDeck(user.id);
   const all = courses();
-  const tallies = courseTallies(await deckFacts(user.id, endOfDay(tz)), all.map((o) => o.id));
+  const [facts, crowns] = await Promise.all([deckFacts(user.id, endOfDay(tz)), learnedCrowns(user.id, tz)]);
+  const tallies = courseTallies(facts, all.map((o) => o.id));
   const rows = all.map((o) => ({ o, ...tallies.get(o.id)!, hero: courseCard(o, undefined).hero }));
   const started = rows.filter((r) => r.started);
   const rest = rows.filter((r) => !r.started);
@@ -26,6 +31,7 @@ export default async function RepertoireIndex() {
     <div className="rep-index">
       {items.map(({ o, tally, hero }) => {
         const total = tallyTotal(tally);
+        const chapters = crowns.get(o.id) ? getOpening(o.id).lines.map((l) => ({ name: l.name, level: crowns.get(o.id)!.get(l.slug)!.level })) : null;
         return (
           <Link key={o.id} href={`/repertoire/${o.id}`} className="card rep-card">
             <MiniBoard fen={hero.fen} flipped={o.orientation === 'black'} last={hero} />
@@ -42,6 +48,16 @@ export default async function RepertoireIndex() {
               <span className="muted small">
                 {sideLabel(o.orientation)} · {total - tally.none} of {total} moves learned
               </span>
+              {chapters ? (
+                <span className="rep-card__crowns">
+                  {chapters.map((ch, i) => (
+                    <Crown key={i} level={ch.level} size="sm" label={`${ch.name}: ${CROWN_NAME[ch.level]}`} />
+                  ))}
+                  <span className="muted small">
+                    {chapters.filter((ch) => ch.level === MAX_CROWN).length} of {chapters.length} chapters mastered
+                  </span>
+                </span>
+              ) : null}
             </span>
           </Link>
         );
