@@ -380,11 +380,14 @@ def main():
                     walk(b, moves + [san], depth)
             return
         for reply, count in sorted(counts.items(), key=lambda kv: -kv[1]):
-            if count < ENOUGH:
+            # By share as well as count: with a whole month of the explorer behind every
+            # position, 25 games is a sliver of a busy one, and following every sliver walks a
+            # tree many times the course's size.
+            if count < ENOUGH or count / total < COMMON:
                 continue
             b = board.copy()
             b.push_san(reply)
-            if b.epd() not in seen and count / total >= COMMON:
+            if b.epd() not in seen:
                 seen.add(b.epd())
                 item = build_item(board, moves, reply, count, total, None, None, course_move.get(epd))
                 if item and item["kind"] == "set":
