@@ -36,7 +36,7 @@ The planning tools ask the explorer directly, so a reply the course doesn't answ
 can be followed as far as anyone played it; the sparring tools read the committed file
 `club-moves.py` writes, exactly as the trainer does. Answers are cached for good under
 `.engine/lichess/`, shared by every worktree, and requests are queued box-wide, one at a
-time, because the explorer allows about one every two seconds. The client needs a
+time, because the explorer allows roughly 20 to 30 a minute. The client needs a
 Lichess API token in `~/.config/lichess-token` (any account, no scopes).
 
 - **`dossier.py <id> --start ... --system ...`** (minutes, no engine). The opening

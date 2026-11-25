@@ -17,9 +17,10 @@ number on the page from `.engine/stockfish` at depth 20. The opening-research sk
 (`.claude/skills/opening-research/SKILL.md`) holds the detail behind each step, and this
 checklist links to its sections rather than repeating them.
 
-**The budget for a course the size of the London: under an hour of data and engine time,
-the rest authoring and checking.** Research needs no engine at all; the engine runs once,
-as one background job, while you check the app.
+**Where the time goes**: research is network time with no engine (the dossier, about 20
+to 30 minutes the first time); the engine runs once, as one background job, while you
+check the app, and only the steps an edit touched run again. The generate log times each
+step; put those minutes in the PR, so the next course's estimate is a measurement.
 
 ## The size budget
 
@@ -63,9 +64,10 @@ cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/ski
 
 `--start` is played as given; `--system` is the course's signature moves, played in the
 learner's first four moves unless the cloud says one costs an inaccuracy there (it then
-says so under CHOICES). No engine, no lock: about 10 to 20 minutes the first time, limited
-by the explorer's rate (it allows about a request every two seconds and the client paces
-itself; a `429 ... waiting 60 s` line is that pacing, not a failure), seconds after.
+says so under CHOICES). No engine, no lock: about 20 to 30 minutes the first time (the
+Jobava London walked 505 positions on about 1,000 requests), limited by the explorer's
+rate (roughly 20 to 30 requests a minute; the client paces itself, and a
+`429 ... waiting 60 s` line is that pacing, not a failure), about a second after.
 Everything is cached under `.engine/lichess/` for every worktree. It writes
 `.engine/dossier/<id>.txt`; read all of it:
 

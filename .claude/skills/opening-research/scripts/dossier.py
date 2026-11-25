@@ -150,7 +150,7 @@ class Walk:
         cloud rates within an inaccuracy of its best. The learner's need the masters and the cloud
         to choose a move; the masters and the club only where the map, the chapters and the dodge
         check look (--show %+ reach). Below that the cloud's move is good enough to walk on, and
-        the explorer is the scarce one: it allows about one request every two seconds."""
+        the explorer is the scarce one: it allows roughly 20 to 30 requests a minute."""
         epd = board.epd()
         learner = board.turn == self.side
         node = {"path": path, "ply": len(path), "reach": reach, "flags": [],
