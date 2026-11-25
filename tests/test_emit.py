@@ -292,8 +292,8 @@ class TestEmit(unittest.TestCase):
             self.assertTrue(game["plies"], name)
 
     def test_club_counts_ship_in_their_own_file_for_every_opponent_move(self):
-        """The sparring partner reads club/<id>.json. It stays out of coaching/, which is what
-        turns the engine view on, and it covers every position the opponent moves in, or a game
+        """The sparring partner reads club/<id>.json. It stays out of coaching/, which carries
+        the verdicts and sidelines, and it covers every position the opponent moves in, or a game
         quietly falls back to the course's own weights; re-run club-moves.py after an edit."""
         clubs = sorted(name[len("club/"):-len(".json")] for name in self.files if name.startswith("club/"))
         self.assertTrue({"london", "queensgambit", "ruylopez", "sicilian", "scandinavian"} <= set(clubs))
@@ -315,6 +315,22 @@ class TestEmit(unittest.TestCase):
                     self.assertRegex(diff, r"^([a-h][1-8][.pnbrqkPNBRQK]){2,4}$", f"{op_id}: {san}")
                     self.assertIn(f"{uci[:2]}.", diff, f"{op_id}: {san} leaves its square")
                     self.assertIn(check, (0, 1), f"{op_id}: {san}")
+
+    def test_the_engine_answers_where_club_moves_leave_the_course(self):
+        """`answers` (exits.py) is what the sparring end screen shows: keyed by the position after
+        the leaving move, with the learner to move, the reply's squares and a line opening on it."""
+        for name in sorted(n for n in self.files if n.startswith("club/")):
+            club = self.files[name]
+            self.assertTrue(club.get("answers"), f"{name}: re-run exits.py")
+            for key, a in club["answers"].items():
+                self.assertRegex(key, r"^[.pnbrqkPNBRQK]{64}[wb]$", name)
+                self.assertRegex(a["num"], r"^\d+\.(\.\.)?\S+$", name)
+                self.assertTrue(a["line"].startswith(a["num"]), f"{name}: {a['line']}")
+                square = (8 - int(a["from"][1])) * 8 + "abcdefgh".index(a["from"][0])
+                piece = key[square]
+                self.assertNotEqual(piece, ".", f"{name}: {a['num']}")
+                self.assertEqual(piece.isupper(), key[-1] == "w", f"{name}: {a['num']} moves the side to play")
+                self.assertIsInstance(a["ev"], int, name)
 
 
 if __name__ == "__main__":

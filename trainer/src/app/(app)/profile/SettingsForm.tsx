@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from 'react';
 import { updateSettings } from '@/app/actions';
 import { play, SOUND_SET_INFO, SOUND_SETS, type SoundSet } from '@/lib/sound';
-import { SPEECH_RATES, VOICES, type Voice } from '@/lib/speech';
+import { SPEECH_RATES, VOICES, brianOnlyNote, type Voice } from '@/lib/speech';
 
 const GOALS = [
   { value: 10, label: 'Casual', note: '10 moves' },
@@ -31,10 +31,13 @@ interface FormSettings {
 export default function SettingsForm({
   initial,
   samples,
+  brianOnly,
 }: {
   initial: FormSettings;
   /** Each voice's recorded sample, when it has been recorded. */
   samples: Record<Voice, string | null>;
+  /** The titles of the narrated courses recorded in Brian's voice alone. */
+  brianOnly: string[];
 }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(false);
@@ -48,6 +51,7 @@ export default function SettingsForm({
       setSaved(true);
     });
   };
+  const voiceNote = brianOnlyNote(brianOnly);
   const hear = (voice: Voice, rate: number) => {
     const src = samples[voice];
     if (!src) return;
@@ -122,6 +126,7 @@ export default function SettingsForm({
             </button>
           ))}
         </div>
+        {voiceNote ? <p className="muted small">{voiceNote}</p> : null}
       </fieldset>
       <fieldset disabled={!s.narration} className="settings__voice">
         <legend>Speaking speed</legend>

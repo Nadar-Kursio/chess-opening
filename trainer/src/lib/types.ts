@@ -142,7 +142,7 @@ export interface Opening {
   lesson?: Lesson;
   lines: Line[];
   branchsets?: Branch[][];
-  /** The eval bar, move marks and wrong-move verdicts are on for this course. */
+  /** The eval bar and move marks are on: the course's plies carry engine scores. */
   engineView?: boolean;
   sidelines?: Sidelines;
   /** Trap courses that happen in this one, found by position at build time. */

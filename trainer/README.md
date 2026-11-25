@@ -20,10 +20,10 @@ since the trainer, branch positions too), scores are the shipped evals.
 | Sessions | `src/components/session/` — `LineSession` (learn/drill/recall), `QuizSession` (quiz, punish, review), `FreeSession`. |
 | Recall | `src/lib/memory.ts` (FSRS scheduling, grades from behaviour), `src/lib/recall.ts` (cards and the runs that ask them), `src/lib/cards.ts` (the deck in `review_cards`), `RecallSession`. See below. |
 | Looking back | `components/session/SessionBoard.tsx` is the board every session draws, plus the arrow keys, the buttons under it and the clickable move list. A session passes only the positions already reached, so stepping forward can't show the move it's about to ask for. |
-| Sparring | `/play/spar`: the course against a club opponent that draws each move from `club/<id>.json` (`club-moves.py` in the `opening-research` skill), so common lines come up most and a move the course doesn't answer ends the game. `src/lib/spar.ts` makes the choices, `SparSession` plays them; three lives, a book-depth score, personal bests in `spar_bests`. A course gets it by having the file. |
+| Sparring | `/play/spar`: the course against a club opponent that draws each move from `club/<id>.json` (`club-moves.py` in the `opening-research` skill), so common lines come up most and a move the course doesn't answer ends the game: "End of your prep", with the engine's reply drawn as an arrow and labelled as the engine's, not the course's (`answers` in the same file, from `exits.py`). `src/lib/spar.ts` makes the choices, `SparSession` plays them; three lives, a book-depth score, personal bests in `spar_bests`. A course gets it by having the file. |
 | Repertoire | `/repertoire/[id]`: the course's tree from one chair (`src/lib/repertoire.ts`, built on Recall's paths), each move with the learner's memory below it, its club share and score, and the lesson that teaches it; a map of every learner position by move number. Club shares come from `content/club/<id>.json` when the scripts made one (`positions`, by position key or FEN, replies counted by SAN), else from the course's sideline rows. |
 | Stats | `/stats`: practice per day, accuracy, the year, the deck by stability, retention and the ten weakest positions (`src/lib/stats.ts` is the pure part, `statsData.ts` the aggregates). "Practise these" runs them as a Recall round at `/stats/practice`. |
-| Engine view | A course with `coaching/<id>.json` gets an eval bar, move marks, a verdict on every wrong move and the "When they leave the line" section. Nothing is searched at runtime: `src/lib/engineView.ts` only presents what the scripts in the `opening-research` skill generated. A sideline is a `Line` with a `start`, so sessions, saves and Recall treat it like a chapter, with Learn and Drill only. |
+| Engine view | Every course gets the eval bar and move marks, because every ply ships a score (`src/content/evals/`): live in Learn and Watch, held at the learner's last move in Drill, Free, Guess and sparring, hidden in Test, Quiz and Recall until the move is answered. A course with `coaching/<id>.json` also gets a verdict on every wrong move and the "When they leave the line" section. Nothing is searched at runtime: `src/lib/engineView.ts` only presents what the scripts in the `opening-research` skill generated. A sideline is a `Line` with a `start`, so sessions, saves and Recall treat it like a chapter, with Learn and Drill only. |
 | Your games | `src/lib/games.ts` walks a learner's imported Lichess and Chess.com games down the same tree free practice uses and finds where each left the course (pure, `tests/games.test.ts`). `gameSources.ts` reads the sites' responses, `gameImport.ts` fetches them (server only, one request at a time per site, one import per site every 10 minutes) and `gamePositions.ts` replays the moves with `chess.js` on the server so another move order into the course still counts. A move the learner had learned and missed in a game is due in Recall straight away (`bringForward`). Pages: `/games`, `/games/<site>/<id>`, `/games/practice`. |
 | Real play | `src/lib/gameTraps.ts` reads each trap course's bait off its own lines (the victim's first move the course marks a mistake where it also offers a sound one) and finds it in a game by position: sprung, sprung on you, or dodged. Imported games are checked on every read; a sparring game sends its path with the save and `playRecord.ts` checks it against the course and club moves before storing what it met in `spar_traps` (`010_play.sql`). The same record pays XP for imported games (`gameXp` in `xp.ts`). The album is `/traps/collection`. |
 | Crowns | `src/lib/crowns.ts`: each chapter's 0-5 crown from its Recall cards (learned, every move answered, every move familiar, half then all in long-term memory), one level lost for overdue cards and one more per week. Shown on the course page. |
@@ -89,13 +89,17 @@ can be fitted to these learners later.
 ## Narration
 
 Learn is read aloud by a recorded coach, in the voice and speed the learner picks in Settings.
-`npm run narrate` records every clip that isn't on disk yet for the openings listed in
-`scripts/narrate.ts` (`NARRATED`), in all three voices (less any line in `SKIPPED`), with Polly's
+`npm run narrate` records every clip that isn't on disk yet for the courses in `NARRATED`
+(`src/lib/speech.ts`), each in the voices it lists (less any line in `SKIPPED`): the first four in
+all three, a new course in Brian's alone, with Polly's
 neural engine through the machine's AWS credentials. Clips are named by a hash of voice and the words spoken (not the
 punctuation), so a run after a content edit records only the sentences whose words changed, and the server offers a session only the clips that
-exist — an unrecorded line plays silent. Spending is capped: `narration/ledger.json` keeps the
-running total and a run that would pass `NARRATION_BUDGET_USD` (default $5) records nothing.
-`--dry-run` prints the count and the cost. Clips live in `narration/` (or `NARRATION_DIR`), are
+exist — an unrecorded line plays silent. Spending is capped per course: `narration/ledger.json` keeps the running total and each
+course's spend (the first four courses spent theirs together, before the split, and share one
+budget), and a course whose clips would pass `NARRATION_BUDGET_USD` (default $5) records nothing
+while the others go on. `--dry-run` prints the clips and the cost course by course, `--course <id>`
+limits a run to one. When a learner's voice hasn't read a course, Learn plays Brian's (then any
+recorded voice), and Settings names the courses only Brian reads. Clips live in `narration/` (or `NARRATION_DIR`), are
 generated and never committed, and are served by `/api/narration/[voice]/[clip]` to signed-in
 learners. The deploy runs `narrate` after compiling the course.
 

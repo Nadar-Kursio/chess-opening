@@ -372,3 +372,46 @@
     font-size: var(--text-xl);
   }
 }
+
+/* End of prep: the engine's reply, kept visibly apart from what the course teaches. */
+.arrow--engine {
+  stroke: var(--arrow-engine);
+  stroke-dasharray: var(--space-1) calc(var(--space-1) / 2);
+}
+.arrow-head--engine {
+  fill: var(--arrow-engine);
+}
+.spar-engine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: var(--border) dashed var(--purple);
+  background: var(--purple-soft);
+}
+.spar-engine .eyebrow {
+  color: var(--purple);
+}
+.spar-engine__move {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.spar-engine__move b {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+.spar-engine__eval {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+.spar-engine__line {
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}

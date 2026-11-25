@@ -718,7 +718,7 @@ def build_sideline(op, index, item, errors, evals, chapters):
     row["yourMoves"] = (len(line_moves) + 1) // 2
     ply = len(prefix) + 1
     built = build_line(op["id"], index, {
-        "name": f"They left the line: {num}",
+        "name": f"{num} sideline",
         "note": f"{item['pct']}% of club games at this point go this way." if item["pct"] else "This one is rare at club level, and worth knowing anyway.",
         "moves": " ".join(prefix + [item["reply"]] + line_moves),
         "notes": {ply: row["note"]},
@@ -806,7 +806,39 @@ def build_club(record, errors, warnings):
     if missing:
         warnings.append(f"club/{record['id']}: {len(missing)} positions the opponent moves in have "
                         f"no club counts, re-run club-moves.py")
-    return {**{k: data[k] for k in ("source", "generated", "scanned", "games", "elo")}, "positions": positions}
+    out = {**{k: data[k] for k in ("source", "generated", "scanned", "games", "elo")}, "positions": positions}
+    answers = exit_answers(record["id"], errors)
+    if answers:
+        out["answers"] = answers
+    return out
+
+
+def exit_answers(op_id, errors):
+    """The engine's reply wherever a club move leaves the course, from exits.py, for the sparring
+    end screen: keyed as the trainer keys the position after the leaving move, with the move's
+    squares, the score and a short line as a scoresheet ("4.Nf3 Nc6 5.c3")."""
+    data = load_generated("exits", op_id)
+    if not data:
+        return None
+    out = {}
+    for epd, a in data["positions"].items():
+        board = chess.Board(epd + " 0 1")
+        board.fullmove_number = a["ply"] // 2 + 1
+        try:
+            best = board.parse_san(a["best"])
+            sans, b = [], board.copy()
+            for san in a["line"].split():
+                sans.append(san_with_number(b, san) if b.turn == chess.WHITE or not sans else san)
+                b.push_san(san)
+        except ValueError as e:
+            errors.append(f"exits/{op_id}: {a['best']} / {a['line']} from {epd}: {e}")
+            continue
+        answer = {"num": san_with_number(board, board.san(best)), "from": chess.square_name(best.from_square),
+                  "to": chess.square_name(best.to_square), "ev": a["v"], "line": " ".join(sans)}
+        if "n" in a:
+            answer["mate"] = a["n"]
+        out[board_array(board) + ("w" if board.turn == chess.WHITE else "b")] = answer
+    return out
 
 
 def build_openings(games, evals):

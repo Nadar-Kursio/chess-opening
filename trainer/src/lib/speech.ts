@@ -15,6 +15,39 @@ export type Voice = keyof typeof VOICES;
 
 export const isVoice = (v: string): v is Voice => Object.hasOwn(VOICES, v);
 
+/** Every course gets Brian; the voice a learner hears when theirs wasn't recorded. */
+export const DEFAULT_VOICE: Voice = 'brian';
+
+/** The courses read aloud, each with the voices it is recorded in. The first four were recorded in
+    all three; a new course is recorded once, in Brian's voice, because every voice costs the same
+    again and each course has its own budget (scripts/narrate.ts). */
+export const NARRATED: Record<string, readonly Voice[]> = {
+  london: ['brian', 'amy', 'matthew'],
+  scandinavian: ['brian', 'amy', 'matthew'],
+  sicilian: ['brian', 'amy', 'matthew'],
+  queensgambit: ['brian', 'amy', 'matthew'],
+};
+
+/** The voices to try for a course, best first: the learner's own if the course has it, then Brian. */
+export function voicesFor(courseId: string, chosen: Voice): Voice[] {
+  const recorded = NARRATED[courseId] ?? [];
+  return [chosen, DEFAULT_VOICE, ...recorded].filter((v, i, all) => recorded.includes(v) && all.indexOf(v) === i);
+}
+
+/** The narrated courses only Brian reads. */
+export function brianOnly(): string[] {
+  return Object.entries(NARRATED)
+    .filter(([, voices]) => voices.length === 1 && voices[0] === DEFAULT_VOICE)
+    .map(([id]) => id);
+}
+
+/** The line under the voice picker naming those courses, by their titles; null when there are none. */
+export function brianOnlyNote(names: string[]) {
+  if (!names.length) return null;
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return `Brian reads ${list} on his own, so you’ll hear him there whichever voice you pick.`;
+}
+
 /** Speaking speeds offered in Settings, in percent. */
 export const SPEECH_RATES = [90, 100, 125, 150] as const;
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { spoken, utterances } from '../src/lib/speech.ts';
+import { NARRATED, VOICES, brianOnlyNote, spoken, utterances, voicesFor } from '../src/lib/speech.ts';
 import type { Opening } from '../src/lib/types.ts';
 
 const ROOT = process.env.CONTENT_DIR ?? path.join(import.meta.dirname, '..', 'content');
@@ -45,4 +45,21 @@ test('every narrated line has a clip per ply, and no notation survives into spee
       }
     }
   }
+});
+
+test('a learner hears their own voice where it was recorded, else Brian, else whoever was', () => {
+  assert.deepEqual(voicesFor('london', 'amy'), ['amy', 'brian', 'matthew']);
+  assert.deepEqual(voicesFor('london', 'brian'), ['brian', 'amy', 'matthew']);
+  assert.deepEqual(voicesFor('not-narrated', 'amy'), []);
+  for (const [id, voices] of Object.entries(NARRATED)) {
+    assert.ok(voices.length > 0 && voices.every((v) => Object.hasOwn(VOICES, v)), id);
+    assert.ok(openings.some((op) => op.id === id), `${id} is a course`);
+    for (const v of Object.keys(VOICES) as (keyof typeof VOICES)[]) assert.ok(voicesFor(id, v).every((x) => voices.includes(x)), id);
+  }
+});
+
+test('Settings names the courses only Brian reads, in a sentence', () => {
+  assert.equal(brianOnlyNote([]), null);
+  assert.equal(brianOnlyNote(['Jobava London']), 'Brian reads Jobava London on his own, so you’ll hear him there whichever voice you pick.');
+  assert.match(brianOnlyNote(['A', 'B', 'C'])!, /reads A, B and C on his own/);
 });

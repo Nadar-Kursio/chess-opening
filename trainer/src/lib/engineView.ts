@@ -1,4 +1,4 @@
-import type { Mark, MoveScore, Ply, Severity } from './types.ts';
+import type { Line, Mark, MoveScore, Ply, Severity } from './types.ts';
 
 /* Presents the engine's numbers: the eval bar, the move marks, and what a wrong move scored. All of
    it was searched ahead of time and shipped; nothing here plays or judges a move. */
@@ -6,6 +6,11 @@ import type { Mark, MoveScore, Ply, Severity } from './types.ts';
 export const MARK_GLYPH: Record<Mark, string> = { brilliant: '!!', great: '!', inaccuracy: '?!', blunder: '??' };
 
 type Score = Pick<Ply, 'ev' | 'mate'>;
+
+/** Whether a course gets the eval bar and marks: every course whose plies carry scores, coaching file or not. */
+export function hasScores(lines: Pick<Line, 'plies'>[]) {
+  return lines.some((line) => line.plies.some((p) => p.ev !== undefined || p.mate !== undefined));
+}
 
 /** White's score, as a player reads it. */
 export function evalText({ ev, mate }: Score) {

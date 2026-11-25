@@ -15,7 +15,8 @@ const FILES = 'abcdefgh';
 export interface BoardArrow {
   from: string;
   to: string;
-  kind: 'hint' | 'good' | 'bad';
+  /** `engine`: Stockfish's choice past the end of the course, never the course's own move. */
+  kind: 'hint' | 'good' | 'bad' | 'engine';
 }
 
 export interface BoardFlash {
@@ -279,7 +280,7 @@ function Arrows({ arrows, orientation }: { arrows: BoardArrow[]; orientation: Tu
   return (
     <svg className="arrows" viewBox="0 0 100 100" aria-hidden="true">
       <defs>
-        {(['hint', 'good', 'bad'] as const).map((k) => (
+        {(['hint', 'good', 'bad', 'engine'] as const).map((k) => (
           <marker key={k} id={`head-${k}`} markerWidth="4" markerHeight="4" refX="2.2" refY="2" orient="auto">
             <path d="M0,0 L4,2 L0,4 z" className={`arrow-head arrow-head--${k}`} />
           </marker>

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
-import { utterances, VOICES, SAMPLE, type Voice } from './speech';
+import { utterances, voicesFor, VOICES, SAMPLE, type Voice } from './speech';
 import type { Colour, Line } from './types';
 
 /* Recorded narration: one mp3 per (voice, words), named by a hash of both, in NARRATION_DIR/<voice>/.
@@ -31,7 +31,7 @@ function recorded(voice: Voice) {
 const url = (voice: Voice, name: string) => `/api/narration/${voice}/${name}`;
 
 /** The clips for a Learn session of this line, by utterance key; empty when none are recorded. */
-export function lineClips(line: Line, side: Colour, voice: Voice) {
+function lineClips(line: Line, side: Colour, voice: Voice) {
   const have = recorded(voice);
   const clips: Record<string, string> = {};
   for (const u of utterances(line, side)) {
@@ -39,6 +39,16 @@ export function lineClips(line: Line, side: Colour, voice: Voice) {
     if (have.has(name)) clips[u.key] = url(voice, name);
   }
   return clips;
+}
+
+/** A Learn session's clips in the learner's voice, or in Brian's (then any other recorded) when the
+    course or this line wasn't recorded in theirs. Empty for a course nobody narrated. */
+export function narrationFor(courseId: string, line: Line, side: Colour, chosen: Voice) {
+  for (const voice of voicesFor(courseId, chosen)) {
+    const clips = lineClips(line, side, voice);
+    if (Object.keys(clips).length) return clips;
+  }
+  return {};
 }
 
 /** Each voice's sample, for the picker in Settings. */

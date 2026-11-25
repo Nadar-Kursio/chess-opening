@@ -24,6 +24,16 @@ The bands are marks.py's, so this and the move icons can't disagree. One move is
 checked, at depth 20, which is what catches a tactic like 2...h5 3.e3 e5; it does
 not replay the setup any further than that.
 
+GROWING PAST THE EXITS
+
+Then it closes the gaps coverage.py lists: every reply chosen by --share % of the
+club games at a position --reach % of them get to, within the opponent's first
+--moves moves, that reaches no position the course teaches. That includes replies
+inside the sidelines it has just made, so it goes round until none is left (or
+--rounds). Each becomes a sideline judged the same way, its autopilot move being the
+one the learner plays against the course's expected reply. --no-grow skips it.
+Items already in the file keep their slugs: they are made first, in the same order.
+
 Lines come from the authored branch when there is one, and from Stockfish's
 principal variation when there isn't. Ranking needs nothing else: `coverage` is
 every club reply in the first MOVES opponent moves, weighted by how often the
@@ -42,6 +52,8 @@ import chess                                            # noqa: E402
 import chess.engine                                     # noqa: E402
 from _engine import ROOT, engine_path                   # noqa: E402
 from engine.marks import INACCURACY                     # noqa: E402
+from _course import Tree, club_counts                   # noqa: E402
+from coverage import analyse                            # noqa: E402
 
 MATE = 10000
 MOVES = 5           # opponent moves per chapter on the page
@@ -78,8 +90,11 @@ class Search:
             limit = chess.engine.Limit(depth=depth)
             info = self.eng.analyse(board, limit, root_moves=[move] if move else None)
             self.cache[key] = [info["score"].white().score(mate_score=MATE), [m.uci() for m in info.get("pv", [])]]
-            with open(self.path, "w", encoding="utf-8") as f:
+            # Through a temporary file: a run stopped mid-write (by pid, as the skill says) must not
+            # leave half a cache that every later run fails to read.
+            with open(self.path + ".tmp", "w", encoding="utf-8") as f:
                 json.dump(self.cache, f)
+            os.replace(self.path + ".tmp", self.path)
         ev, pv = self.cache[key]
         return ev, [chess.Move.from_uci(m) for m in pv]
 
@@ -124,6 +139,11 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("opening")
     ap.add_argument("--threads", type=int, default=2)
+    ap.add_argument("--no-grow", dest="grow", action="store_false", help="only the chapters' own exits")
+    ap.add_argument("--moves", type=int, default=6, help="grow: the opponent's first N moves")
+    ap.add_argument("--share", type=float, default=5, help="grow: replies chosen this often (%%)")
+    ap.add_argument("--reach", type=float, default=0.25, help="grow: at positions this share (%%) of games reach")
+    ap.add_argument("--rounds", type=int, default=6, help="grow: at most this many passes")
     args = ap.parse_args()
 
     from importlib import import_module
@@ -296,6 +316,49 @@ def main():
             walk(b, moves + [reply], depth + 1)
 
     walk(chess.Board(), [], 0)
+
+    def chapter_of(moves):
+        """The chapter whose positions the game last passed through."""
+        board, found = chess.Board(), None
+        for san in moves:
+            board.push_san(san)
+            found = owner.get(board.epd(), found)
+        return found
+
+    def autopilot(tree, board):
+        """The learner's move after the reply the course expects here."""
+        expected = tree.learner_moves(board.epd())
+        if not expected:
+            return None
+        b = board.copy()
+        b.push_san(max(expected, key=expected.get))
+        mine = tree.learner_moves(b.epd())
+        return max(mine, key=mine.get) if mine else None
+
+    if args.grow:
+        design, _ = club_counts(args.opening, "design")
+        # Not `seen`: the passes above mark replies they judged and let go, and a gap is never one to let go.
+        tried = set()
+        for rounds in range(1, args.rounds + 1):
+            tree = Tree(op, sidelines=items)
+            gaps = analyse(tree, design, args.moves, args.share, ENOUGH, args.reach)["gaps"]
+            grown = 0
+            print(f"grow, round {rounds}: {len(gaps)} gaps", flush=True)
+            for gap in gaps:
+                before = play(gap["moves"])
+                result = before.copy()
+                result.push_san(gap["reply"])
+                if result.epd() in tried:
+                    continue
+                tried.add(result.epd())
+                seen.add(result.epd())
+                item = build_item(before, gap["moves"], gap["reply"], gap["games"], gap["at"],
+                                  chapter_of(gap["moves"]), None, autopilot(tree, before))
+                if item:
+                    add(item, before)
+                    grown += 1
+            if not grown:
+                break
 
     # What each chapter and sideline teaches, weighted by how often it comes up.
     sideline_owner = {}

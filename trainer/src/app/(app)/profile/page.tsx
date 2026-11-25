@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Board, Book, Flame, Target } from '@/components/ui/icons';
 import { courseCard, courses } from '@/lib/catalog';
 import { sampleClips } from '@/lib/narration';
+import { brianOnly } from '@/lib/speech';
 import { getProgress, getPulse, getSettings, getTotals } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import SettingsForm from './SettingsForm';
@@ -128,7 +129,11 @@ export default async function ProfilePage() {
 
       <section className="card">
         <h2>Settings</h2>
-        <SettingsForm initial={settings} samples={sampleClips()} />
+        <SettingsForm
+          initial={settings}
+          samples={sampleClips()}
+          brianOnly={brianOnly().flatMap((id) => courses().find((o) => o.id === id)?.name ?? [])}
+        />
       </section>
     </main>
   );
