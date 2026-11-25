@@ -55,7 +55,8 @@ System `python3` has no `python-chess`; use the venv.
   trainer's sparring partner reads it through its own emitted `club/<id>.json`,
   never `coaching/`. `src/content/exits/*.json` (the engine's reply wherever a club move
   leaves a course, for the sparring end screen, from `exits.py`) rides along in that same
-  emitted file; re-run it after `club-moves.py`.
+  emitted file; re-run it after `club-moves.py` (the build warns about club moves
+  that leave a course with no answer, and `tests/test_content.py` fails).
 - Adding an opening to the site is data-only: author a `slug` per line and add
   the id to `PORTED` in `src/build.py`. If the app needs code to accommodate a
   new opening, that is a bug in the app.

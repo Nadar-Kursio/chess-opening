@@ -1,0 +1,19 @@
+/* The short wait while a page's tree arrives (src/lib/usePacked.ts). */
+.loading-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: var(--loader-height);
+  text-align: center;
+}
+.loading-note p {
+  margin: 0;
+}
+.loading-note--session {
+  min-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}

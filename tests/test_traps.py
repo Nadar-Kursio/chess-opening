@@ -165,8 +165,7 @@ class TestRealCatalogue(unittest.TestCase):
                          {"londonb2": "set", "londonh5hunt": "watch", "englundtrap": "watch"})
         self.assertEqual(traps["londonb2"]["chapter"], "c5-challenge")
         self.assertEqual(traps["londonh5hunt"]["sideline"], "leaves-2-h5")
-        # The deepest sideline on the trap's road: 5...Qxb2, where the London's 6.Nc3 sidesteps it.
-        self.assertEqual(traps["englundtrap"]["sideline"], "leaves-5-qxb2")
+        self.assertEqual(traps["englundtrap"]["sideline"], "leaves-1-e5")
         self.assertEqual(self.files["openings/londonb2.json"]["partOf"], ["london"])
 
     def test_the_other_repertoire_courses(self):

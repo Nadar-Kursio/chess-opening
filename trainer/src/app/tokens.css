@@ -141,8 +141,12 @@
   --spar-face-ink: #1b2333;
   --spar-glasses: #1b2333;
   --spar-heart-on: #e5484d;
+  /* The wait while a page's tree loads */
+  --loader-height: 240px;
   /* Sparring end of prep: the engine's choice, drawn apart from the course's own hint arrows */
   --arrow-engine: rgba(139, 92, 246, 0.85);
+  /* Dash and gap in the board's 100-unit arrow space (a square is 12.5) */
+  --arrow-engine-dash: 2.5 1.6;
   /* repertoire explorer and stats: how well a position is remembered, weakest to strongest (one
      hue, validated as an ordinal ramp), practice volume (a second one-hue ramp), and chart chrome */
   --lvl-new: #7cc796;

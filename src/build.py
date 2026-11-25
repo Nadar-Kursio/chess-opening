@@ -672,7 +672,47 @@ def sideline_copy(item, before, after, branch):
     return short, branch["why"] if branch else short
 
 
-def build_sideline(op, index, item, errors, evals, chapters):
+def numbered_from(sans, start):
+    """'2...e6 3.e3' for the plies of `sans` from index `start`, numbered as played from the start."""
+    out = []
+    for i in range(start, len(sans)):
+        if i % 2 == 0:
+            out.append(f"{i // 2 + 1}.{sans[i]}")
+        else:
+            out.append(f"{i // 2 + 1}...{sans[i]}" if i == start else sans[i])
+    return " ".join(out)
+
+
+def sideline_names(items):
+    """A name for each sideline that no other shares and that says where it is: its move, then as
+    few of the moves before it as tell it apart ("3...Bd6 after 2...e6 3.e3"). The London has eight
+    3...e6 sidelines; a session header or a Recall card naming one has to say which."""
+    rows = []
+    for item in items:
+        prefix = item["moves"].split()
+        board = chess.Board()
+        for san in prefix:
+            board.push_san(san)
+        rows.append((item["slug"], prefix, san_with_number(board, item["reply"])))
+    take = {slug: min(2, len(prefix)) for slug, prefix, _ in rows}
+
+    def name(slug, prefix, num):
+        k = take[slug]
+        return f"{num} after {numbered_from(prefix, len(prefix) - k)}" if k else f"{num} sideline"
+
+    while True:
+        names = {}
+        for slug, prefix, num in rows:
+            names.setdefault(name(slug, prefix, num), []).append((slug, prefix))
+        clashes = [(slug, prefix) for group in names.values() if len(group) > 1 for slug, prefix in group
+                   if take[slug] < len(prefix)]
+        if not clashes:
+            return {slug: name(slug, prefix, num) for slug, prefix, num in rows}
+        for slug, _ in clashes:
+            take[slug] += 1
+
+
+def build_sideline(op, index, item, errors, evals, chapters, name):
     """One sideline's row and, unless a chapter already teaches it, its lesson: a Line that plays
     the chapter's moves to the moment Black leaves, so a session and Recall can treat it as one."""
     prefix = item["moves"].split()
@@ -718,7 +758,7 @@ def build_sideline(op, index, item, errors, evals, chapters):
     row["yourMoves"] = (len(line_moves) + 1) // 2
     ply = len(prefix) + 1
     built = build_line(op["id"], index, {
-        "name": f"{num} sideline",
+        "name": name,
         "note": f"{item['pct']}% of club games at this point go this way." if item["pct"] else "This one is rare at club level, and worth knowing anyway.",
         "moves": " ".join(prefix + [item["reply"]] + line_moves),
         "notes": {ply: row["note"]},
@@ -742,9 +782,10 @@ def build_coaching(op, errors, evals):
         out["verdictDepth"] = verdicts["depth"]
     if sidelines:
         chapters = {line["slug"]: i for i, line in enumerate(op["lines"])}
+        names = sideline_names(sidelines["sidelines"])
         out["sidelines"] = {
             **{k: sidelines[k] for k in ("source", "scanned", "games", "elo", "depth", "moments", "coverage")},
-            "items": [build_sideline(op, 1000 + i, item, errors, evals, chapters)
+            "items": [build_sideline(op, 1000 + i, item, errors, evals, chapters, names[item["slug"]])
                       for i, item in enumerate(sidelines["sidelines"])],
         }
     return out
@@ -772,6 +813,29 @@ def opponent_keys(record):
     return keys
 
 
+def learner_keys(record):
+    """Every position where the course has a move for the learner, keyed as the trainer keys one:
+    where a club game stays in the course rather than leaving it."""
+    keys = set()
+    sets = record.get("branchsets") or []
+    sidelines = (record.get("coaching") or {}).get("sidelines") or {}
+    walks = [(line["plies"], line.get("side", record["orientation"])[0]) for line in record["lines"]]
+    walks += [(item["line"]["plies"], record["orientation"][0]) for item in sidelines.get("items", []) if item.get("line")]
+    walks += [([None] + br["plies"], record["orientation"][0]) for brs in sets for br in brs]
+    for plies, learner in walks:
+        for p, nxt in zip(plies, plies[1:]):
+            if p is None:
+                continue
+            mover = "w" if not p["san"] else ("b" if p["turn"] == "w" else "w")
+            if mover == learner:
+                keys.add(p["fen"] + mover)
+    return keys
+
+
+# trainer/src/lib/spar.ts THIN: below this many club games the sparring partner follows the course.
+CLUB_THIN = 20
+
+
 def build_club(record, errors, warnings):
     """What club players play wherever the trainer's sparring partner moves, from club-moves.py.
 
@@ -783,11 +847,16 @@ def build_club(record, errors, warnings):
     if not data:
         return None
     positions = {}
+    exits = load_generated("exits", record["id"])
+    answered = set(exits["positions"]) if exits else set()
+    stays = learner_keys(record)
+    unanswered = 0
     for epd, moves in data["positions"].items():
         board = chess.Board(epd + " 0 1")
         before = board_array(board)
         key = before + ("w" if board.turn == chess.WHITE else "b")
         out = []
+        asks = exits and sum(moves.values()) >= CLUB_THIN
         for san, n in moves.items():
             try:
                 move = board.parse_san(san)
@@ -801,7 +870,13 @@ def build_club(record, errors, warnings):
             diff = "".join(f"{'abcdefgh'[i % 8]}{8 - i // 8}{reached[i]}"
                            for i in range(64) if reached[i] != before[i])
             out.append([board.san(move), n, uci, diff, 1 if after.is_check() else 0])
+            leaves = board_array(after) + ("w" if after.turn == chess.WHITE else "b") not in stays
+            if asks and n >= exits["games"] and leaves and after.epd() not in answered and not after.is_game_over():
+                unanswered += 1
         positions[key] = out
+    if unanswered:
+        warnings.append(f"exits/{record['id']}: {unanswered} club moves leave the course with no engine "
+                        f"answer for the sparring end screen, re-run exits.py")
     missing = opponent_keys(record) - positions.keys() - {board_array(chess.Board()) + "w"}
     if missing:
         warnings.append(f"club/{record['id']}: {len(missing)} positions the opponent moves in have "

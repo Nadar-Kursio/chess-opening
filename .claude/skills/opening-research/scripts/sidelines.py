@@ -52,7 +52,7 @@ import chess                                            # noqa: E402
 import chess.engine                                     # noqa: E402
 from _engine import ROOT, engine_path                   # noqa: E402
 from engine.marks import INACCURACY                     # noqa: E402
-from _course import Tree, club_counts                   # noqa: E402
+from _course import THIN, Tree, club_counts             # noqa: E402
 from coverage import analyse                            # noqa: E402
 
 MATE = 10000
@@ -68,6 +68,10 @@ CLEARLY = 100
 SEARCH = 20
 SCREEN = 14
 LEARNER_MOVES = 3
+# How far below the engine's best a club move may be and still be the reply a lesson expects.
+CLUB_SLACK = 30
+CLUB_TRIES = 3      # most common club moves tried at a position, most common first
+CLUB_MOST = 0.5     # a move this share of club players choose is expected even when it's a mistake
 
 
 class Search:
@@ -151,6 +155,7 @@ def main():
     with open(os.path.join(ROOT, ".engine", "club", f"{args.opening}.json"), encoding="utf-8") as f:
         club = json.load(f)
     positions = club["positions"]
+    design, _ = club_counts(args.opening, "design")
     learner = chess.WHITE if op["orientation"] == "white" else chess.BLACK
     sign = 1 if learner == chess.WHITE else -1
 
@@ -181,6 +186,49 @@ def main():
 
     search = Search(args.threads)
     items, moments, taken, seen = [], [], set(), set()
+
+    def club_reply(board):
+        """The opponent's move a lesson should expect: the most common club move here that the
+        engine rates within CLUB_SLACK of its best, else the engine's best. A move most club
+        players choose is expected whatever it costs them: then the lesson is how to punish it."""
+        best_ev, pv = search.score(board, SEARCH)
+        if not pv:
+            return None
+        counts = design.get(board.epd())
+        if counts and sum(counts.values()) >= THIN:
+            mover = 1 if board.turn == chess.WHITE else -1
+            total = sum(counts.values())
+            for san, n in counts.most_common(CLUB_TRIES):
+                move = board.parse_san(san)
+                if move == pv[0] or n / total >= CLUB_MOST:
+                    return move
+                if mover * (best_ev - search.score(board, SEARCH, move)[0]) <= CLUB_SLACK:
+                    return move
+        return pv[0]
+
+    def club_line(after, first=None):
+        """A sideline's continuation from the learner's move: the engine's best for the learner
+        (or `first`), and for the opponent what club players really play when it holds up."""
+        sans, b = [], after.copy()
+        for k in range(LEARNER_MOVES):
+            move = first if k == 0 and first else None
+            if move is None:
+                pv = search.score(b, SEARCH)[1]
+                if not pv:
+                    break
+                move = pv[0]
+            sans.append(b.san(move))
+            b.push(move)
+            if k == LEARNER_MOVES - 1 or b.is_game_over():
+                break
+            reply = club_reply(b)
+            if reply is None:
+                break
+            sans.append(b.san(reply))
+            b.push(reply)
+        while sans and len(sans) % 2 == 0:
+            sans.pop()
+        return sans
 
     def build_item(before, moves, reply, count, total, chapter, moment, auto):
         after = before.copy()
@@ -233,15 +281,9 @@ def main():
         if branch and branch.get("line"):
             line = branch["line"].split()
         elif kind == "keep" and auto_move:
-            b = after.copy()
-            first = b.san(auto_move)
-            b.push(auto_move)
-            _, pv = search.score(b, SCREEN + 2)
-            line = [first] + line_from_pv(b, pv)[:4]
-            while len(line) % 2 == 0:
-                line.pop()
+            line = club_line(after, auto_move)
         else:
-            line = line_from_pv(after, best_pv)
+            line = club_line(after)
         if not line:
             return None
         best_san = after.san(best_pv[0]) if best_pv else None
@@ -256,6 +298,21 @@ def main():
                   f"n={item['games']:<6} auto {item.get('auto')} {item.get('autoEv')} "
                   f"best {item.get('best')} {item.get('bestEv')}", flush=True)
 
+    # Positions every chapter passes through belong to none of them: a reply there leaves before
+    # the chapters part, and is filed under "before the chapters" (chapter None).
+    shared = {chess.Board().epd()}
+    board = chess.Board()
+    for i in range(min(len(line["moves"].split()) for line in chapters)):
+        sans = {line["moves"].split()[i] for line in chapters}
+        if len(sans) > 1:
+            break
+        board.push_san(sans.pop())
+        shared.add(board.epd())
+    moment_at = {}      # (chapter or None, position) -> moment index
+    moment_ply = {}     # (chapter or None, moment index) -> plies played before it
+    # Moments run as deep as the grown sidelines look, so every one of them has one.
+    depth = max(MOVES, args.moves)
+
     # The chapters, one opponent move at a time.
     for line in chapters:
         moves = line["moves"].split()
@@ -264,7 +321,7 @@ def main():
         for i, san in enumerate(moves):
             if board.turn != learner:
                 counts = positions.get(board.epd())
-                if asked >= MOVES or not counts:
+                if asked >= depth or not counts:
                     board.push_san(san)
                     continue
                 total = sum(counts.values())
@@ -272,8 +329,20 @@ def main():
                 number = board.fullmove_number
                 white = f"{number}.{prior}" if learner == chess.WHITE else f"{number}.{san}"
                 label = f"{white} {san}" if learner == chess.WHITE else white
-                moments.append({"chapter": line["slug"], "index": asked, "label": label,
-                                "leave": 100 - round(100 * counts.get(san, 0) / total)})
+                group = None if board.epd() in shared else line["slug"]
+                if (group, board.epd()) not in moment_at:
+                    index = sum(1 for m in moments if m["chapter"] == group)
+                    moment_at[(group, board.epd())] = index
+                    moment_ply[(group, index)] = i
+                    moments.append({"chapter": group, "index": index, "label": label if group else white,
+                                    "leave": 100 - round(100 * sum(n for r, n in counts.items()
+                                                                   if r in {l["moves"].split()[i] for l in chapters
+                                                                            if l["moves"].split()[:i] == moves[:i]})
+                                                             / total)})
+                if asked >= MOVES:
+                    asked += 1
+                    board.push_san(san)
+                    continue
                 auto = moves[i + 1] if i + 1 < len(moves) else None
                 for reply, count in sorted(counts.items(), key=lambda kv: -kv[1]):
                     if reply == san or count < RARE_ENOUGH:
@@ -317,13 +386,23 @@ def main():
 
     walk(chess.Board(), [], 0)
 
-    def chapter_of(moves):
-        """The chapter whose positions the game last passed through."""
-        board, found = chess.Board(), None
+    def placement(moves):
+        """Where a sideline sits on the page: the chapter whose own positions (not the ones every
+        chapter shares) its road last passes through, or None for "before the chapters", and the
+        last of that group's moments on the way."""
+        board = chess.Board()
+        route = [board.epd()]
         for san in moves:
             board.push_san(san)
-            found = owner.get(board.epd(), found)
-        return found
+            route.append(board.epd())
+        chapter = next((owner[epd] for epd in reversed(route) if epd not in shared and epd in owner), None)
+        moment = next((moment_at[(chapter, epd)] for epd in reversed(route) if (chapter, epd) in moment_at), None)
+        if moment is None:
+            # Reached the chapter by another move order: the chapter's moment at the same move.
+            ply = max(i for i, epd in enumerate(route) if owner.get(epd) == chapter and epd not in shared) if chapter else 0
+            moment = max((index for (group, _), index in moment_at.items()
+                          if group == chapter and moment_ply[(group, index)] <= ply), default=0)
+        return chapter, moment
 
     def autopilot(tree, board):
         """The learner's move after the reply the course expects here."""
@@ -353,12 +432,15 @@ def main():
                 tried.add(result.epd())
                 seen.add(result.epd())
                 item = build_item(before, gap["moves"], gap["reply"], gap["games"], gap["at"],
-                                  chapter_of(gap["moves"]), None, autopilot(tree, before))
+                                  *placement(gap["moves"]), autopilot(tree, before))
                 if item:
                     add(item, before)
                     grown += 1
             if not grown:
                 break
+
+    for item in items:
+        item["chapter"], item["moment"] = placement(item["moves"].split())
 
     # What each chapter and sideline teaches, weighted by how often it comes up.
     sideline_owner = {}

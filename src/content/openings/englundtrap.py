@@ -166,6 +166,12 @@ OPENING = {
              "why": "The antidote: develop the knight onto c3 yourself, so the bishop never stands there to be pinned. The engine gives White about two pawns, and it is Black's queen, far from home on b2, that has to worry.",
              "line": "Bb4 Rb1 Qa3"},
         ],
+        # White's 8th, sidestepping: the London course's own choice here
+        "d4 e5 dxe5 Nc6 Nf3 Qe7 Bf4 Qb4+ Bd2 Qxb2 Nc3 Bb4 Rb1 Qa3": [
+            {"san": "Nd5", "severity": "playable", "tier": "Foundation",
+             "why": "Playable, and the engine rates it a touch higher: the knight hits the b4-bishop and the c7-pawn, where Nxc7+ would fork king and rook. Black's best is to trade with 8...Bxd2+ and guard c7 with the king from d8. The London course plays it. This chapter plays 8.Rb3 to keep one plan: chase the queen, then take the centre with e4.",
+             "line": "Bxd2+ Qxd2 Kd8 e4"},
+        ],
         # White's 8th
         "d4 e5 dxe5 Nc6 Nf3 Qe7 Bf4 Qb4+ Bd2 Qxb2 Bc3 Bb4 Qd2 Bxc3": [
             {"san": "Qxc3", "severity": "blunder", "tier": "Foundation",

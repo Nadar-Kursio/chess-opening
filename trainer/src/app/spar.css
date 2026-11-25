@@ -376,7 +376,9 @@
 /* End of prep: the engine's reply, kept visibly apart from what the course teaches. */
 .arrow--engine {
   stroke: var(--arrow-engine);
-  stroke-dasharray: var(--space-1) calc(var(--space-1) / 2);
+  stroke-dasharray: var(--arrow-engine-dash);
+  /* Round caps would close the gaps and draw it solid. */
+  stroke-linecap: butt;
 }
 .arrow-head--engine {
   fill: var(--arrow-engine);

@@ -252,6 +252,23 @@ export function sparBook(op: Opening, side: Colour, club: ClubBook): SparBook {
   return { tree, choices, study, lines, longest, elo: club.elo, answers };
 }
 
+/** The book as the sparring page sends it: only what the game reads. The board takes moves only
+    where the learner is to move, so only there does a position keep its legal moves and verdicts;
+    a position's note is said after the learner's move into it, so only those keep theirs. */
+export function forBrowser(book: SparBook): SparBook {
+  const you = book.tree.side;
+  const nodes: Tree['nodes'] = {};
+  for (const [key, { legal, verdicts, note, moves, ...node }] of Object.entries(book.tree.nodes)) {
+    const mine = node.toMove === you;
+    nodes[key] = {
+      ...node,
+      ...(mine ? { legal, verdicts } : { note }),
+      moves: moves.map(({ why: _why, ...edge }) => edge),
+    };
+  }
+  return { ...book, tree: { ...book.tree, nodes } };
+}
+
 export interface Opponent {
   id: string;
   name: string;

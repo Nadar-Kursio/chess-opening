@@ -128,7 +128,7 @@ OPENING = {
         # Black's 4th
         "d4 d5 Bf4 c5 e3 Qb6 Nc3": [
             {"san": "e6", "severity": "playable", "tier": "Foundation",
-             "why": "The antidote: d5 gets its guard before the queen goes anywhere, and the b2-pawn is no longer worth taking. After 5.Nb5 Na6 White keeps only a small edge.",
+             "why": "The antidote: d5 gets its guard before the queen goes anywhere, and the b2-pawn is no longer worth taking. After 5.Nb5 Na6 White keeps only a small edge, with 6.Nf3 here or 6.a4 first as the London course plays it: the engine rates the two the same.",
              "line": "Nb5 Na6 Nf3"},
         ],
         # White's 5th, against the antidote

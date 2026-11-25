@@ -27,9 +27,12 @@ proportion to how often 1200-2000 players chose it:
               land in the course, weighted by how often the game gets there.
   games       where a club game is after --moves opponent moves: still in the course, left it
               (the opponent played something it doesn't teach) or ran past its end.
-  book end    the sparring partner's game, played to the end: how often it reaches the end of
-              the course rather than leaving it, and of the games that leave, how many end on
-              a move exits.py answered. Same rules as trainer/src/lib/spar.ts.
+  book end    a club-weighted game played to the end: how often it reaches the end of the
+              course rather than leaving it. Twice: from club games alone (every position with
+              any club games is sampled), which is the coverage figure; and as the sparring
+              partner plays it (trainer/src/lib/spar.ts), where under THIN club games it
+              follows the course and can't leave, which is what sparring feels like. Then, of
+              the games that leave, how many end on a move exits.py answered.
   engine-only chapters with no master games behind them (no `record`).
 """
 import argparse
@@ -119,8 +122,12 @@ def analyse(tree, counts, moves=6, share=5, min_games=25, reach=0.25):
     }
 
 
-def book_end(tree, counts):
-    """The sparring partner's game to its end: (P(book end), the exits by how often they end a game)."""
+def book_end(tree, counts, thin=THIN):
+    """The sparring partner's game to its end: (P(book end), the exits by how often they end a game).
+
+    Below `thin` club games the opponent follows the course, as the trainer does at THIN, so it
+    can't leave there. thin=1 samples every position that has any club games: what club games
+    alone say, the honest coverage figure."""
     learner = tree.side
     opening_keys = tree.opening_positions()
     exits = {}
@@ -154,7 +161,7 @@ def book_end(tree, counts):
             ((san, (_, b)),) = course.items()
             flow(b, path + [san], weight, depth + 1)
             return
-        if total < THIN:
+        if total < thin:
             if not course:
                 result["book"] += weight
                 return
@@ -215,6 +222,7 @@ def main():
     report = analyse(tree, counts, args.moves, args.share, args.games, args.reach)
     spar_counts, spar_source = club_counts(args.opening, "spar")
     rate, exits = book_end(tree, spar_counts)
+    honest, _ = book_end(tree, spar_counts, thin=1)
     engine_only = [line.get("slug") or line["name"] for line in op["lines"] + ([op["deep"]] if op.get("deep") else [])
                    if not line.get("record")]
 
@@ -227,8 +235,11 @@ def main():
     print(f"club games after {args.moves} opponent moves: {pct(g['inside'])} still in the course, "
           f"{pct(g['left'])} left it, {pct(g['ended'])} ran past its end "
           f"({pct(g['thin'])} passed through positions with under {THIN} club games)")
-    print(f"sparring book end: {pct(rate)} of club-weighted games reach the end of the course, "
-          f"{pct(100 - rate)} leave it, {pct(answered(exits, args.opening))} of those with the engine's answer")
+    print(f"book end, club games alone: {pct(honest)} reach the end of the course (every position with club "
+          f"games is sampled; the coverage figure to report)")
+    print(f"book end as sparring plays it: {pct(rate)} (under {THIN} club games the opponent follows the course, "
+          f"so {pct(rate - honest)} of it is that fallback), {pct(100 - rate)} leave, "
+          f"{pct(answered(exits, args.opening))} of those on a move with the engine's answer")
     print(f"engine-only chapters (no master record): {', '.join(engine_only) or 'none'}\n")
 
     print(f"GAPS: replies chosen by {args.share:g}%+ ({args.games}+ games) in the opponent's first {args.moves} moves, "
@@ -249,7 +260,7 @@ def main():
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump({"opening": args.opening, "source": source, "moves": args.moves, "share": args.share,
                        "games_min": args.games, "reach": args.reach,
-                       **report, "book_end": rate, "answered": answered(exits, args.opening), "exits": exits,
+                       **report, "book_end": honest, "book_end_sparring": rate, "answered": answered(exits, args.opening), "exits": exits,
                        "engine_only": engine_only}, f, indent=1)
 
 

@@ -316,6 +316,18 @@ class TestEmit(unittest.TestCase):
                     self.assertIn(f"{uci[:2]}.", diff, f"{op_id}: {san} leaves its square")
                     self.assertIn(check, (0, 1), f"{op_id}: {san}")
 
+    def test_every_sideline_chapter_has_a_name_of_its_own(self):
+        """A session header, Recall and the sparring card show the name alone, so two sidelines
+        must never share one, and it must say where the sideline is."""
+        for name in sorted(n for n in self.files if n.startswith("coaching/")):
+            items = self.files[name].get("sidelines", {}).get("items", [])
+            names = [it["line"]["name"] for it in items if it.get("line")]
+            self.assertEqual(len(names), len(set(names)), name)
+            for it in items:
+                if it.get("line") and it["after"]:
+                    self.assertIn(" after ", it["line"]["name"], it["slug"])
+                    self.assertTrue(it["line"]["name"].startswith(it["num"]), it["slug"])
+
     def test_the_engine_answers_where_club_moves_leave_the_course(self):
         """`answers` (exits.py) is what the sparring end screen shows: keyed by the position after
         the leaving move, with the learner to move, the reply's squares and a line opening on it."""

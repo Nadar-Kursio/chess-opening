@@ -34,7 +34,7 @@ export default async function SparPage({ params, searchParams }: PageProps<'/pla
       openingId={id}
       course={op.name}
       side={side}
-      book={book}
+      src={`/api/spar/${id}?side=${side}`}
       traps={traps}
       // Chosen here, so the page the server draws is the one the browser hydrates.
       opponent={pickOpponent(Math.random)}

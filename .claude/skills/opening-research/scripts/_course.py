@@ -145,15 +145,14 @@ def club_counts(op_id, source="design"):
     first moves of games in this opening, so a reply the course doesn't answer yet can be
     followed. src/content/club/<id>.json (club-moves.py) is committed and is what the sparring
     partner plays from, but only holds positions the course already reaches, from every game that
-    reaches them. `spar` reads it first, as the trainer does, and fills the positions it lacks from
-    the other. `design` (what sidelines.py decides with) takes whichever file has more games at
+    reaches them. `spar` reads it alone, exactly what the trainer has. `design` (what sidelines.py decides with) takes whichever file has more games at
     each position: club-stats.py keeps only games where the course's side plays its --must moves,
     so a sideline where the learner answers differently (1.d4 b6 2.e4 in the London) is thin
     there and thick in the other. Shares are taken within one position, so mixing the two per
     position is sound."""
     files = {"content": os.path.join(ROOT, "src", "content", "club", f"{op_id}.json"),
              "engine": os.path.join(ROOT, ".engine", "club", f"{op_id}.json")}
-    order = {"design": ["engine", "content"], "spar": ["content", "engine"]}[source]
+    order = {"design": ["engine", "content"], "spar": ["content"]}[source]
     counts, used = {}, []
     for name in order:
         if not os.path.exists(files[name]):
@@ -168,4 +167,4 @@ def club_counts(op_id, source="design"):
         used.append(f"{os.path.relpath(files[name], ROOT)} ({data['source']}, {data['games']:,} games)")
     if not used:
         raise SystemExit(f"no club counts for {op_id}: run club-stats.py (see the skill) first")
-    return counts, (" then " if source == "spar" else " and ").join(used)
+    return counts, " and ".join(used)

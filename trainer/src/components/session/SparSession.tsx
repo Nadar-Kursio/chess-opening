@@ -6,6 +6,8 @@ import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type TreeEdge } from '@/lib/course';
 import { evalText, verdictOf, verdictWords } from '@/lib/engineView';
 import { saveGrade, saveSession } from '@/lib/outbox';
+import { usePacked } from '@/lib/usePacked';
+import '@/app/loader.css';
 import { play, type SoundSet } from '@/lib/sound';
 import { LIVES, answerTo, leaving, pickOpponent, pickReply, shareOf, type EngineAnswer, type Leave, type Opponent, type SparBook } from '@/lib/spar';
 import type { Colour } from '@/lib/types';
@@ -51,7 +53,30 @@ type Outcome =
 const SEV_WORD = { playable: 'A sideline the course knows', inaccuracy: 'An inaccuracy', blunder: 'A blunder' } as const;
 const THINK_MS = [550, 1200];
 
-export default function SparSession({ openingId, course, side, book, opponent: first, best: startBest, closeHref, sound, coordinates, engineView = false, traps = [] }: Props) {
+/** Sparring, once the course's book has arrived from /api/spar/[id] (it is too big to write into the page). */
+export default function SparSession({ src, ...props }: Omit<Props, 'book'> & { src: string }) {
+  const { data, retry } = usePacked<SparBook>(src);
+  if (data === 'failed') {
+    return (
+      <main className="card loading-note loading-note--session" role="status">
+        <p>The game didn’t load.</p>
+        <button type="button" className="btn btn--ghost" onClick={retry}>
+          Try again
+        </button>
+      </main>
+    );
+  }
+  if (!data) {
+    return (
+      <main className="card loading-note loading-note--session" role="status">
+        <p className="muted">Setting up the board…</p>
+      </main>
+    );
+  }
+  return <SparGame {...props} book={data} />;
+}
+
+function SparGame({ openingId, course, side, book, opponent: first, best: startBest, closeHref, sound, coordinates, engineView = false, traps = [] }: Props) {
   const { tree, choices } = book;
   const make = useMessages();
   const you = tree.side;
@@ -442,9 +467,9 @@ function Recap({
 
   const study = line
     ? outcome.kind === 'lives'
-      ? { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.sideline ? 'the ' : ''}${line.name}`, why: 'The chapter with the move you missed.' }
+      ? { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.name}`, why: 'The chapter with the move you missed.' }
       : line.sideline
-        ? { href: `/openings/${openingId}/${line.slug}/learn`, label: `Learn the ${line.name}`, why: 'The game went down this sideline. Its lesson shows the ideas.' }
+        ? { href: `/openings/${openingId}/${line.slug}/learn`, label: `Learn ${line.name}`, why: 'The sideline this game went down. Its lesson shows the ideas.' }
         : line.deviation
           ? { href: `/openings/${openingId}/${line.slug}/quiz`, label: `Quiz ${line.name}`, why: 'The game went down one of this chapter’s side roads. Its quiz asks them.' }
         : outcome.kind === 'book'
@@ -511,7 +536,7 @@ function EngineReply({ answer }: { answer: EngineAnswer }) {
         <span className="spar-engine__eval">{evalText(answer)}</span>
       </div>
       <p className="spar-engine__line">{answer.line}</p>
-      <p className="muted small">Stockfish’s best move here, worked out ahead of time. It’s a pointer, not part of the course.</p>
+      <p className="muted small">Stockfish’s best move here, worked out ahead of time, scored from White’s side. It’s a pointer, not part of the course.</p>
     </div>
   );
 }

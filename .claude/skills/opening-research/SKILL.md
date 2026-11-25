@@ -25,10 +25,13 @@ Budget a long day, most of it waiting on the engine and the Lichess stream: abou
 checking** for a course the size of the London. Start every long run in the
 background, with its pid captured, and author while it runs.
 
-Commands are from the worktree root (`cd` into it first: `build.py` follows the
-current directory) unless they say `trainer/`. `<id>` is the module name
-(`jobava`), `$LOCK` is `/home/ec2-user/chess-opening/.worktrees/.heavy.lock`, and
-scratch files go in `/home/ec2-user/chess-opening/.worktrees/_scratch/<id>/`.
+Commands run from the worktree root unless they say `trainer/`. An agent's shell
+forgets its directory and its variables between commands, so start each one with
+`cd /home/ec2-user/chess-opening/.worktrees/<id> &&` (`build.py` writes relative
+to the current directory: from anywhere else it rebuilds `main`), and every path
+below is written out in full rather than kept in a variable. `<id>` is the module
+name (`jobava`). Scratch files go in `/home/ec2-user/chess-opening/.worktrees/_scratch/<id>/`,
+which step 0 creates.
 
 ### 0. Set up
 
@@ -36,23 +39,30 @@ scratch files go in `/home/ec2-user/chess-opening/.worktrees/_scratch/<id>/`.
 git -C /home/ec2-user/chess-opening fetch origin
 git -C /home/ec2-user/chess-opening worktree add /home/ec2-user/chess-opening/.worktrees/<id> -b feat/<id>-course origin/main
 cd /home/ec2-user/chess-opening/.worktrees/<id> && ln -s ../../.venv .venv && ln -s ../../.engine .engine
-ls .engine/stockfish || .claude/skills/opening-research/scripts/setup-engine.sh   # four minutes, once
+mkdir -p /home/ec2-user/chess-opening/.worktrees/_scratch/<id>
+cd /home/ec2-user/chess-opening/.worktrees/<id> && (ls .engine/stockfish || .claude/skills/opening-research/scripts/setup-engine.sh)   # four minutes, once
+cd /home/ec2-user/chess-opening/.worktrees/<id>/trainer && flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock npm ci   # for steps 7 and 8
 ```
 
 Rules for the whole job ([Running the engine beside other work](#running-the-engine-beside-other-work)):
-**one engine job at a time on the box**, always `flock $LOCK nice -n 10 ...` with
+**one engine job at a time on the box**, always `flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 ...` with
 2 threads at most; Lichess streams run `nice -n 19` without the lock; capture each
 pid and stop it by pid, never `pkill -f`.
 
 ### 1. Club data first: it decides the chapters
 
 ```bash
-curl -s https://database.lichess.org/standard/lichess_db_standard_rated_2026-10.pgn.zst \
+cd /home/ec2-user/chess-opening/.worktrees/<id> && \
+  (curl -s https://database.lichess.org/standard/lichess_db_standard_rated_2026-10.pgn.zst \
   | zstd -dc | nice -n 19 .venv/bin/python3 .claude/skills/opening-research/scripts/club-stats.py \
-    <id> --first d4 --must Nc3 --must Bf4 --month "October 2026" \
+    <id> --first d4 --must Nc3 --must Bf4 --month "October 2026") \
   > /home/ec2-user/chess-opening/.worktrees/_scratch/<id>/club-stats.log 2>&1 &
 echo $!
 ```
+
+Check after a minute that the log shows `counting games ...` and a first
+`200000 scanned` line: a redirect into a missing folder fails silently, and the pid
+printed is then of a pipeline that already died.
 
 `--first` is the course's first move and each `--must` a move the course's side
 plays within its first three moves (any order); a Black course names Black's moves
@@ -71,11 +81,13 @@ See [the course-planning tools](#the-course-planning-tools).
    games: `explorer.py` and `fetch-games.py` for what strong players chose, `scan.py`
    to check it ([1. Research](#1-research)). Names come from Wikipedia and
    Wikibooks ([references/sources.md](references/sources.md)).
-2. Write the module with just its main line (`orientation`, `section`, one line
-   with a `slug`), so the tools have something to measure. Then:
+2. Write the module with just its main line (`id`, `name`, `orientation`,
+   `section`, and one line with `name`, `slug` and `moves`) and add the id to
+   `ORDER` in `src/content/openings/__init__.py`, so the tools have something to
+   measure. Then:
 
    ```bash
-   .venv/bin/python3 .claude/skills/opening-research/scripts/coverage.py <id> --moves 8
+   cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/coverage.py <id> --moves 8
    ```
 
 3. **Every row under GAPS needs an answer.** A gap is a reply chosen by 5%+ of club
@@ -96,17 +108,30 @@ See [the course-planning tools](#the-course-planning-tools).
 ### 3. Overlap with the other courses
 
 ```bash
-.venv/bin/python3 .claude/skills/opening-research/scripts/overlap.py <id>
+cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/overlap.py <id>
 ```
 
 Seconds, no engine. Every course sharing positions with this one is listed, with
 `see` links each way. **Link both ways**: a branch entry with `see: "<other>#<slug>"`
 where this course's road meets the other course's chapter, and the same in the
-other module. Every `CONFLICT ... [unexplained]` is a position where two courses
-tell the learner, from the same chair, to play different moves: play the same move,
-or add a branch entry at that position for the other course's move whose `why` says
-"playable, but this course plays X because..." (the conflict then reads
-`[explained]`). Trap courses are linked by the build, by position, and need no `see`.
+other module. Trap courses are linked by the build, by position, and need no `see`.
+
+Every `CONFLICT` is a position where two courses tell the learner, from the same
+chair, to play different moves. How to read and resolve them:
+
+- `[openings part here]` (the first two moves) and `[explained]` need nothing.
+- `[both fine]`: the shipped evals rate both moves within an inaccuracy. Two sound
+  choices; nothing to do, and the usual case inside a generated sideline, which you
+  never edit by hand.
+- `[unexplained]` is what to fix, in the course whose move is the weaker or the less
+  usual one (check both with `scan.py`). Either play the same move there, or add a
+  branch entry at that position for the other course's move, `severity` from
+  `verify-branches.py`, whose `why` says what it does and why this course plays its
+  own move instead ("playable, and the engine likes it too: ...; the course plays X
+  because ..."). Re-run `position-evals.py` for that course afterwards. The
+  conflict then reads `[explained]`.
+- If the move you'd change sits in a generated sideline, change the other course or
+  explain it there: a re-run of `sidelines.py` would undo an edit to the file.
 
 ### 4. Traps
 
@@ -116,7 +141,7 @@ or add a branch entry at that position for the other course's move whose `why` s
    under the lock; 10 min for the London, 6 for the Queen's Gambit):
 
    ```bash
-   flock $LOCK nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/trap-scan.py <id>
+   cd /home/ec2-user/chess-opening/.worktrees/<id> && flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/trap-scan.py <id>
    ```
 
    Each candidate is a common club move that costs its player 2+ pawns at depth 20,
@@ -128,7 +153,9 @@ or add a branch entry at that position for the other course's move whose `why` s
    (`THE COURSE PLAYS IT` is a bug in the course). **A `NEW` candidate met in
    0.05%+ of the course's games, or with 300+ games behind it, is a trap course to
    write** ([Trap courses](#trap-courses)): `section: "traps"`, taught from the chair
-   that springs it, plus a line from the victim's chair with the safe move. A known
+   that springs it, plus a line from the victim's chair with the safe move. Skip a
+   candidate whose punishing line is a one-move capture (2.Bf4?? exf4 drops a piece
+   to a pawn): that is a hanging piece, not a trap, and a deviation covers it. A known
    trap from step 1 that never shows up in the scan is rare at club level: give it a
    deviation, not a course.
 3. Every new trap course goes through steps 5 to 7 like any course (it needs its
@@ -163,50 +190,62 @@ takes about twice as long. A trap course has no club data: it needs only **c**.
 
 | # | Command | Writes | Time |
 | --- | --- | --- | --- |
-| a | `flock $LOCK nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/sidelines.py <id> --threads 2` | `src/content/sidelines/<id>.json` | 20-25 min the first time, 2-5 min a round after |
+| a | `flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/sidelines.py <id> --threads 2` | `src/content/sidelines/<id>.json` | 20-25 min the first time, 2-5 min a round after |
 | b | Lichess stream into `club-moves.py` (below), no lock | `src/content/club/<id>.json` | 23 min (15M games, one core) |
-| c | `flock $LOCK nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/position-evals.py <id> --threads 2` | `src/content/evals/<id>.json` | about 1 s a new position: 25 min for the London's 900 new ones, 4 min after a small edit |
-| d | `flock $LOCK nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/move-verdicts.py <id> --workers 2` | `src/content/verdicts/<id>.json` | about 12 s a new learner position: 2 h for the London's 628 new ones |
-| e | `flock $LOCK nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/exits.py <id> --threads 2` | `src/content/exits/<id>.json` | 2-3 s an exit: 15 min for the Queen's Gambit's 394, 47 min for the London's 839 |
+| c | `flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/position-evals.py <id> --threads 2` | `src/content/evals/<id>.json` | about 1 s a new position: 25 min for the London's 900 new ones, 4 min after a small edit |
+| d | `flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/move-verdicts.py <id> --workers 2` | `src/content/verdicts/<id>.json` | about 12 s a new learner position: 2 h for the London's 628 new ones |
+| e | `flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/exits.py <id> --games 3 --threads 2` | `src/content/exits/<id>.json` | 2-3 s an exit: 15 min for the Queen's Gambit's 394 at the default `--games 10`, about 100 min for the London's 1,900 at `--games 3` cold, 20 min re-run |
 
 ```bash
 # b: no lock, nice 19, one core; name only the courses whose positions changed
-curl -s https://database.lichess.org/standard/lichess_db_standard_rated_2026-10.pgn.zst \
+cd /home/ec2-user/chess-opening/.worktrees/<id> && curl -s https://database.lichess.org/standard/lichess_db_standard_rated_2026-10.pgn.zst \
   | zstd -dc | nice -n 19 .venv/bin/python3 .claude/skills/opening-research/scripts/club-moves.py \
     <id> --games 15000000 --month "October 2026"
-.venv/bin/python3 .claude/skills/opening-research/scripts/coverage.py <id>    # then: GAPS (0)?
+cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/coverage.py <id>    # then: GAPS (0)?
 ```
 
-- **a and b go round until `coverage.py` prints `GAPS ... (0)`.** `sidelines.py`
+- **a and b go round until `coverage.py` prints `GAPS ... (0)` and the build no
+  longer warns `positions the opponent moves in have no club counts`.** `sidelines.py`
   judges every club reply that leaves a chapter, then grows past the exits: every
   gap becomes a sideline answered by the engine, round after round inside one run.
   But it can only see replies the club counts have, and `club-stats.py` kept only
   games where the course's side played its `--must` moves, so a sideline where the
   learner answers differently (1.d4 e5 2.dxe5 in the London) is thin there.
   `club-moves.py` then counts every game reaching the new sidelines, which shows the
-  next layer of replies. The London took four rounds (52, then 280, 326 and 335
-  sidelines); each round after the first costs a few minutes of engine time and
-  one stream. If a gap survives, it needs a chapter or a deviation (step 2).
+  next layer of replies, and a sideline's expected moves can change with the new
+  counts. The London's last regeneration took four rounds (376, then 39, 6 and 1
+  opponent positions still without club counts, ending on 270 sidelines); each round
+  after the first costs a few minutes of engine time and one stream. If a gap survives, it needs a
+  chapter or a deviation (step 2).
+- **What a sideline teaches the opponent to play is what club players play.** Its
+  learner moves are the engine's best; at each opponent move with 20+ club games it
+  expects the most common club move among those the engine rates within 0.3 pawns
+  of its best (`CLUB_SLACK`), and the engine's move only when no common move holds
+  up, except that a move half of club players choose is expected even when it's a
+  mistake (then the lesson is how to punish it). A lesson that expects 5...Qe7 where
+  98% of club players take on b2 teaches the learner to prepare for a game they
+  won't get. Authored branch lines are kept as written.
 - **c** after the last **a**, because sidelines add positions; re-run it after any
   edit to a line, deviation, game or sideline, or the bar loses the plies you moved.
 - **d** after **c** (it scores the learner's positions the sidelines add).
 - **e** after the last **b**: it answers the club moves that leave the course,
   which is what the sparring end screen shows. `coverage.py`'s book-end line then
-  says how many of the games that leave end on an answered move; aim for 90%+. It
-  answers moves with 10+ club games (`--games`); a course whose sidelines run deep
-  meets thinner positions, and the London needed `--games 3` (66% at 10, 90% at 3,
-  about 1,800 positions and 50 more minutes).
+  says how many of the games that leave end on an answered move; aim for 90%+. The
+  default `--games 10` answers moves with 10+ club games; a course whose sidelines
+  run deep meets thinner positions, so start with `--games 3` as the table does
+  (the London: 66% at 10, 90% at 3). The build warns when a club move leaving the
+  course has no answer, and `tests/test_content.py` fails: re-run `exits.py`.
 
 ### 7. Verify
 
 ```bash
-THREADS=2 flock $LOCK nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/verify-branches.py <id>  # 15-20 min
-.venv/bin/python3 .claude/skills/opening-research/scripts/verify-notes.py <id>
-.venv/bin/python3 .claude/skills/opening-research/scripts/verify-prose.py <id> --counts
-.venv/bin/python3 -m unittest discover tests        # content, emit contract, prose
-flock $LOCK .venv/bin/python3 src/build.py --emit   # read every warning, not just the exit code
-(cd trainer && flock $LOCK npm run content && npm test && flock $LOCK npx next build && npx tsc --noEmit -p .)
-ln -s ../../../web/node_modules web/node_modules; node tests/prose-ui.mjs; rm web/node_modules  # UI strings
+cd /home/ec2-user/chess-opening/.worktrees/<id> && THREADS=2 flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/verify-branches.py <id>  # 15-20 min
+cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/verify-notes.py <id>
+cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/verify-prose.py <id> --counts
+cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 -m unittest discover tests        # content, emit contract, prose
+cd /home/ec2-user/chess-opening/.worktrees/<id> && flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock .venv/bin/python3 src/build.py --emit   # read every warning, not just the exit code
+cd /home/ec2-user/chess-opening/.worktrees/<id> && (cd trainer && flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock npm run content && npm test && flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock npx next build && npx tsc --noEmit -p .)
+cd /home/ec2-user/chess-opening/.worktrees/<id> && ln -s ../../../web/node_modules web/node_modules; node tests/prose-ui.mjs; rm web/node_modules  # UI strings
 ```
 
 The build must not warn about your course: no plies without commentary, no
@@ -224,13 +263,19 @@ A new course is recorded once, in Brian's voice, within **$5 per course**
 `trainer/src/lib/speech.ts`, then price it:
 
 ```bash
-cd trainer && flock $LOCK npm run content && npm run narrate -- --dry-run --course <id>
+cd /home/ec2-user/chess-opening/.worktrees/<id>/trainer && flock /home/ec2-user/chess-opening/.worktrees/.heavy.lock npm run content && npm run narrate -- --dry-run --course <id>
 ```
 
-A worktree has no recordings, which is exactly a new course's position. (For a
-course already narrated, set `NARRATION_DIR` to a scratch folder holding empty files
-named like the production clips and a copy of its `ledger.json`, so the dry-run
-prices only what changed; never point it at the production folder itself.)
+A worktree has no recordings, which is exactly a new course's position. For a
+course already narrated, price it against a scratch copy of the production clip
+names (empty files) and ledger, never the production folder itself:
+
+```bash
+N=/home/ec2-user/chess-opening/.worktrees/_scratch/<id>/narration; P=/home/ec2-user/chess-opening/trainer/narration
+for v in brian amy matthew; do mkdir -p $N/$v && (cd $P/$v && ls) | (cd $N/$v && xargs -r touch); done; cp $P/ledger.json $N/
+cd /home/ec2-user/chess-opening/.worktrees/<id>/trainer && NARRATION_DIR=$N npm run narrate -- --dry-run --course <id>
+```
+
 It prints the clips, characters and cost for the course and its spend so far, and
 `OVER` when it would cross the budget: then cut the text (shorter notes, fewer
 words in names and plans) until it fits, and never raise the budget without the
@@ -258,16 +303,23 @@ there, in a fresh account, at 390x664, 320x568 and 1280x800, light and dark:
 ### 10. Report the metrics
 
 ```bash
-.venv/bin/python3 .claude/skills/opening-research/scripts/coverage.py <id>
+cd /home/ec2-user/chess-opening/.worktrees/<id> && .venv/bin/python3 .claude/skills/opening-research/scripts/coverage.py <id>
 ```
 
 Put these in the PR, from that output and step 8:
 
-- **replies covered**, first 6 opponent moves (the London: 87.6%, up from 72.5%
-  before it grew past its exits), and the GAPS count (must be 0);
-- **sparring book end**: how often a club-weighted sparring game reaches the end of
-  the course instead of leaving it (the London: 34%, up from 2.4%), and how many of
-  the games that leave end on a move with the engine's answer (aim for 90%+);
+- **replies covered**, first 6 opponent moves (the London: 88.2%, up from
+  72.5% before it grew past its exits), and the GAPS count (must be 0);
+- **book end, club games alone**: how often a club-weighted game reaches the end of
+  the course instead of leaving it, sampling every position that has any club games
+  (the London: 6.0%, up from 0.5%). This is the coverage figure. Report
+  it, not the next one;
+- **book end as sparring plays it**, as context: the same with the trainer's rule
+  that under 20 club games the opponent follows the course and can't leave
+  (the London: 29.2%, up from 2.4%). The gap between the two is games that ran into
+  thin positions, not coverage: a course grown deep into thin territory looks
+  better here than it is. Also how many of the games that leave end on a move with
+  the engine's answer (aim for 90%+);
 - **engine-only chapters**: those with no master `record`;
 - **narration**: the dry-run price, and the spend after recording.
 

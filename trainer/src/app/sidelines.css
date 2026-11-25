@@ -1,0 +1,25 @@
+/* "When they leave the line" on a phone: a long scoresheet gets the row's whole width, with the
+   move and its share above it, instead of a narrow column between them. */
+@media (max-width: 640px) {
+  .sideline__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'num done pct'
+      'text text text';
+    row-gap: var(--space-1);
+  }
+  .sideline__num {
+    grid-area: num;
+    width: auto;
+  }
+  .sideline__done {
+    grid-area: done;
+  }
+  .sideline__pct {
+    grid-area: pct;
+  }
+  .sideline__text {
+    grid-area: text;
+  }
+}

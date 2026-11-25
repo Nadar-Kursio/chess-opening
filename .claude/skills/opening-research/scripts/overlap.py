@@ -10,8 +10,10 @@ prints how many positions the two share, the deepest one, whether each links to 
 `see` (a trap course is linked by the build instead, see below), and every CONFLICT: a position where both courses tell the learner, from the same chair,
 to play different moves. A conflict is fine when one of the courses says why (a branch entry at
 that position naming the other course's move, which Drill shows as "playable, but the course
-plays X because..."); it is marked `unexplained` otherwise, and that is the thing to fix. In the
-first two moves it is just two openings parting, and marked so.
+plays X because...", marked `explained`), or when the shipped evals rate every move either course
+plays there within an inaccuracy (`both fine`: two sound choices, typical inside a generated
+sideline, which nobody edits). It is marked `unexplained` otherwise, and that is the thing to fix.
+In the first two moves it is just two openings parting, and marked so.
 
 The trap relation (which trap courses happen in this one) is the build's, not this script's:
 src/build.py relate_traps links them by position on every build.
@@ -22,12 +24,41 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import chess                                            # noqa: E402
-from _course import Tree, every_opening, numbered, opening  # noqa: E402
+from _course import Tree, every_opening, generated, numbered, opening  # noqa: E402
+from engine.marks import INACCURACY                     # noqa: E402
 
 PORTED = None
 # A course's first two moves are where two repertoires choose different openings: a conflict
 # there is the choice itself, not something to explain.
 PARTING = 4
+
+
+SCORES = {}
+
+
+def score(epd):
+    """White's score of a position from any course's evals file, or None."""
+    if not SCORES:
+        for op_id in every_opening():
+            SCORES.update((generated("evals", op_id) or {}).get("scores", {}))
+    found = SCORES.get(epd)
+    return found["v"] if found else None
+
+
+def both_fine(epd, mine, theirs):
+    """Whether the engine rates every move either course plays here within an inaccuracy of the
+    others, by the shipped evals: then the courses simply chose differently."""
+    board = chess.Board(epd + " 0 1")
+    sign = 1 if board.turn == chess.WHITE else -1
+    scores = []
+    for san in mine | theirs:
+        b = board.copy()
+        b.push_san(san)
+        v = score(b.epd())
+        if v is None:
+            return False
+        scores.append(sign * v)
+    return max(scores) - min(scores) < INACCURACY
 
 
 def ported():
@@ -101,7 +132,8 @@ def main():
                 continue
             path = here.reached[epd]
             explained = any(here.explains(epd, s) for s in theirs) or any(there.explains(epd, s) for s in mine)
-            verdict = "explained" if explained else "openings part here" if len(path) < PARTING else "unexplained"
+            verdict = ("explained" if explained else "openings part here" if len(path) < PARTING
+                       else "both fine" if both_fine(epd, mine, theirs) else "unexplained")
             unexplained += verdict == "unexplained"
             number = f"{len(path) // 2 + 1}.{'..' if len(path) % 2 else ''}"
             label = lambda moves: ", ".join(f"{number}{s}" for s in sorted(moves))

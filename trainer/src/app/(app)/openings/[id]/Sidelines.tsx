@@ -25,7 +25,10 @@ const KIND_LABEL: Record<SidelineKind, string> = {
 
 const isStudy = (s: Row) => s.kind === 'answer' || s.kind === 'dodge' || s.kind === 'set';
 const pctLabel = (s: Row) => (s.pct ? `${s.pct}%` : 'Rare');
-const KEEP_SHOWN = 10;
+// Enough to see what the group is about on a phone; the rest is a tap away.
+const SHOWN = 6;
+// The filter for sidelines that leave before the chapters part (chapter null in the data).
+const BEFORE = 'before-the-chapters';
 // A rare sideline adds a fraction of a percent, and studying it should still move the number.
 const percent = (n: number) => (n > 0 && n < 0.1 ? 'under 0.1' : n.toFixed(n < 10 ? 1 : 0));
 
@@ -57,12 +60,22 @@ export default function Sidelines({
   const [moment, setMoment] = useState<number | null>(null);
   const [selected, setSelected] = useState(items.find(isStudy)?.slug ?? items[0]?.slug);
   const [open, setOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [more, setMore] = useState({ study: false, keep: false });
 
-  const shown = items.filter((s) => (!chapter || s.chapter === chapter) && (moment === null || s.moment === moment));
+  const group = chapter === BEFORE ? null : chapter;
+  const inGroup = (s: Pick<Row, 'chapter'>) => !chapter || s.chapter === group;
+  const shown = items.filter((s) => inGroup(s) && (moment === null || s.moment === moment));
   const study = shown.filter(isStudy);
   const keep = shown.filter((s) => !isStudy(s));
-  const keepShown = showAll || chapter ? keep : keep.slice(0, KEEP_SHOWN);
+  const studyShown = more.study ? study : study.slice(0, SHOWN);
+  const keepShown = more.keep ? keep : keep.slice(0, SHOWN);
+  const before = items.filter((s) => s.chapter === null).length;
+  const groupMoments = chapter ? moments.filter((m) => m.chapter === group && items.some((s) => s.chapter === group && s.moment === m.index)) : [];
+  const filter = (next: string | null, at: number | null) => {
+    setChapter(next);
+    setMoment(at);
+    setMore({ study: false, keep: false });
+  };
   const current = items.find((s) => s.slug === selected) ?? items[0];
 
   const available = Object.values(coverage).reduce((n, w) => n + w, 0);
@@ -131,53 +144,41 @@ export default function Sidelines({
       </div>
 
       <div className="sidelines__filters" role="group" aria-label="Which chapter">
-        <button
-          type="button"
-          className="sidelines__filter"
-          aria-pressed={!chapter}
-          onClick={() => {
-            setChapter(null);
-            setMoment(null);
-          }}
-        >
+        <button type="button" className="sidelines__filter" aria-pressed={!chapter} onClick={() => filter(null, null)}>
           <b>All</b>
           <small>Most common first</small>
         </button>
-        {chapters
-          .filter((ch) => moments.some((m) => m.chapter === ch.slug))
-          .map((ch) => (
-            <button
-              key={ch.slug}
-              type="button"
-              className="sidelines__filter"
-              aria-pressed={chapter === ch.slug}
-              onClick={() => {
-                setChapter(ch.slug);
-                setMoment(null);
-              }}
-            >
+        {before ? (
+          <button type="button" className="sidelines__filter" aria-pressed={chapter === BEFORE} onClick={() => filter(BEFORE, null)}>
+            <b>Before the chapters</b>
+            <small>{before} places</small>
+          </button>
+        ) : null}
+        {chapters.map((ch) => {
+          const count = items.filter((s) => s.chapter === ch.slug).length;
+          return count ? (
+            <button key={ch.slug} type="button" className="sidelines__filter" aria-pressed={chapter === ch.slug} onClick={() => filter(ch.slug, null)}>
               <b>Chapter {ch.index + 1}</b>
-              <small>{items.filter((s) => s.chapter === ch.slug).length} places</small>
+              <small>{count} places</small>
             </button>
-          ))}
+          ) : null;
+        })}
       </div>
 
-      {chapter ? (
+      {groupMoments.length > 1 ? (
         <div className="sidelines__filters" role="group" aria-label="Which move">
-          {moments
-            .filter((m) => m.chapter === chapter)
-            .map((m) => (
-              <button
-                key={m.index}
-                type="button"
-                className="sidelines__filter"
-                aria-pressed={moment === m.index}
-                onClick={() => setMoment(moment === m.index ? null : m.index)}
-              >
-                <b>{m.label}</b>
-                <small>{m.leave}% leave here</small>
-              </button>
-            ))}
+          {groupMoments.map((m) => (
+            <button
+              key={m.index}
+              type="button"
+              className="sidelines__filter"
+              aria-pressed={moment === m.index}
+              onClick={() => filter(chapter, moment === m.index ? null : m.index)}
+            >
+              <b>{m.label}</b>
+              <small>{m.leave}% leave here</small>
+            </button>
+          ))}
         </div>
       ) : null}
 
@@ -186,7 +187,12 @@ export default function Sidelines({
           {study.length ? (
             <div className="sidelines__group">
               <h3>Worth studying</h3>
-              {study.map(row)}
+              {studyShown.map(row)}
+              {studyShown.length < study.length ? (
+                <button type="button" className="btn btn--ghost" onClick={() => setMore({ ...more, study: true })}>
+                  Show {study.length - studyShown.length} more
+                </button>
+              ) : null}
             </div>
           ) : (
             <p className="sidelines__source">Nothing to study here. Every common reply keeps your setup.</p>
@@ -196,7 +202,7 @@ export default function Sidelines({
               <h3>Keep your setup</h3>
               {keepShown.map(row)}
               {keepShown.length < keep.length ? (
-                <button type="button" className="btn btn--ghost" onClick={() => setShowAll(true)}>
+                <button type="button" className="btn btn--ghost" onClick={() => setMore({ ...more, keep: true })}>
                   Show {keep.length - keepShown.length} more
                 </button>
               ) : null}

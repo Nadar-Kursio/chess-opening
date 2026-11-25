@@ -76,9 +76,11 @@ interface Job {
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
-  const only = process.argv.includes('--course') ? process.argv[process.argv.indexOf('--course') + 1] : null;
-  if (only && !NARRATED[only]) {
-    console.error(`${only} isn't in NARRATED (src/lib/speech.ts), so it has no voices to record.`);
+  const named = process.argv.indexOf('--course');
+  const only = named < 0 ? null : (process.argv[named + 1] ?? '');
+  // `--course` with nothing after it must not quietly become "every course".
+  if (only !== null && !NARRATED[only]) {
+    console.error(only ? `${only} isn't in NARRATED (src/lib/speech.ts), so it has no voices to record.` : '--course needs a course id.');
     process.exit(1);
   }
   const jobs: Job[] = [];
@@ -86,10 +88,7 @@ async function main() {
     const file = path.join(NARRATION_DIR, voice, clipName(voice, text));
     if (!existsSync(file) && !jobs.some((j) => j.file === file)) jobs.push({ voice, text, file, course });
   };
-  for (const voice of Object.keys(VOICES) as Voice[]) {
-    mkdirSync(path.join(NARRATION_DIR, voice), { recursive: true });
-    if (!only) queue(voice, SAMPLE, null);
-  }
+  for (const voice of Object.keys(VOICES) as Voice[]) if (!only) queue(voice, SAMPLE, null);
   for (const [course, voices] of Object.entries(NARRATED)) {
     if (only && course !== only) continue;
     for (const voice of voices) for (const text of texts(course, voice)) queue(voice, text, course);
@@ -118,6 +117,7 @@ async function main() {
     );
   }
   if (dryRun) return;
+  for (const voice of new Set(jobs.map((j) => j.voice))) mkdirSync(path.join(NARRATION_DIR, voice), { recursive: true });
   const allowed = jobs.filter((j) => !j.course || !over.includes(pot(j.course)));
   jobs.splice(0, jobs.length, ...allowed);
   if (!jobs.length) process.exit(over.length ? 1 : 0);

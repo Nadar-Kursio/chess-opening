@@ -208,7 +208,8 @@ export interface Sidelines {
   games: number;
   elo: [number, number];
   depth: number;
-  moments: { chapter: string; index: number; label: string; leave: number }[];
+  /** The opponent's moves the sidelines leave at, per chapter; `chapter` null for the moves every chapter shares. */
+  moments: { chapter: string | null; index: number; label: string; leave: number }[];
   /** Percent of club replies in the first moves each chapter or sideline teaches, by slug. */
   coverage: Record<string, number>;
   items: Sideline[];
