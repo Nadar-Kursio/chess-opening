@@ -1,4 +1,4 @@
-import { buildTree, lineSide, positionKey, turnOf, yourMoveIndexes, type Tree, type TreeEdge } from './course.ts';
+import { alternativesAt, buildTree, lineSide, positionKey, toMove, turnOf, yourMoveIndexes, type Tree, type TreeEdge } from './course.ts';
 import type { Colour, Opening } from './types.ts';
 
 /* The sparring partner: a club opponent that plays the learner's opening the way 1200-2000 rated
@@ -18,6 +18,20 @@ export interface ClubBook {
   games: number;
   elo: [number, number];
   positions: Record<string, ClubMove[]>;
+  /** The engine's reply after club moves that leave the course, by the position they reach (exits.py). */
+  answers?: Record<string, EngineAnswer>;
+}
+
+/** Stockfish's choice where the course ends: searched ahead of time, never course theory. */
+export interface EngineAnswer {
+  num: string;
+  from: string;
+  to: string;
+  /** White's centipawns, best play. */
+  ev: number;
+  mate?: number;
+  /** A short line from the move on, as a scoresheet. */
+  line: string;
 }
 
 /** Club games at a position below which its shares are noise, and the opponent follows the course. */
@@ -69,6 +83,8 @@ export interface StudyLine {
   slug: string;
   name: string;
   sideline: boolean;
+  /** Reached through one of the chapter's opponent deviations, which its Quiz asks. */
+  deviation?: boolean;
 }
 
 export interface SparBook {
@@ -80,6 +96,8 @@ export interface SparBook {
   /** The most moves of the learner's any chapter from this chair has: a full game's depth. */
   longest: number;
   elo: [number, number];
+  /** The engine's reply after each move that leaves the course, keyed by the position it reaches. */
+  answers: Record<string, EngineAnswer>;
 }
 
 /** "4." or "3...", for a move from a position reached by `num` ("3.Bf4") with `toMove` to play. */
@@ -167,6 +185,11 @@ export function pickReply(choice: Choice, rand: () => number): Drawn {
     : { kind: 'on', reply: choice.replies[choice.replies.length - 1] };
 }
 
+/** The engine's reply to a move that left the course, when exits.py searched it. */
+export function answerTo(book: Pick<SparBook, 'answers'>, leave: Pick<Leave, 'fen'>, you: 'w' | 'b'): EngineAnswer | null {
+  return book.answers[leave.fen + you] ?? null;
+}
+
 /** The move that leaves the course, with the board it reaches. */
 export function leaving(tree: Tree, key: string, [san, games, uci, diff, check]: ClubMove): Leave {
   const node = tree.nodes[key];
@@ -196,8 +219,15 @@ export function sparBook(op: Opening, side: Colour, club: ClubBook): SparBook {
   const you = turnOf(side);
   const opening = sharedOpening(op, side);
   const choices: SparBook['choices'] = {};
+  const answers: SparBook['answers'] = {};
   for (const [key, node] of Object.entries(tree.nodes)) {
-    if (node.toMove !== you && node.moves.length) choices[key] = choiceAt(tree, key, club.positions[key], opening);
+    if (node.toMove === you || !node.moves.length) continue;
+    choices[key] = choiceAt(tree, key, club.positions[key], opening);
+    for (const m of choices[key].out) {
+      const after = afterKey(node, m[3]);
+      const answer = club.answers?.[after];
+      if (answer) answers[after] = answer;
+    }
   }
 
   const lines: StudyLine[] = [];
@@ -210,10 +240,35 @@ export function sparBook(op: Opening, side: Colour, club: ClubBook): SparBook {
     if (lineSide(op, line) === side) own(line.plies, { slug: line.slug, name: line.name, sideline: false });
   }
   for (const s of op.sidelines?.items ?? []) {
-    if (s.line && lineSide(op, s.line) === side) own(s.line.plies.slice(s.line.start ?? 0), { slug: s.slug, name: s.line.name, sideline: true });
+    // From the reply on: the position it leaves from belongs to whatever taught the way there.
+    if (s.line && lineSide(op, s.line) === side) own(s.line.plies.slice((s.line.start ?? 0) + 1), { slug: s.slug, name: s.line.name, sideline: true });
+  }
+  for (const line of op.lines) {
+    if (lineSide(op, line) !== side) continue;
+    const plies = line.plies.flatMap((p, i) => (toMove(p) === you ? [] : alternativesAt(op, line, i).flatMap((b) => b.plies)));
+    if (plies.length) own(plies, { slug: line.slug, name: line.name, sideline: false, deviation: true });
   }
   const longest = Math.max(1, ...op.lines.filter((l) => lineSide(op, l) === side).map((l) => yourMoveIndexes(l, side).length));
-  return { tree, choices, study, lines, longest, elo: club.elo };
+  return { tree, choices, study, lines, longest, elo: club.elo, answers };
+}
+
+/** The book as the sparring page sends it: only what the game reads. The board takes moves only
+    where the learner is to move, so only there does a position keep its legal moves; a position's
+    note is said after the learner's move into it, so only those keep theirs. The wrong-move
+    verdicts (a score for every legal move, most of the book) come a position at a time from
+    /api/spar/[id]/verdicts as the learner reaches it. */
+export function forBrowser(book: SparBook): SparBook {
+  const you = book.tree.side;
+  const nodes: Tree['nodes'] = {};
+  for (const [key, { legal, verdicts: _verdicts, note, moves, ...node }] of Object.entries(book.tree.nodes)) {
+    const mine = node.toMove === you;
+    nodes[key] = {
+      ...node,
+      ...(mine ? { legal } : { note }),
+      moves: moves.map(({ why: _why, ...edge }) => edge),
+    };
+  }
+  return { ...book, tree: { ...book.tree, nodes } };
 }
 
 export interface Opponent {

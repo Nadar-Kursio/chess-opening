@@ -401,6 +401,15 @@ class TestEngineScores(unittest.TestCase):
         self.assertFalse(evals.scores.keys() - evals.used,
                          "scored positions nothing reaches any more")
 
+    def test_every_club_move_that_leaves_a_course_has_the_engines_answer(self):
+        """exits.py's answers go stale the same way: an edit that grows the course moves its exits,
+        and sparring then ends on "End of your prep" with no engine reply. The build warns."""
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            build_openings([], EvalIndex([]))
+        stale = [line for line in out.getvalue().splitlines() if "warning: exits/" in line]
+        self.assertEqual(stale, [], "re-run exits.py")
+
     def test_one_depth_for_every_number(self):
         """Two positions searched to different depths cannot be compared.
 

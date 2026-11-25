@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { BoardArrow, BoardFlash } from '@/components/Board';
 import { colourName, otherTurn, type TreeEdge } from '@/lib/course';
-import { verdictOf, verdictWords } from '@/lib/engineView';
+import { evalText, verdictOf, verdictWords } from '@/lib/engineView';
 import { saveGrade, saveSession } from '@/lib/outbox';
+import { usePacked } from '@/lib/usePacked';
+import '@/app/loader.css';
 import { play, type SoundSet } from '@/lib/sound';
-import { LIVES, leaving, pickOpponent, pickReply, shareOf, type Leave, type Opponent, type SparBook } from '@/lib/spar';
-import type { Colour } from '@/lib/types';
+import { LIVES, answerTo, leaving, pickOpponent, pickReply, shareOf, type EngineAnswer, type Leave, type Opponent, type SparBook } from '@/lib/spar';
+import type { Colour, Ply } from '@/lib/types';
 import { Coach, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 import { squareIndex } from './LineSession';
 import { SessionBoard, useMoveReview, type BoardStep } from './SessionBoard';
@@ -18,7 +20,8 @@ import { Face, Hearts } from './SparParts';
 /* Sparring: the course against a club opponent. The opponent draws each move from what club
    players really play there, so the learner meets the common lines most and finds out where their
    prep runs out. A wrong move costs a life; the game ends when the course does, when the opponent
-   plays something it has no answer to, or when the lives run out. Every first answer is graded
+   plays something it has no answer to (then the engine's reply, searched at build time, is shown
+   apart from the course), or when the lives run out. Every first answer is graded
    into Recall, and the game is saved as a session so it counts toward the day. */
 
 interface Props {
@@ -44,13 +47,41 @@ interface Played {
 
 type Outcome =
   | { kind: 'book' }
-  | { kind: 'left'; leave: Leave; share: number | null }
+  | { kind: 'left'; leave: Leave; share: number | null; answer: EngineAnswer | null }
   | { kind: 'lives'; at: string; answer: TreeEdge };
 
 const SEV_WORD = { playable: 'A sideline the course knows', inaccuracy: 'An inaccuracy', blunder: 'A blunder' } as const;
 const THINK_MS = [550, 1200];
 
-export default function SparSession({ openingId, course, side, book, opponent: first, best: startBest, closeHref, sound, coordinates, engineView = false, traps = [] }: Props) {
+/** Sparring, once the course's book has arrived from /api/spar/[id] (it is too big to write into the page). */
+export default function SparSession({ src, ...props }: Omit<Props, 'book'> & { src: string }) {
+  const { data, error, retry } = usePacked<SparBook>(src);
+  if (error) {
+    return (
+      <main className="card loading-note loading-note--session" role="status">
+        <p>{error === 'slow' ? 'The game is taking too long to load.' : 'The game didn’t load.'}</p>
+        <div className="loading-note__actions">
+          <Link className="btn btn--ghost" href={props.closeHref}>
+            Back
+          </Link>
+          <button type="button" className="btn btn--primary" onClick={retry}>
+            Try again
+          </button>
+        </div>
+      </main>
+    );
+  }
+  if (!data) {
+    return (
+      <main className="card loading-note loading-note--session" role="status">
+        <p className="muted">Setting up the board…</p>
+      </main>
+    );
+  }
+  return <SparGame {...props} book={data} />;
+}
+
+function SparGame({ openingId, course, side, book, opponent: first, best: startBest, closeHref, sound, coordinates, engineView = false, traps = [] }: Props) {
   const { tree, choices } = book;
   const make = useMessages();
   const you = tree.side;
@@ -81,8 +112,19 @@ export default function SparSession({ openingId, course, side, book, opponent: f
   const say = (m: Omit<Msg, 'id'>) => setMsgs((list) => [...list, make(m)]);
 
   const steps: BoardStep[] = path.map((step) => ({ ...tree.nodes[step.key], san: step.san, turn: otherTurn(tree.nodes[step.key].toMove) }));
+  const leftAnswer = left ? answerTo(book, left, you) : null;
   if (left) {
-    steps.push({ fen: left.fen, from: left.from, to: left.to, san: left.san, num: left.num, turn: otherTurn(you), check: left.check });
+    steps.push({
+      fen: left.fen,
+      from: left.from,
+      to: left.to,
+      san: left.san,
+      num: left.num,
+      turn: otherTurn(you),
+      check: left.check,
+      ev: leftAnswer?.ev,
+      mate: leftAnswer?.mate,
+    });
   }
   const review = useMoveReview(steps);
 
@@ -146,10 +188,10 @@ export default function SparSession({ openingId, course, side, book, opponent: f
         say({
           kind: 'theirs',
           title: `${opponent.name} plays ${move.num}`,
-          text: `${share !== null ? `${share}% of club players choose it here. ` : ''}${move.known ? 'The course mentions it but has no answer yet.' : 'Your course has nothing for it yet.'}`,
+          text: `${share !== null ? `${share}% of club players choose it here. ` : ''}That’s the end of your prep.`,
         });
         bait();
-        finish({ kind: 'left', leave: move, share }, tally, depth);
+        finish({ kind: 'left', leave: move, share, answer: answerTo(book, move, you) }, tally, depth);
         return;
       }
       trail.current = [...trail.current, move.next];
@@ -178,6 +220,27 @@ export default function SparSession({ openingId, course, side, book, opponent: f
   useEffect(() => {
     if (yourTurn && asked.current.key !== key) asked.current = { key, at: performance.now(), graded: false };
   }, [yourTurn, key]);
+
+  // Wrong-move verdicts, fetched for every position the learner can reach next while the opponent
+  // thinks, and again on the learner's turn if that failed. Not there in time, or not at all, and
+  // the coach just says it isn't the course's move.
+  const verdicts = useRef<Record<string, Ply['verdicts'] | null>>({});
+  useEffect(() => {
+    const keys = yourTurn ? [key] : over ? [] : node.moves.map((e) => e.next).concat((choices[key]?.replies ?? []).map((r) => r.next));
+    for (const k of keys) {
+      if (k in verdicts.current || tree.nodes[k]?.toMove !== you) continue;
+      verdicts.current[k] = null;
+      fetch(`/api/spar/${openingId}/verdicts?key=${encodeURIComponent(k)}`, { redirect: 'manual' })
+        .then((res) => (res.ok ? (res.json() as Promise<Ply['verdicts'] | null>) : Promise.reject(new Error(String(res.status)))))
+        .then((scored) => {
+          if (scored) verdicts.current[k] = scored;
+        })
+        .catch(() => {
+          delete verdicts.current[k];
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yourTurn, key, over, openingId]);
 
   /** The first try at a position is the one Recall hears about. */
   const grade = (hit: boolean) => {
@@ -211,7 +274,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
     }
 
     grade(false);
-    const verdict = verdictOf(node, from, to);
+    const verdict = verdictOf({ verdicts: node.verdicts ?? verdicts.current[key] ?? undefined }, from, to);
     const words = verdict && verdictWords(verdict, node, expected.num);
     const fine = verdict?.sev === 'good';
     const lost = fine ? 0 : 1;
@@ -270,7 +333,12 @@ export default function SparSession({ openingId, course, side, book, opponent: f
   usePrimaryKey(over ? again : null);
 
   const answerArrow = outcome?.kind === 'lives' ? outcome.answer : yourTurn && hintLevel >= 2 ? expected : null;
-  const arrows: BoardArrow[] = answerArrow ? [{ from: answerArrow.from, to: answerArrow.to, kind: 'hint' }] : [];
+  const engineArrow = outcome?.kind === 'left' ? outcome.answer : null;
+  const arrows: BoardArrow[] = answerArrow
+    ? [{ from: answerArrow.from, to: answerArrow.to, kind: 'hint' }]
+    : engineArrow
+      ? [{ from: engineArrow.from, to: engineArrow.to, kind: 'engine' }]
+      : [];
   const canHint = yourTurn && wrongHere > 0 && hintLevel < 2;
 
   return (
@@ -290,7 +358,13 @@ export default function SparSession({ openingId, course, side, book, opponent: f
           arrows={arrows}
           flash={flash}
           coordinates={coordinates}
-          engine={engineView ? (over ? { upTo: path.length - 1 } : { upTo: path.findLastIndex((step) => tree.nodes[step.key].toMove !== you && step.san !== '') }) : null}
+          engine={
+            engineView
+              ? over
+                ? { upTo: leftAnswer ? path.length : path.length - 1 }
+                : { upTo: path.findLastIndex((step) => tree.nodes[step.key].toMove !== you && step.san !== '') }
+              : null
+          }
         />
       }
       side={
@@ -330,7 +404,7 @@ export default function SparSession({ openingId, course, side, book, opponent: f
         over ? (
           <>
             <div className="foot__text">
-              <strong>{outcome.kind === 'book' ? 'Book complete' : outcome.kind === 'left' ? 'Out of your prep' : 'Out of lives'}</strong>
+              <strong>{outcome.kind === 'book' ? 'Book complete' : outcome.kind === 'left' ? 'End of your prep' : 'Out of lives'}</strong>
               <span>
                 {depth} {depth === 1 ? 'move' : 'moves'} in book{isNewBest ? ' · new personal best' : best ? ` · best ${best}` : ''}
               </span>
@@ -410,10 +484,10 @@ function Recap({
       ? { title: 'Book complete!', text: `You played every move the course has here, and ${opponent.name} never got you out of it.` }
       : outcome.kind === 'left'
         ? {
-            title: `${opponent.name} left your prep`,
-            text: `${outcome.leave.num}${outcome.share !== null ? ` comes up in ${outcome.share}% of club games here` : ' is rare at club level'}. ${
-              outcome.leave.known ? 'The course names it but has no answer yet.' : 'Nothing in the course for this yet.'
-            }`,
+            title: 'End of your prep',
+            text: `${opponent.name} played ${outcome.leave.num}${
+              outcome.share !== null ? `, a move ${outcome.share}% of club players choose here` : ', a rare one at club level'
+            }. ${outcome.leave.known ? 'The course mentions it but doesn’t teach an answer yet.' : 'The course doesn’t go this way yet.'}`,
           }
         : { title: 'Out of lives', text: `The course plays ${outcome.answer.num} here. The arrow shows it.` };
 
@@ -421,10 +495,12 @@ function Recap({
     ? outcome.kind === 'lives'
       ? { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.name}`, why: 'The chapter with the move you missed.' }
       : line.sideline
-        ? { href: `/openings/${openingId}/${line.slug}/learn`, label: `Learn ${line.name}`, why: 'You ended in a sideline. Its lesson shows the ideas.' }
+        ? { href: `/openings/${openingId}/${line.slug}/learn`, label: `Learn ${line.name}`, why: 'The sideline this game went down. Its lesson shows the ideas.' }
+        : line.deviation
+          ? { href: `/openings/${openingId}/${line.slug}/quiz`, label: `Quiz ${line.name}`, why: 'The game went down one of this chapter’s side roads. Its quiz asks them.' }
         : outcome.kind === 'book'
           ? { href: `/openings/${openingId}/${line.slug}/recall`, label: `Test ${line.name}`, why: 'You know it over the board. Now from memory, start to finish.' }
-          : { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.name}`, why: 'The chapter this game followed until it left.' }
+          : { href: `/openings/${openingId}/${line.slug}/drill`, label: `Drill ${line.name}`, why: 'The chapter this game followed, up to where the course ends.' }
     : null;
 
   return (
@@ -447,6 +523,7 @@ function Recap({
           <span>{lives === 1 ? 'life left' : 'lives left'}</span>
         </div>
       </div>
+      {outcome.kind === 'left' && outcome.answer ? <EngineReply answer={outcome.answer} /> : null}
       {study ? (
         <Link className="spar-next" href={study.href}>
           <span className="eyebrow">Study next</span>
@@ -472,5 +549,20 @@ function Recap({
         </div>
       ) : null}
     </section>
+  );
+}
+
+/** Stockfish's reply where the course ran out, kept visibly apart from what the course teaches. */
+function EngineReply({ answer }: { answer: EngineAnswer }) {
+  return (
+    <div className="spar-engine" role="note" aria-label="The engine’s choice">
+      <span className="eyebrow">The engine’s choice</span>
+      <div className="spar-engine__move">
+        <b>{answer.num}</b>
+        <span className="spar-engine__eval">{evalText(answer)}</span>
+      </div>
+      <p className="spar-engine__line">{answer.line}</p>
+      <p className="muted small">Stockfish’s best move here, worked out ahead of time, scored from White’s side. It’s a pointer, not part of the course.</p>
+    </div>
   );
 }

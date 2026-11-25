@@ -142,7 +142,7 @@ export interface Opening {
   lesson?: Lesson;
   lines: Line[];
   branchsets?: Branch[][];
-  /** The eval bar, move marks and wrong-move verdicts are on for this course. */
+  /** The eval bar and move marks are on: the course's plies carry engine scores. */
   engineView?: boolean;
   sidelines?: Sidelines;
   /** Trap courses that happen in this one, found by position at build time. */
@@ -208,7 +208,9 @@ export interface Sidelines {
   games: number;
   elo: [number, number];
   depth: number;
-  moments: { chapter: string; index: number; label: string; leave: number }[];
+  /** The opponent's moves the sidelines leave at, per chapter (`leave`: the share of club games leaving
+      there); `chapter` null for the replies before the chapters part (`leave`: the share that play it). */
+  moments: { chapter: string | null; index: number; label: string; leave: number }[];
   /** Percent of club replies in the first moves each chapter or sideline teaches, by slug. */
   coverage: Record<string, number>;
   items: Sideline[];

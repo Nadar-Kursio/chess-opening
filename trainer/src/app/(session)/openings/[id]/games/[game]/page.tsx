@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import GameSession from '@/components/session/GameSession';
 import { getGame, getOpening, hasOpening } from '@/lib/content';
 import { turnOf } from '@/lib/course';
+import { hasScores } from '@/lib/engineView';
 import { getSettings } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 
@@ -28,7 +29,8 @@ export default async function GamePage({ params }: Params) {
       closeHref={`/openings/${id}`}
       sound={settings.sound}
       coordinates={settings.coordinates}
-      engineView={getOpening(id).engineView}
+      // A game the evals skip (a long endgame) shows no bar rather than an empty one.
+      engineView={hasScores([game])}
     />
   );
 }

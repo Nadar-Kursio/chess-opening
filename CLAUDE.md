@@ -47,12 +47,16 @@ System `python3` has no `python-chess`; use the venv.
   only from those scripts. Re-run `sidelines.py`, `position-evals.py` and
   `move-verdicts.py`, in that order, after editing a covered opening. Only the
   trainer reads them, through `coaching/<id>.json`; a course with neither file has
-  no eval bar, marks or sidelines there.
+  no wrong-move verdicts or sidelines there. The eval bar and move marks need only the
+  evals, so every course has them.
 - `src/content/club/*.json` (what 1200-2000 Lichess players play in every position
   a course's opponent moves in, from `club-moves.py`) is generated and committed the
   same way, and re-run after `sidelines.py` when a covered opening changes. The
   trainer's sparring partner reads it through its own emitted `club/<id>.json`,
-  never `coaching/`, so having club data doesn't switch the engine view on.
+  never `coaching/`. `src/content/exits/*.json` (the engine's reply wherever a club move
+  leaves a course, for the sparring end screen, from `exits.py`) rides along in that same
+  emitted file; re-run it after `club-moves.py` (the build warns about club moves
+  that leave a course with no answer, and `tests/test_content.py` fails).
 - Adding an opening to the site is data-only: author a `slug` per line and add
   the id to `PORTED` in `src/build.py`. If the app needs code to accommodate a
   new opening, that is a bug in the app.

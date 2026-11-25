@@ -8,6 +8,8 @@ import { ChevronLeft, ChevronRight } from '@/components/ui/icons';
 import { MARK_GLYPH, evalText } from '@/lib/engineView';
 import { LevelLegend, MemoryBar, WeakMark } from '@/components/ui/Memory';
 import { LEVEL_LABEL, LEVEL_NOTE, emptyTally, tallyTotal, type PositionMemory, type Tally } from '@/lib/mastery';
+import { usePacked } from '@/lib/usePacked';
+import '@/app/loader.css';
 import type { BranchGroup, Teach, XMove, XNode } from '@/lib/repertoire';
 import type { Severity, Turn } from '@/lib/types';
 
@@ -35,7 +37,30 @@ export type ExplorerMove = XMove & { more: number };
 
 const SEV_LABEL: Record<Severity, string> = { playable: 'Playable', inaccuracy: 'Inaccuracy', blunder: 'Blunder' };
 
-export default function Explorer({ data }: { data: ExplorerData }) {
+/** The explorer, once its data has arrived from /api/repertoire/[id]. */
+export default function Explorer({ src }: { src: string }) {
+  const { data, error, retry } = usePacked<ExplorerData>(src);
+  if (error) {
+    return (
+      <div className="card loading-note" role="status">
+        <p>{error === 'slow' ? 'The repertoire is taking too long to load.' : 'The repertoire didn’t load.'}</p>
+        <button type="button" className="btn btn--ghost" onClick={retry}>
+          Try again
+        </button>
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="card loading-note" role="status">
+        <p className="muted">Opening the repertoire…</p>
+      </div>
+    );
+  }
+  return <ExplorerView data={data} />;
+}
+
+function ExplorerView({ data }: { data: ExplorerData }) {
   const { nodes } = data;
   const [path, setPath] = useState(data.initial.length ? data.initial : [data.root]);
   const [at, setAt] = useState(path.length - 1);

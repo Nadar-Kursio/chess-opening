@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { test } from 'node:test';
 import { yourMoveIndexes } from '../src/lib/course.ts';
-import { evalBarText, evalShare, evalText, verdictOf, verdictWords } from '../src/lib/engineView.ts';
-import type { Line, Ply } from '../src/lib/types.ts';
+import { evalBarText, evalShare, evalText, hasScores, verdictOf, verdictWords } from '../src/lib/engineView.ts';
+import type { Catalog, Line, Opening, Ply } from '../src/lib/types.ts';
+
+// The real compiled course: CONTENT_DIR, else trainer/content (npm run content).
+const ROOT = process.env.CONTENT_DIR ?? path.join(import.meta.dirname, '..', 'content');
+const read = (name: string) => JSON.parse(readFileSync(path.join(ROOT, name), 'utf8'));
 
 const position: Pick<Ply, 'ev' | 'verdicts'> = {
   ev: 21,
@@ -70,4 +76,16 @@ test('a sideline only asks the moves after it leaves the chapter', () => {
   const line = { slug: 's', name: '', note: '', plies: [ply('w'), ply('w'), ply('b'), ply('w'), ply('b'), ply('w')], start: 2 } as Line;
   assert.deepEqual(yourMoveIndexes(line, 'white'), [3, 5]);
   assert.deepEqual(yourMoveIndexes({ ...line, start: undefined }, 'white'), [1, 3, 5]);
+});
+
+test('every course gets the eval bar, trap courses and courses without a coaching file included', () => {
+  const { openings } = read('catalog.json') as Catalog;
+  assert.ok(openings.some((o) => o.section === 'traps'));
+  for (const { id } of openings) {
+    const op = read(`openings/${id}.json`) as Opening;
+    assert.ok(hasScores(op.lines), id);
+    const scored = op.lines.flatMap((l) => l.plies).filter((p) => p.ev !== undefined || p.mate !== undefined).length;
+    assert.equal(scored, op.lines.reduce((n, l) => n + l.plies.length, 0), `${id}: every ply has a score`);
+  }
+  assert.equal(hasScores([{ plies: [{ fen: '' } as Ply] }]), false);
 });

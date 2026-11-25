@@ -2,6 +2,7 @@ import 'server-only';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { positionKey } from './course';
+import { hasScores } from './engineView';
 import type { ClubBook } from './spar';
 import type { Catalog, Game, MoveScore, Opening, Ply, Sidelines } from './types';
 
@@ -35,8 +36,10 @@ interface Coaching {
   sidelines?: Sidelines;
 }
 
-/** A course's generated extras, in a file of their own: a course with none reads as it always has. */
+/** The eval bar and marks wherever the plies carry scores (every course ships evals), and the
+    generated extras from a file of their own: a course with none has no verdicts or sidelines. */
 function withCoaching(op: Opening) {
+  op.engineView = hasScores(op.lines);
   const file = path.join('coaching', `${op.id}.json`);
   if (!existsSync(path.join(ROOT, file))) return op;
   const { verdicts, sidelines } = JSON.parse(read(file)) as Coaching;
@@ -49,7 +52,6 @@ function withCoaching(op: Opening) {
   for (const line of op.lines) place(line.plies);
   for (const set of op.branchsets ?? []) for (const b of set) place(b.plies);
   for (const s of sidelines?.items ?? []) if (s.line) place(s.line.plies);
-  op.engineView = true;
   op.sidelines = sidelines;
   return op;
 }
@@ -61,6 +63,18 @@ export function getOpening(id: string): Opening {
     openings.set(id, op);
   }
   return op;
+}
+
+const verdictMaps = new Map<string, Coaching['verdicts']>();
+
+/** Every legal move's score from one position the learner is asked, by the trainer's position key;
+    null where the course has none. Sparring fetches these a position at a time. */
+export function getVerdicts(id: string, key: string) {
+  if (!verdictMaps.has(id)) {
+    const file = path.join('coaching', `${id}.json`);
+    verdictMaps.set(id, existsSync(path.join(ROOT, file)) ? (JSON.parse(read(file)) as Coaching).verdicts : undefined);
+  }
+  return verdictMaps.get(id)?.[key] ?? null;
 }
 
 const clubs = new Map<string, ClubBook | null>();

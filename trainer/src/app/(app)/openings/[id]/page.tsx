@@ -25,6 +25,7 @@ import ResetCourse from './ResetCourse';
 import Sidelines from './Sidelines';
 import Traps from './Traps';
 import '@/app/traps.css';
+import '@/app/sidelines.css';
 
 export const dynamic = 'force-dynamic';
 

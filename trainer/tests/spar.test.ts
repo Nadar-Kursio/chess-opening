@@ -4,7 +4,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { positionKey, sidesTaught } from '../src/lib/course.ts';
 import type { Tree } from '../src/lib/course.ts';
-import { OPPONENTS, THIN, choiceAt, leaving, nextNumber, pickOpponent, pickReply, shareOf, sparBook, type ClubBook, type ClubMove, type Drawn } from '../src/lib/spar.ts';
+import { OPPONENTS, THIN, answerTo, choiceAt, leaving, nextNumber, pickOpponent, pickReply, shareOf, sparBook, type ClubBook, type ClubMove, type Drawn } from '../src/lib/spar.ts';
 import type { Opening, Sidelines } from '../src/lib/types.ts';
 
 /* ---------- the opponent's choice, on a tree small enough to read ---------- */
@@ -227,4 +227,52 @@ test('a Black course opens with the move it answers', () => {
     assert.equal(root.forced, true, id);
     assert.deepEqual(root.replies.map((r) => r.san), [op.lines[0].plies[1].san], id);
   }
+});
+
+test('where a common club move leaves the course, the end screen has the engine’s reply', () => {
+  for (const id of clubs) {
+    const book = JSON.parse(readFileSync(path.join(clubDir, `${id}.json`), 'utf8')) as ClubBook;
+    assert.ok(book.answers, `${id}: run exits.py`);
+    const op = load(id);
+    for (const side of sidesTaught(op)) {
+      const spar = sparBook(op, side, book);
+      const you = spar.tree.side;
+      let common = 0;
+      let answered = 0;
+      for (const [key, choice] of Object.entries(spar.choices)) {
+        if (choice.thin || choice.forced) continue;
+        for (const m of choice.out) {
+          const leave = leaving(spar.tree, key, m);
+          const answer = answerTo(spar, leave, you);
+          if (m[1] >= 10) common++;
+          if (!answer) continue;
+          answered += m[1] >= 10 ? 1 : 0;
+          const piece = leave.fen[squareAt(answer.from)];
+          assert.ok(piece !== '.' && (piece === piece.toUpperCase()) === (you === 'w'), `${id}: ${answer.num} moves the learner's piece`);
+          assert.match(answer.num, /^\d+\.(\.\.)?\S+$/, id);
+          assert.ok(answer.line.startsWith(answer.num), `${id}: ${answer.line} starts with ${answer.num}`);
+        }
+      }
+      assert.ok(common > 0 && answered / common > 0.95, `${id}: ${answered} of ${common} common exits answered`);
+    }
+  }
+});
+
+test('a game that ends in a deviation’s continuation points at the chapter’s Quiz', () => {
+  const op = load('queensgambit');
+  const spar = sparBook(op, 'white', JSON.parse(readFileSync(path.join(clubDir, 'queensgambit.json'), 'utf8')) as ClubBook);
+  const devs = Object.values(spar.study).filter((i) => spar.lines[i].deviation);
+  assert.ok(devs.length > 0);
+  for (const i of devs) assert.ok(op.lines.some((l) => l.slug === spar.lines[i].slug && !spar.lines[i].sideline));
+  // A chapter's own positions keep the chapter, not its deviations.
+  for (const line of op.lines) for (const p of line.plies) assert.ok(!spar.lines[spar.study[positionKey(p)]]?.deviation, line.slug);
+});
+
+test('a sideline’s own moves point at it, not at a later sideline leaving from the same place', () => {
+  const op = load('london');
+  const spar = sparBook(op, 'white', JSON.parse(readFileSync(path.join(clubDir, 'london.json'), 'utf8')) as ClubBook);
+  const f5 = op.sidelines!.items.find((s) => s.slug === 'leaves-1-f5')!.line!;
+  // 1.d4 f5 2.Bf4: the 1...f5 sideline's move, and where a grown 2...e6 sideline leaves from.
+  const after = f5.plies[(f5.start ?? 0) + 2];
+  assert.equal(spar.lines[spar.study[positionKey(after)]].slug, 'leaves-1-f5');
 });

@@ -156,7 +156,11 @@ test('an opponent move the course doesn’t have says so; a sideline or authored
   assert.equal(off.met?.kind, 'uncovered');
   assert.equal(off.met?.num, '1...a5');
 
-  const s = london.sidelines!.items.find((x) => x.line && x.kind === 'answer')!;
+  // One that leaves a chapter: a sideline grown past another one is met at the first one.
+  const chapterKeys = new Set(london.lines.flatMap((l) => l.plies.map(positionKey)));
+  const s = london.sidelines!.items.find(
+    (x) => x.line && x.kind === 'answer' && x.line.plies.slice(0, (x.line.start ?? 0) + 1).every((p) => chapterKeys.has(positionKey(p))),
+  )!;
   const w = walkCourse(london, 'white', sans(s.line!));
   assert.equal(w.met?.kind, 'sideline');
   assert.equal(w.met?.slug, s.slug);
