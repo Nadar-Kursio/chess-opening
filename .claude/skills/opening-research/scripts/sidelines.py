@@ -34,8 +34,10 @@ inside the sidelines it has just made, so it goes round until none is left (or
 one the learner plays against the course's expected reply. --no-grow skips it.
 Items already in the file keep their slugs: they are made first, in the same order.
 
-Lines come from the authored branch when there is one, and from Stockfish's
-principal variation when there isn't. Ranking needs nothing else: `coverage` is
+Lines come from the authored branch when there is one. Otherwise the learner's moves
+are Stockfish's best and the opponent's are what club players play (club_reply: the top
+club move when a quarter of players choose it, else a common move within an inaccuracy
+of the best, else the engine's). Ranking needs nothing else: `coverage` is
 every club reply in the first MOVES opponent moves, weighted by how often the
 game gets there when the learner plays the course, and credited to the chapter or
 sideline that teaches it, so what a learner has studied just adds up.
@@ -52,7 +54,7 @@ import chess                                            # noqa: E402
 import chess.engine                                     # noqa: E402
 from _engine import ROOT, engine_path                   # noqa: E402
 from engine.marks import INACCURACY                     # noqa: E402
-from _course import THIN, Tree, club_counts             # noqa: E402
+from _course import THIN, Tree, club_counts, move_label  # noqa: E402
 from coverage import analyse                            # noqa: E402
 
 MATE = 10000
@@ -69,9 +71,9 @@ SEARCH = 20
 SCREEN = 14
 LEARNER_MOVES = 3
 # How far below the engine's best a club move may be and still be the reply a lesson expects.
-CLUB_SLACK = 30
+CLUB_SLACK = INACCURACY  # "holds up" means what the move marks mean by it
 CLUB_TRIES = 3      # most common club moves tried at a position, most common first
-CLUB_MOST = 0.5     # a move this share of club players choose is expected even when it's a mistake
+CLUB_COMMON = 0.25  # a top move this share of club players choose is expected whatever it costs
 
 
 class Search:
@@ -188,9 +190,11 @@ def main():
     items, moments, taken, seen = [], [], set(), set()
 
     def club_reply(board):
-        """The opponent's move a lesson should expect: the most common club move here that the
-        engine rates within CLUB_SLACK of its best, else the engine's best. A move most club
-        players choose is expected whatever it costs them: then the lesson is how to punish it."""
+        """The opponent's move a lesson should expect, with 20+ club games here: the top club
+        move if a quarter of players choose it, whatever it costs them (a common mistake is the
+        thing to teach: the learner's next move is the engine's best, which punishes it), else the
+        most common of the top CLUB_TRIES that the engine rates within CLUB_SLACK of its best,
+        else the engine's best."""
         best_ev, pv = search.score(board, SEARCH)
         if not pv:
             return None
@@ -198,9 +202,12 @@ def main():
         if counts and sum(counts.values()) >= THIN:
             mover = 1 if board.turn == chess.WHITE else -1
             total = sum(counts.values())
+            top, n = counts.most_common(1)[0]
+            if n / total >= CLUB_COMMON:
+                return board.parse_san(top)
             for san, n in counts.most_common(CLUB_TRIES):
                 move = board.parse_san(san)
-                if move == pv[0] or n / total >= CLUB_MOST:
+                if move == pv[0]:
                     return move
                 if mover * (best_ev - search.score(board, SEARCH, move)[0]) <= CLUB_SLACK:
                     return move
@@ -386,16 +393,32 @@ def main():
 
     walk(chess.Board(), [], 0)
 
-    def placement(moves):
+    def placement(moves, reply):
         """Where a sideline sits on the page: the chapter whose own positions (not the ones every
-        chapter shares) its road last passes through, or None for "before the chapters", and the
-        last of that group's moments on the way."""
+        chapter shares) its road last passes through, and the last of that chapter's moments on
+        the way. A position two chapters share belongs to the first that reaches it (`owner`), so
+        the London's 1.d4 d5 2.Bf4 replies are all Chapter 1's. A sideline that never reaches a
+        chapter's own positions is "before the chapters" (chapter None), filed under the first
+        reply that left the shared moves ("1...e5"), so that group has move chips too."""
         board = chess.Board()
         route = [board.epd()]
-        for san in moves:
+        for san in moves + [reply]:
             board.push_san(san)
             route.append(board.epd())
+        route, after = route[:-1], route
         chapter = next((owner[epd] for epd in reversed(route) if epd not in shared and epd in owner), None)
+        if chapter is None:
+            i = next(i for i, epd in enumerate(after) if epd not in shared)
+            if (None, after[i]) not in moment_at:
+                prior = chess.Board(after[i - 1] + " 0 1")
+                prior.fullmove_number = (i - 1) // 2 + 1
+                san = (moves + [reply])[i - 1]
+                counts = positions.get(after[i - 1]) or {}
+                index = sum(1 for m in moments if m["chapter"] is None)
+                moment_at[(None, after[i])] = index
+                moments.append({"chapter": None, "index": index, "label": move_label(prior, san),
+                                "leave": round(100 * counts.get(san, 0) / max(1, sum(counts.values())))})
+            return None, moment_at[(None, after[i])]
         moment = next((moment_at[(chapter, epd)] for epd in reversed(route) if (chapter, epd) in moment_at), None)
         if moment is None:
             # Reached the chapter by another move order: the chapter's moment at the same move.
@@ -432,7 +455,7 @@ def main():
                 tried.add(result.epd())
                 seen.add(result.epd())
                 item = build_item(before, gap["moves"], gap["reply"], gap["games"], gap["at"],
-                                  *placement(gap["moves"]), autopilot(tree, before))
+                                  *placement(gap["moves"], gap["reply"]), autopilot(tree, before))
                 if item:
                     add(item, before)
                     grown += 1
@@ -440,7 +463,7 @@ def main():
                 break
 
     for item in items:
-        item["chapter"], item["moment"] = placement(item["moves"].split())
+        item["chapter"], item["moment"] = placement(item["moves"].split(), item["reply"])
 
     # What each chapter and sideline teaches, weighted by how often it comes up.
     sideline_owner = {}

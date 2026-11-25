@@ -70,11 +70,22 @@ export default function Sidelines({
   const studyShown = more.study ? study : study.slice(0, SHOWN);
   const keepShown = more.keep ? keep : keep.slice(0, SHOWN);
   const before = items.filter((s) => s.chapter === null).length;
-  const groupMoments = chapter ? moments.filter((m) => m.chapter === group && items.some((s) => s.chapter === group && s.moment === m.index)) : [];
+  const groupMoments = chapter
+    ? moments
+        .filter((m) => m.chapter === group && items.some((s) => s.chapter === group && s.moment === m.index))
+        // A chapter's moves in the order they're played; the replies before the chapters, most played first.
+        .sort((a, b) => (group === null ? b.leave - a.leave : a.index - b.index))
+    : [];
   const filter = (next: string | null, at: number | null) => {
     setChapter(next);
     setMoment(at);
     setMore({ study: false, keep: false });
+    // The detail panel follows the list: never a row the filter has just hidden.
+    const nextGroup = next === BEFORE ? null : next;
+    const rows = items.filter((s) => (!next || s.chapter === nextGroup) && (at === null || s.moment === at));
+    const first = rows.find(isStudy) ?? rows[0];
+    if (first) setSelected(first.slug);
+    setOpen(false);
   };
   const current = items.find((s) => s.slug === selected) ?? items[0];
 
@@ -176,7 +187,7 @@ export default function Sidelines({
               onClick={() => filter(chapter, moment === m.index ? null : m.index)}
             >
               <b>{m.label}</b>
-              <small>{m.leave}% leave here</small>
+              <small>{m.chapter === null ? `${m.leave}% play it` : `${m.leave}% leave here`}</small>
             </button>
           ))}
         </div>

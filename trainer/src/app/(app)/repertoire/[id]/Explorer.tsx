@@ -39,11 +39,11 @@ const SEV_LABEL: Record<Severity, string> = { playable: 'Playable', inaccuracy: 
 
 /** The explorer, once its data has arrived from /api/repertoire/[id]. */
 export default function Explorer({ src }: { src: string }) {
-  const { data, retry } = usePacked<ExplorerData>(src);
-  if (data === 'failed') {
+  const { data, error, retry } = usePacked<ExplorerData>(src);
+  if (error) {
     return (
       <div className="card loading-note" role="status">
-        <p>The repertoire didn’t load.</p>
+        <p>{error === 'slow' ? 'The repertoire is taking too long to load.' : 'The repertoire didn’t load.'}</p>
         <button type="button" className="btn btn--ghost" onClick={retry}>
           Try again
         </button>

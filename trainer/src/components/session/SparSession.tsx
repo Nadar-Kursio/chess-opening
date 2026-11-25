@@ -55,14 +55,19 @@ const THINK_MS = [550, 1200];
 
 /** Sparring, once the course's book has arrived from /api/spar/[id] (it is too big to write into the page). */
 export default function SparSession({ src, ...props }: Omit<Props, 'book'> & { src: string }) {
-  const { data, retry } = usePacked<SparBook>(src);
-  if (data === 'failed') {
+  const { data, error, retry } = usePacked<SparBook>(src);
+  if (error) {
     return (
       <main className="card loading-note loading-note--session" role="status">
-        <p>The game didn’t load.</p>
-        <button type="button" className="btn btn--ghost" onClick={retry}>
-          Try again
-        </button>
+        <p>{error === 'slow' ? 'The game is taking too long to load.' : 'The game didn’t load.'}</p>
+        <div className="loading-note__actions">
+          <Link className="btn btn--ghost" href={props.closeHref}>
+            Back
+          </Link>
+          <button type="button" className="btn btn--primary" onClick={retry}>
+            Try again
+          </button>
+        </div>
       </main>
     );
   }
@@ -216,19 +221,26 @@ function SparGame({ openingId, course, side, book, opponent: first, best: startB
     if (yourTurn && asked.current.key !== key) asked.current = { key, at: performance.now(), graded: false };
   }, [yourTurn, key]);
 
-  // A wrong move's verdict, fetched while the learner thinks. Not there in time, or not at all,
-  // and the coach just says it isn't the course's move.
+  // Wrong-move verdicts, fetched for every position the learner can reach next while the opponent
+  // thinks, and again on the learner's turn if that failed. Not there in time, or not at all, and
+  // the coach just says it isn't the course's move.
   const verdicts = useRef<Record<string, Ply['verdicts'] | null>>({});
   useEffect(() => {
-    if (!yourTurn || key in verdicts.current) return;
-    verdicts.current[key] = null;
-    fetch(`/api/spar/${openingId}/verdicts?key=${encodeURIComponent(key)}`, { redirect: 'manual' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((scored: Ply['verdicts'] | null) => {
-        if (scored) verdicts.current[key] = scored;
-      })
-      .catch(() => {});
-  }, [yourTurn, key, openingId]);
+    const keys = yourTurn ? [key] : over ? [] : node.moves.map((e) => e.next).concat((choices[key]?.replies ?? []).map((r) => r.next));
+    for (const k of keys) {
+      if (k in verdicts.current || tree.nodes[k]?.toMove !== you) continue;
+      verdicts.current[k] = null;
+      fetch(`/api/spar/${openingId}/verdicts?key=${encodeURIComponent(k)}`, { redirect: 'manual' })
+        .then((res) => (res.ok ? (res.json() as Promise<Ply['verdicts'] | null>) : Promise.reject(new Error(String(res.status)))))
+        .then((scored) => {
+          if (scored) verdicts.current[k] = scored;
+        })
+        .catch(() => {
+          delete verdicts.current[k];
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yourTurn, key, over, openingId]);
 
   /** The first try at a position is the one Recall hears about. */
   const grade = (hit: boolean) => {

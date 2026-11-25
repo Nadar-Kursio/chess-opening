@@ -17,3 +17,7 @@
   border-radius: 0;
   box-shadow: none;
 }
+.loading-note__actions {
+  display: flex;
+  gap: var(--space-3);
+}

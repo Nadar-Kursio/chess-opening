@@ -7,7 +7,8 @@ import { getClub, getOpening } from '@/lib/content';
 import { sidesTaught } from '@/lib/course';
 import { getSettings } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
-import { pickOpponent, sparBook } from '@/lib/spar';
+import { pickOpponent } from '@/lib/spar';
+import { servedBook } from '@/lib/sparCache';
 import { getSparRecords } from '@/lib/sparBests';
 import type { Colour } from '@/lib/types';
 import '../../../../spar.css';
@@ -25,7 +26,7 @@ export default async function SparPage({ params, searchParams }: PageProps<'/pla
   const asked = (await searchParams).side;
   const side: Colour = sides.includes(asked as Colour) ? (asked as Colour) : sides[0];
   const [settings, records] = await Promise.all([getSettings(user.id), getSparRecords(user.id)]);
-  const book = sparBook(op, side, club);
+  const { book } = servedBook(id, side)!;
   const traps = baitsOf(allOpenings())
     .filter((b) => b.setter === side && book.tree.nodes[b.key])
     .map((b) => ({ id: b.trapId, name: trapName(getOpening(b.trapId).name), taken: b.taken, num: b.num }));
