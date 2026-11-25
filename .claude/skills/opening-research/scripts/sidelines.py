@@ -62,7 +62,7 @@ MATE = 10000
 MOVES = 5           # opponent moves per chapter on the page
 COMMON = 0.03       # share of the position's games
 ENOUGH = 25         # games, below which a percentage is noise
-PLENTY = 2000       # games that matter however small their share of a huge position
+PLENTY = 0.015      # of the course's games: a reply that matters however small its share of a huge position
 SET_SHARE = 0.01    # a one-off blunder isn't a trap to set
 RARE_ENOUGH = 20    # games for a rare reply that might still be a trap
 TRAP = 150
@@ -242,7 +242,7 @@ def main():
         reply_move = after.parse_san(reply)
         after.push(reply_move)
         share = count / total
-        common = (share >= COMMON and count >= ENOUGH) or count >= PLENTY
+        common = (share >= COMMON and count >= ENOUGH) or count >= PLENTY * club["games"]
         entry = {"moves": " ".join(moves), "reply": reply, "pct": round(100 * share),
                  "games": count, "at": total, "chapter": chapter, "moment": moment}
         target = owner.get(after.epd())

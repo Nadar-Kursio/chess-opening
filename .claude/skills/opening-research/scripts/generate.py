@@ -133,7 +133,8 @@ def main():
     ap.add_argument("--reach", type=float, default=1.0, help="sidelines: grow at positions this share (%%) of games reach")
     ap.add_argument("--share", type=float, default=5, help="sidelines: ...from replies chosen this often (%%)")
     ap.add_argument("--moves", type=int, default=6, help="sidelines: ...in the opponent's first N moves")
-    ap.add_argument("--exit-games", type=int, default=3, help="exits: answer club moves with this many games")
+    ap.add_argument("--exit-games", type=int, default=10, help="exits: answer club moves with this many games (a whole "
+                    "month of the explorer is about four times the old stream sample, so 10 is the old 3)")
     ap.add_argument("--skip", default="", help="position-evals: model games to leave unscored, comma-separated "
                     "(default: the ones the course's evals file already skips)")
     ap.add_argument("--only", help="run only these steps, comma-separated")

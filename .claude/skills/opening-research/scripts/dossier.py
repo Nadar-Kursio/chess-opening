@@ -276,7 +276,7 @@ def report(walk, args, out):
             san, why = child["chosen"]
             m = child["masters"] or {"white": 0, "draws": 0, "black": 0}
             mg = m["white"] + m["draws"] + m["black"]
-            say(f"           {label(child['path']):<8} -> {(san or 'stop'):<6} [{why}]  masters {mg:,} games, "
+            say(f"           {label(node['path'] + [row[0]]):<8} -> {(san or 'stop'):<6} [{why}]  masters {mg:,} games, "
                 f"cloud {cp(child['cloud'][0])}" + (f"  ! {'; '.join(child['flags'])}" if child["flags"] else ""))
     say()
 
@@ -306,7 +306,7 @@ def report(walk, args, out):
                 child = nodes.get(board.epd())
                 if child and child["cloud"][0] is not None and child["cloud"][0] - node["cloud"][0] >= SWING:
                     found = True
-                    say(f"  set    {label(child['path']):<8} {share:4.0f}% of {total:,}, reach {100 * child['reach']:.2f}%, "
+                    say(f"  set    {label(node['path'] + [row[0]]):<8} {share:4.0f}% of {total:,}, reach {100 * child['reach']:.2f}%, "
                         f"{(child['cloud'][0] - node['cloud'][0]) / 100:+.1f} for you  after {numbered(node['path'])}"
                         f"  (you: {child.get('chosen', (None,))[0]})")
         for san, share, cost in node.get("dodge", []):
