@@ -35,6 +35,7 @@ games get to, in the opponent's first --moves moves. The defaults keep a course 
 would teach; widen them on purpose, never to chase a coverage number.
 """
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -177,17 +178,23 @@ def main():
         if args.status:
             log(f"{name}: would run ({'never run' if name not in state else 'its inputs changed'})")
             continue
-        command = (["flock", LOCK, "nice", "-n", "10"] if locked else ["nice", "-n", "5"]) + argv
-        log(f"{name}: running{' (waiting for the engine lock first)' if locked else ''}")
-        began = time.time()
-        result = subprocess.run(command, cwd=ROOT)
+        waited = 0.0
+        with open(LOCK, "a") as lock:
+            if locked:
+                log(f"{name}: waiting for the engine lock")
+                queued = time.time()
+                fcntl.flock(lock, fcntl.LOCK_EX)
+                waited = time.time() - queued
+            log(f"{name}: running" + (f" after {waited / 60:.1f} min in the queue" if locked else ""))
+            began = time.time()
+            result = subprocess.run(["nice", "-n", "10" if locked else "5"] + argv, cwd=ROOT)
         if result.returncode:
             log(f"failed: {name} exited {result.returncode} after {int(time.time() - began)} s")
             sys.exit(result.returncode)
         # Fingerprinted after the run: a step's own output may be an input of a later one.
         state[name] = fingerprint(content, step)
         save_state(args.opening, state)
-        log(f"{name}: done in {(time.time() - began) / 60:.1f} min")
+        log(f"{name}: done in {(time.time() - began) / 60:.1f} min of work")
     if not args.status:
         log(f"done: {args.opening} in {(time.time() - started) / 60:.1f} min")
 
