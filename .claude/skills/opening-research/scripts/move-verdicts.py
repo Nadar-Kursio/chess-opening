@@ -47,30 +47,38 @@ CACHE = os.path.join(ROOT, ".engine", "verdict-cache.json")
 
 
 def asked_positions(op, sidelines):
-    learner = chess.WHITE if op["orientation"] == "white" else chess.BLACK
+    """From each chair the course has a chapter for: a trap course teaches the dodge from the other side."""
     found = {}
+    lines = op["lines"] + ([op["deep"]] if op.get("deep") else [])
+    for side in dict.fromkeys(line.get("side", op["orientation"]) for line in lines):
+        learner = chess.WHITE if side == "white" else chess.BLACK
+        reached = set()
 
-    def walk(board, sans):
-        for san in sans:
+        def walk(board, sans):
+            for san in sans:
+                reached.add(board.epd())
+                if board.turn == learner:
+                    found[board.epd()] = True
+                board.push_san(san)
+            reached.add(board.epd())
             if board.turn == learner:
                 found[board.epd()] = True
-            board.push_san(san)
-        if board.turn == learner:
-            found[board.epd()] = True
 
-    for line in op["lines"] + ([op["deep"]] if op.get("deep") else []):
-        walk(chess.Board(), line["moves"].split())
-    for prefix, entries in (op.get("branches") or {}).items():
-        base = chess.Board()
-        for san in prefix.split():
-            base.push_san(san)
-        if base.turn == learner:
-            continue            # the learner's own alternatives are never asked
-        for br in entries:
-            walk(base.copy(), [br["san"]] + br.get("line", "").split())
-    for item in sidelines:
-        if item.get("line"):
-            walk(chess.Board(), item["moves"].split() + [item["reply"]] + item["line"].split())
+        for line in lines:
+            if line.get("side", op["orientation"]) == side:
+                walk(chess.Board(), line["moves"].split())
+        for prefix, entries in (op.get("branches") or {}).items():
+            base = chess.Board()
+            for san in prefix.split():
+                base.push_san(san)
+            if base.turn == learner or base.epd() not in reached:
+                continue        # the learner's own alternatives are never asked, nor another chair's deviations
+            for br in entries:
+                walk(base.copy(), [br["san"]] + br.get("line", "").split())
+        if side == op["orientation"]:
+            for item in sidelines:
+                if item.get("line"):
+                    walk(chess.Board(), item["moves"].split() + [item["reply"]] + item["line"].split())
     return list(found)
 
 
