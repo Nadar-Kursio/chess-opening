@@ -68,10 +68,11 @@ const CAST: Record<MascotId, { anchors: Anchors; face: FaceSpec; body: React.Rea
       <>
         <path className="m-b" d={BASE} />
         <path className="m-b" d={pedestal(80)} />
-        <path className="m-b" d="M37 36 L33 9 L53 25 Z" />
-        <path className="m-b" d="M70 24 L91 7 L84 35 Z" />
-        <path className="m-s m-flat" d="M40 31 L38 17 L48 26 Z" />
-        <path className="m-s m-flat" d="M74 25 L85 16 L82 30 Z" />
+        <path className="m-s" d="M62 17 Q82 11 89 27 Q99 31 93 41 Q101 48 93 56 Q99 65 90 70 Q92 79 79 81 Z" />
+        <path className="m-b" d="M45 31 Q34 17 40 3 Q53 12 54 25 Z" />
+        <path className="m-b" d="M75 31 Q86 17 80 3 Q67 12 66 25 Z" />
+        <path className="m-s m-flat" d="M46 25 Q40 16 42 10 Q49 15 50 22 Z" />
+        <path className="m-s m-flat" d="M74 25 Q80 16 78 10 Q71 15 70 22 Z" />
         <path className="m-b" d="M60 18 C82 18 88 36 86 52 C84 66 78 83 60 83 C42 83 36 66 34 52 C32 36 38 18 60 18 Z" />
         <ellipse className="m-l" cx="60" cy="69" rx="18" ry="12.5" />
         <ellipse className="m-ink" cx="53.5" cy="67" rx="2.4" ry="3" />
@@ -231,8 +232,10 @@ function Mouth({ f, face }: { f: FaceSpec; face: Face }) {
   return <path className="m-arc" d={`M${x - 6} ${y - 1} Q${x} ${y + 5} ${x + 6} ${y - 1}`} />;
 }
 
-function star(cx: number, cy: number, s: number) {
-  return `M${cx} ${cy - s} Q${cx} ${cy} ${cx + s} ${cy} Q${cx} ${cy} ${cx} ${cy + s} Q${cx} ${cy} ${cx - s} ${cy} Q${cx} ${cy} ${cx} ${cy - s} Z`;
+/** A four-point star; `plump` pulls the curves between the points outwards, so the arms are thick enough to show their fill under an outline. */
+function star(cx: number, cy: number, s: number, plump = 0) {
+  const k = s * plump;
+  return `M${cx} ${cy - s} Q${cx + k} ${cy - k} ${cx + s} ${cy} Q${cx + k} ${cy + k} ${cx} ${cy + s} Q${cx - k} ${cy + k} ${cx - s} ${cy} Q${cx - k} ${cy - k} ${cx} ${cy - s} Z`;
 }
 
 function Cape({ a, stars }: { a: Anchors['shoulders']; stars: boolean }) {
@@ -319,10 +322,10 @@ function Laurel() {
 function Sparkles() {
   return (
     <g className="m-spark">
-      <path d={star(16, 32, 7)} />
-      <path d={star(104, 22, 8.5)} />
-      <path d={star(106, 76, 5.5)} />
-      <path d={star(12, 82, 4.5)} />
+      <path d={star(15, 30, 9, 0.22)} />
+      <path d={star(104, 20, 10, 0.22)} />
+      <path d={star(107, 44, 6.5, 0.22)} />
+      <path d={star(12, 52, 5.5, 0.22)} />
     </g>
   );
 }
