@@ -656,6 +656,10 @@
   .session__foot:has(> .mascot-cheer) {
     position: relative;
   }
+  /* It stands over the bottom of the side panel, so the coach's feed ends above it. */
+  .session:has(.mascot-cheer) .session__side {
+    padding-bottom: calc(var(--mascot-md) + var(--space-4));
+  }
 }
 @media (min-width: 641px) {
   .mascot-sheet .mascot-pick {
