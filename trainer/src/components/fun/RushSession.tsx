@@ -303,6 +303,7 @@ export default function RushSession({ pool, scope, title, fromLearned, best: bes
       progress={left / RUN_MS}
       counter={clock(left)}
       tone={tone}
+      cheer={phase === 'over' ? (ending === 'time' ? 'good' : 'mixed') : undefined}
       board={
         <div className="rush-board">
           <SessionBoard

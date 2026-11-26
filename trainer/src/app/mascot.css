@@ -1,0 +1,690 @@
+/* The companions: the drawing's parts, their moods and motion, and the places they appear (header,
+   picker, ladder, end screens, level-up card). Every value comes from tokens.css. */
+
+.mascot {
+  width: var(--mascot-md);
+  height: var(--mascot-md);
+  flex: none;
+  overflow: visible;
+  stroke-width: var(--mascot-stroke);
+}
+.mascot--xs {
+  width: var(--mascot-xs);
+  height: var(--mascot-xs);
+}
+.mascot--sm {
+  width: var(--mascot-sm);
+  height: var(--mascot-sm);
+}
+.mascot--lg {
+  width: var(--mascot-lg);
+  height: var(--mascot-lg);
+}
+.mascot--xl {
+  width: var(--mascot-xl);
+  height: var(--mascot-xl);
+}
+.mascot--small {
+  stroke-width: var(--mascot-stroke-small);
+}
+.mascot--small .m-detail {
+  display: none;
+}
+
+.mascot--pip {
+  --m-body: var(--mascot-pip);
+  --m-shade: var(--mascot-pip-shade);
+  --m-light: var(--mascot-pip-light);
+  --m-scarf: var(--mascot-pip-scarf);
+  --m-cape: var(--mascot-pip-cape);
+}
+.mascot--jinx {
+  --m-body: var(--mascot-jinx);
+  --m-shade: var(--mascot-jinx-shade);
+  --m-light: var(--mascot-jinx-light);
+  --m-scarf: var(--mascot-jinx-scarf);
+  --m-cape: var(--mascot-jinx-cape);
+}
+.mascot--hoot {
+  --m-body: var(--mascot-hoot);
+  --m-shade: var(--mascot-hoot-shade);
+  --m-light: var(--mascot-hoot-light);
+  --m-scarf: var(--mascot-hoot-scarf);
+  --m-cape: var(--mascot-hoot-cape);
+}
+.mascot--brick {
+  --m-body: var(--mascot-brick);
+  --m-shade: var(--mascot-brick-shade);
+  --m-light: var(--mascot-brick-light);
+  --m-scarf: var(--mascot-brick-scarf);
+  --m-cape: var(--mascot-brick-cape);
+}
+.mascot--nova {
+  --m-body: var(--mascot-nova);
+  --m-shade: var(--mascot-nova-shade);
+  --m-light: var(--mascot-nova-light);
+  --m-scarf: var(--mascot-nova-scarf);
+  --m-cape: var(--mascot-nova-cape);
+}
+.mascot--rufus {
+  --m-body: var(--mascot-rufus);
+  --m-shade: var(--mascot-rufus-shade);
+  --m-light: var(--mascot-rufus-light);
+  --m-scarf: var(--mascot-rufus-scarf);
+  --m-cape: var(--mascot-rufus-cape);
+}
+
+.mascot * {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.m-b,
+.m-s,
+.m-l,
+.m-eye,
+.m-cape,
+.m-scarf,
+.m-ribbon,
+.m-medal,
+.m-crown,
+.m-jewel,
+.m-beak,
+.m-mouth,
+.m-laurel ellipse {
+  stroke: var(--mascot-line);
+}
+.m-b {
+  fill: var(--m-body);
+}
+.m-s {
+  fill: var(--m-shade);
+}
+.m-l {
+  fill: var(--m-light);
+}
+.m-flat {
+  stroke: none;
+}
+.m-l.m-flat {
+  fill: none;
+  stroke: var(--m-light);
+  stroke-width: var(--mascot-stroke);
+  opacity: 0.7;
+}
+.m-tuft {
+  fill: none;
+  stroke: var(--mascot-line);
+}
+.m-ink {
+  fill: var(--mascot-line);
+}
+.m-eye {
+  fill: var(--mascot-eye);
+}
+.m-glasses {
+  fill: none;
+  stroke: var(--mascot-line);
+}
+.m-beak {
+  fill: var(--mascot-hoot-beak);
+}
+.m-shine {
+  fill: var(--mascot-shine);
+}
+.m-arc {
+  fill: none;
+  stroke: var(--mascot-line);
+}
+.m-mouth {
+  fill: var(--mascot-mouth);
+}
+.m-blush {
+  fill: var(--mascot-blush);
+}
+.m-feather,
+.m-mortar,
+.m-scarf-stripe {
+  fill: none;
+  stroke-width: var(--mascot-stroke-detail);
+}
+.m-feather {
+  stroke: var(--m-shade);
+}
+.m-mortar {
+  stroke: var(--m-shade);
+}
+.m-scarf {
+  fill: var(--m-scarf);
+}
+.m-scarf-stripe {
+  stroke: var(--mascot-eye);
+  opacity: 0.6;
+}
+.m-cape {
+  fill: var(--m-cape);
+}
+.m-cape-star path,
+.m-spark path,
+.m-medal-star {
+  fill: var(--mascot-star);
+  stroke: none;
+}
+.m-ribbon {
+  fill: var(--mascot-ribbon);
+}
+.m-medal--bronze {
+  fill: var(--tier-bronze);
+}
+.m-medal--silver {
+  fill: var(--tier-silver);
+}
+.m-medal--gold {
+  fill: var(--tier-gold);
+}
+.m-medal--silver + .m-medal-star,
+.m-medal--bronze + .m-medal-star {
+  fill: var(--mascot-eye);
+  opacity: 0.75;
+}
+.m-crown {
+  fill: var(--mascot-crown);
+}
+.m-jewel {
+  fill: var(--mascot-jewel);
+  stroke-width: var(--mascot-stroke-detail);
+}
+.m-laurel ellipse {
+  fill: var(--mascot-laurel);
+  stroke-width: var(--mascot-stroke-detail);
+}
+.m-glow {
+  filter: blur(var(--mascot-glow-blur));
+}
+.m-glow circle {
+  fill: var(--mascot-glow);
+}
+.mascot--small .m-glow {
+  filter: none;
+}
+.m-spark path {
+  stroke: var(--mascot-line);
+  stroke-width: var(--mascot-stroke-detail);
+}
+
+/* A look not reached yet: the outline of what's coming, nothing more. */
+.mascot--shadow * {
+  fill: var(--mascot-shadow) !important;
+  stroke: var(--mascot-shadow-line) !important;
+  opacity: 1 !important;
+}
+.mascot--shadow .m-face,
+.mascot--shadow .m-detail,
+.mascot--shadow .m-glow {
+  display: none;
+}
+
+/* ---------- motion ---------- */
+
+.mascot__fig {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.mascot--hop .mascot__fig {
+  animation: mascot-hop calc(var(--slow) * 2) var(--ease) 2;
+}
+.mascot--sway .mascot__fig {
+  animation: mascot-sway calc(var(--slow) * 3) ease-in-out 1;
+}
+.mascot--hop .m-spark,
+.mascot--lg .m-spark,
+.mascot--xl .m-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-twinkle calc(var(--slow) * 4) ease-in-out infinite;
+}
+@keyframes mascot-hop {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: scale(1.06, 0.92);
+  }
+  50% {
+    transform: translateY(calc(var(--mascot-hop) * -1)) scale(0.96, 1.05);
+  }
+  80% {
+    transform: scale(1.04, 0.95);
+  }
+}
+@keyframes mascot-sway {
+  0%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: rotate(-5deg);
+  }
+  65% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes mascot-twinkle {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascot .mascot__fig,
+  .mascot .m-spark {
+    animation: none !important;
+  }
+}
+
+/* ---------- where it lives ---------- */
+
+.mascot-disc {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--m-body) var(--mascot-disc), var(--surface));
+  flex: none;
+}
+.mascot-disc--pip {
+  --m-body: var(--mascot-pip);
+}
+.mascot-disc--jinx {
+  --m-body: var(--mascot-jinx);
+}
+.mascot-disc--hoot {
+  --m-body: var(--mascot-hoot);
+}
+.mascot-disc--brick {
+  --m-body: var(--mascot-brick);
+}
+.mascot-disc--nova {
+  --m-body: var(--mascot-nova);
+}
+.mascot-disc--rufus {
+  --m-body: var(--mascot-rufus);
+}
+.avatar.mascot-disc {
+  color: inherit;
+  overflow: hidden;
+}
+.avatar.mascot-disc .mascot {
+  width: var(--mascot-sm);
+  height: var(--mascot-sm);
+  margin-top: var(--space-1);
+}
+
+/* the speech bubble: one short line, beside or above the mascot */
+.mascot-say {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.mascot-say__line {
+  position: relative;
+  max-width: var(--mascot-bubble-max);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: var(--border) solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  margin-bottom: var(--space-4);
+}
+.mascot-say__line::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-2) * -1);
+  bottom: var(--space-2);
+  border: var(--space-1) solid transparent;
+  border-right: var(--space-2) solid var(--line);
+}
+
+/* ---------- picker ---------- */
+
+.mascot-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--mascot-pick-min), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.mascot-pick__opt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: var(--border) solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+.mascot-pick__opt:hover {
+  border-color: var(--line-strong);
+}
+.mascot-pick__opt:has(input:checked) {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.mascot-pick__opt:has(input:focus-visible) {
+  outline: var(--ring) solid var(--blue);
+  outline-offset: var(--hairline);
+}
+.mascot-pick__opt input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.mascot-pick__opt b {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+.mascot-pick__kind {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.mascot-pick__blurb {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.mascot-pick__actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+.mascot-pick__note {
+  margin-right: auto;
+  align-self: center;
+}
+
+.mascot-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: var(--scrim);
+  overflow-y: auto;
+}
+.mascot-sheet__card {
+  outline: none;
+  width: 100%;
+  max-width: calc(var(--narrow) * 1.7);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  background: var(--bg);
+  box-shadow: var(--toast-shadow);
+}
+.mascot-sheet__card h2 {
+  margin: 0 0 var(--space-1);
+}
+.mascot-sheet__card > p {
+  margin: 0 0 var(--space-4);
+}
+
+/* ---------- /mascot ---------- */
+
+.mascot-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+.mascot-hero__body h1 {
+  margin: 0;
+}
+.mascot-hero__body p {
+  margin: var(--space-1) 0 0;
+}
+.wardrobe {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--mascot-lg) + var(--space-6)), 1fr));
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wardrobe__look {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  text-align: center;
+}
+.wardrobe__look--now {
+  background: var(--purple-soft);
+  outline: var(--border) solid var(--purple);
+}
+.wardrobe__look b {
+  font-family: var(--font-display);
+}
+.wardrobe__look span {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ---------- the badges page: hero and the ladder ---------- */
+
+.level-hero__mascot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.level-hero__mascot .level-ring {
+  position: absolute;
+  right: calc(var(--space-2) * -1);
+  bottom: 0;
+}
+.next-look {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.next-look p {
+  margin: 0;
+}
+.next-look .mascot {
+  width: var(--mascot-sm);
+  height: var(--mascot-sm);
+}
+.rank__look {
+  display: inline-grid;
+  place-items: center;
+}
+.rank__line {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.rank__gain {
+  display: block;
+  color: var(--purple);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+/* ---------- end screens ---------- */
+
+.mascot-cheer {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 100%;
+  z-index: 2;
+  pointer-events: none;
+  flex-direction: row-reverse;
+}
+.mascot-cheer .mascot-say__line {
+  margin-bottom: var(--space-6);
+}
+.mascot-cheer .mascot-say__line::before {
+  left: auto;
+  right: calc(var(--space-2) * -1);
+  border: var(--space-1) solid transparent;
+  border-left: var(--space-2) solid var(--line);
+}
+
+/* ---------- level-up card ---------- */
+
+.level-up__mascot {
+  display: grid;
+  place-items: center;
+  margin: 0 auto var(--space-2);
+}
+.level-up__new {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+.level-up__say {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.level-up__brand {
+  display: block;
+  margin-top: var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 640px) {
+  .mascot-hero {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-3);
+  }
+  .mascot-sheet {
+    place-items: end center;
+    padding: 0;
+  }
+  .mascot-sheet__card {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: var(--space-5) var(--gutter);
+    max-height: var(--mascot-sheet-max);
+    overflow-y: auto;
+  }
+  .mascot-pick {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .mascot-pick__blurb {
+    display: none;
+  }
+}
+
+.mascot-pick__legend {
+  position: absolute;
+  width: var(--hairline);
+  height: var(--hairline);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .mascot-pick .mascot {
+    width: var(--mascot-md);
+    height: var(--mascot-md);
+  }
+}
+.level-up__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+.ranks__list--looks .rank {
+  grid-template-columns: var(--mascot-sm) var(--space-6) minmax(0, 1fr) auto;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+.next-look {
+  color: inherit;
+  text-decoration: none;
+}
+.next-look:hover {
+  background: var(--surface-3);
+}
+.avatar--big.mascot-disc .mascot {
+  width: calc(var(--tap) * 1.4);
+  height: calc(var(--tap) * 1.4);
+  margin-top: var(--space-2);
+}
+.profile-head__mascot {
+  display: inline-block;
+  margin-top: var(--space-1);
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* A phone's session footer sits in the flow instead of fixed, so it anchors the mascot itself. */
+@media (max-width: 960px) and (orientation: portrait) {
+  .session__foot:has(> .mascot-cheer) {
+    position: relative;
+  }
+}
+@media (min-width: 641px) {
+  .mascot-sheet .mascot-pick {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.mascot-sheet .mascot-pick__actions {
+  position: sticky;
+  bottom: calc(var(--space-5) * -1);
+  margin-inline: calc(var(--space-6) * -1);
+  margin-bottom: calc(var(--space-6) * -1);
+  padding: var(--space-3) var(--space-6) var(--space-5);
+  background: var(--bg);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+@media (max-width: 640px) {
+  .mascot-sheet .mascot-pick__actions {
+    margin-inline: calc(var(--gutter) * -1);
+    margin-bottom: calc(var(--space-5) * -1);
+    padding-inline: var(--gutter);
+    border-radius: 0;
+  }
+}
+@media (max-width: 640px) {
+  .level-hero:has(.level-hero__mascot) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .level-hero__mascot {
+    align-self: center;
+  }
+}

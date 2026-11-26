@@ -6,6 +6,9 @@ import { Trap } from '@/components/ui/icons';
 import { trapCourses } from '@/lib/catalog';
 import { syncFun } from '@/lib/fun';
 import { getPlayRecord } from '@/lib/playRecord';
+import Mascot from '@/components/mascot/Mascot';
+import { getMascot } from '@/lib/mascotChoice';
+import { LOOK_GAINS, RANK_LINES, mascotById, nextLook, nextLookLine, stageFor } from '@/lib/mascots';
 import { requirePageUser } from '@/lib/session';
 import { GAME_MOVES_CAP, RANKS, XP, levelStart } from '@/lib/xp';
 import '@/app/fun.css';
@@ -20,18 +23,28 @@ const n = (x: number) => x.toLocaleString('en-GB');
 
 export default async function AchievementsPage() {
   const user = await requirePageUser('/achievements');
-  const [fun, play] = await Promise.all([syncFun(user.id), getPlayRecord(user.id)]);
+  const [fun, play, mascotId] = await Promise.all([syncFun(user.id), getPlayRecord(user.id), getMascot(user.id).catch(() => null)]);
+  const mascot = mascotById(mascotId);
   const traps = trapCourses().length;
   const { level, badges, parts } = fun;
   const earned = badges.reduce((k, b) => k + b.tiers.filter((t) => t.unlocked).length, 0);
   const possible = badges.reduce((k, b) => k + b.tiers.length, 0);
   const nextRank = RANKS.find((r) => r.from > level.level);
+  const stage = stageFor(level.level);
+  const next = nextLook(level.level);
   const topXp = Math.max(1, ...parts.map((p) => p.xp));
 
   return (
     <main className="page">
       <section className="card level-hero">
-        <LevelRing level={level.level} share={level.share} big />
+        {mascot ? (
+          <span className="level-hero__mascot">
+            <Mascot id={mascot.id} stage={stage} size="xl" label={`${mascot.name} in the ${level.name} look`} />
+            <LevelRing level={level.level} share={level.share} />
+          </span>
+        ) : (
+          <LevelRing level={level.level} share={level.share} big />
+        )}
         <div className="level-hero__body">
           <span className="eyebrow">Level {level.level}</span>
           <h1>{level.name}</h1>
@@ -47,8 +60,20 @@ export default async function AchievementsPage() {
           </div>
           <p className="muted">
             <b className="level-hero__xp">{n(level.xp)} XP</b> · {n(level.span - level.into)} to level {level.level + 1}
-            {nextRank ? ` · ${nextRank.name} at level ${nextRank.from}` : ''}
+            {nextRank && !mascot ? ` · ${nextRank.name} at level ${nextRank.from}` : ''}
           </p>
+          {mascot ? (
+            <Link href="/mascot" className="next-look">
+              {next ? <Mascot id={mascot.id} stage={next.stage} size="sm" shadow /> : null}
+              <p className="small">{nextLookLine(mascot.name, level.level)}</p>
+            </Link>
+          ) : (
+            <Link href="/mascot" className="next-look">
+              <p className="small">
+                <b>Pick a companion.</b> It dresses up as you climb the ranks.
+              </p>
+            </Link>
+          )}
         </div>
       </section>
 
@@ -149,14 +174,19 @@ export default async function AchievementsPage() {
 
           <section className="card ranks" aria-labelledby="ranks-title">
             <h3 id="ranks-title">The ranks</h3>
-            <ol className="ranks__list">
+            <ol className={`ranks__list${mascot ? ' ranks__list--looks' : ''}`}>
               {RANKS.map((r, i) => {
                 const reached = level.level >= r.from;
                 const current = reached && (RANKS[i + 1]?.from ?? Infinity) > level.level;
                 return (
                   <li key={r.name} className={`rank${reached ? ' rank--on' : ''}${current ? ' rank--now' : ''}`}>
+                    {mascot ? <Mascot id={mascot.id} stage={i} size="sm" shadow={!reached} className="rank__look" /> : null}
                     <span className="rank__lvl">{r.from}</span>
-                    <span className="rank__name">{r.name}</span>
+                    <span className="rank__name">
+                      {r.name}
+                      <span className="rank__line">{RANK_LINES[i]}</span>
+                      {mascot && LOOK_GAINS[i] ? <span className="rank__gain">{`${mascot.name} gets ${LOOK_GAINS[i]}`}</span> : null}
+                    </span>
                     <span className="rank__xp">{n(levelStart(r.from))} XP</span>
                   </li>
                 );

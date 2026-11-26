@@ -377,6 +377,7 @@ function Run({
       progress={asked ? youDone / asked : 0}
       counter={`${youDone}/${asked}`}
       tone={tone}
+      cheer={done ? (done.passed !== false && (mode === 'learn' || (stats.wrong === 0 && stats.hints === 0)) ? 'good' : 'mixed') : undefined}
       board={
         <SessionBoard
           review={review}

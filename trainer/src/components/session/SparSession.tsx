@@ -349,6 +349,7 @@ function SparGame({ openingId, course, side, book, opponent: first, best: startB
       progress={over ? 1 : Math.min(0.95, depth / book.longest)}
       counter={`${depth} in book`}
       tone={tone}
+      cheer={outcome ? (outcome.kind === 'lives' ? 'mixed' : 'good') : undefined}
       board={
         <SessionBoard
           review={review}
