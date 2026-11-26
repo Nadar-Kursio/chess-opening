@@ -471,6 +471,15 @@ def main():
             if not grown:
                 break
 
+    # A sideline found along one of the learner's own alternative move orders (the London's
+    # 2.Bf4 in the Jobava) is stored on the course's own road to the same position whenever the
+    # chapters reach it: the trainer walks a sideline's moves, and a step nothing teaches is a
+    # dead end in the repertoire explorer.
+    roads = Tree(op, with_sidelines=False).path
+    for item in items:
+        road = roads.get(play(item["moves"].split()).epd())
+        if road is not None:
+            item["moves"] = " ".join(road)
     for item in items:
         item["chapter"], item["moment"] = placement(item["moves"].split(), item["reply"])
 
