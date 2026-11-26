@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: Params) {
   return { title: found ? `${STEP_INFO[found.step].label} · ${found.line.name}` : 'Session' };
 }
 
-export default async function StepPage({ params }: Params) {
-  const { id, line: slug, step } = await params;
+export default async function StepPage({ params, searchParams }: Params) {
+  const [{ id, line: slug, step }, { ply }] = await Promise.all([params, searchParams]);
   const found = resolve(id, slug, step);
   if (!found) notFound();
   const user = await requirePageUser(`/openings/${id}/${slug}/${step}`);
@@ -59,6 +59,9 @@ export default async function StepPage({ params }: Params) {
     if (alts.length) alternatives[i] = alts;
   });
 
+  const at = Number(ply);
+  const startAt =
+    (found.step === 'learn' || found.step === 'drill') && Number.isInteger(at) && at > (line.start ?? 0) && at < line.plies.length - 1 ? at : null;
   const clips = found.step === 'learn' ? narrationFor(id, line, lineSide(op, line), settings.voice) : {};
   return (
     <LineSession
@@ -66,6 +69,7 @@ export default async function StepPage({ params }: Params) {
       mode={found.step}
       line={line}
       alternatives={alternatives}
+      startAt={startAt}
       shared={found.step === 'learn' || sidelineLine(op, slug) ? null : sharedStart(op, line)}
       narration={Object.keys(clips).length ? { clips, on: settings.narration, rate: settings.speech_rate } : null}
     />

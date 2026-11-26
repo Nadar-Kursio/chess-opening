@@ -414,9 +414,9 @@
   flex-direction: column;
 }
 .game-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--space-1) var(--space-3);
   padding: var(--space-2) 0;
   border-top: var(--hairline) solid var(--line);
@@ -427,28 +427,12 @@
   text-decoration: underline;
 }
 .game-row__who {
-  flex: 1 1 var(--games-board);
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 .game-row__who b {
   overflow-wrap: anywhere;
-}
-.game-row__exit {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--muted);
-}
-.game-row__exit--you {
-  color: var(--red-ink);
-}
-.game-row__exit--them {
-  color: var(--blue-ink);
-}
-.game-row__exit--end,
-.game-row__exit--over {
-  color: var(--green-ink);
 }
 
 .game-result {
@@ -526,9 +510,23 @@
 .game-view {
   display: grid;
   grid-template-columns: minmax(0, var(--board-max)) minmax(0, 1fr);
-  gap: var(--space-6);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'board prep'
+    'board side';
+  gap: var(--space-4) var(--space-6);
   align-items: start;
 }
+.game-view__board {
+  grid-area: board;
+}
+.game-view__prep {
+  grid-area: prep;
+}
+.game-view__side {
+  grid-area: side;
+}
+.game-view__prep,
 .game-view__side {
   display: flex;
   flex-direction: column;
@@ -543,36 +541,6 @@
 }
 .game-view__detour {
   margin: 0;
-}
-.game-exit {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-}
-.game-exit p {
-  margin: 0;
-}
-.game-exit h2 {
-  font-size: var(--text-xl);
-}
-.game-exit--you {
-  border-color: var(--red);
-}
-.game-exit--you .eyebrow {
-  color: var(--red-ink);
-}
-.game-exit--them {
-  border-color: var(--blue);
-}
-.game-exit--them .eyebrow {
-  color: var(--blue-ink);
-}
-.game-exit--book {
-  border-color: var(--green);
-}
-.game-exit--book .eyebrow {
-  color: var(--green-ink);
 }
 .game-exit__actions {
   display: flex;
@@ -642,8 +610,14 @@
 }
 
 @media (max-width: 960px) {
+  /* The verdict first: on a phone the board would push it below the fold. */
   .game-view {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas:
+      'prep'
+      'board'
+      'side';
   }
   .game-view__board {
     width: min(100%, var(--board-max));
@@ -663,6 +637,13 @@
   }
   .dep__num {
     min-width: var(--games-dep-num-sm);
+  }
+  .game-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .game-row .prep-badge {
+    grid-column: 2;
+    justify-self: start;
   }
   .game-head h1 {
     font-size: var(--text-xl);

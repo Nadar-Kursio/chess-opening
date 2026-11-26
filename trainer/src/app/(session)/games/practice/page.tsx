@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import RecallSession from '@/components/session/RecallSession';
 import { getOpening, hasOpening } from '@/lib/content';
-import { loadReport } from '@/lib/gameImport';
+import { gameCards, loadReport } from '@/lib/gameImport';
+import { withGames } from '@/lib/gamePrep';
 import { practiceKeys } from '@/lib/games';
 import { getSettings } from '@/lib/progress';
 import { buildRuns, isCard, type Due } from '@/lib/recall';
@@ -23,7 +24,7 @@ export default async function GamesPracticePage({ searchParams }: PageProps<'/ga
   if (courseId && typeof key === 'string') query.set('key', key);
   const here = `/games/practice${query.size ? `?${query}` : ''}`;
   const user = await requirePageUser(here);
-  const [{ report }, settings] = await Promise.all([loadReport(user.id), getSettings(user.id)]);
+  const [{ report }, settings, fromGames] = await Promise.all([loadReport(user.id), getSettings(user.id), gameCards(user.id)]);
 
   const due: Due[] =
     courseId && typeof key === 'string'
@@ -31,7 +32,7 @@ export default async function GamesPracticePage({ searchParams }: PageProps<'/ga
         ? [{ openingId: courseId, key }]
         : []
       : practiceKeys(report, courseId).map(({ openingId, key }) => ({ openingId, key }));
-  const runs = buildRuns(due, getOpening);
+  const runs = withGames(buildRuns(due, getOpening), fromGames);
 
   if (!runs.length) {
     return (

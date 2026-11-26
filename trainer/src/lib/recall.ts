@@ -1,4 +1,5 @@
 import { alternativesAt, buildTree, lineBySlug, lineSide, otherTurn, positionKey, toMove, turnOf, yourMoveIndexes, type Tree } from './course.ts';
+import type { FromGame } from './gamePrep.ts';
 import type { Colour, Opening, Ply, Severity, Turn } from './types.ts';
 
 /* Recall, as rounds of runs. A card is a position where the learner has a move to find; a run
@@ -28,6 +29,8 @@ export interface Ask {
   accept: string[];
   /** The authored moves the course chose against, with why. */
   alternatives: YourAlternative[];
+  /** The learner's own game that left the course here, newest first. */
+  game?: FromGame;
 }
 
 export interface Run {

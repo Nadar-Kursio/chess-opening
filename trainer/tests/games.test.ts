@@ -19,7 +19,9 @@ import {
   type GamePosition,
   type ImportedGame,
 } from '../src/lib/games.ts';
+import { gameOrigins, prepBadge, prepOf, prepReport, prepSummary } from '../src/lib/gamePrep.ts';
 import { chesscomOpening, fromChesscom, fromLichess, pgnMoves, usernameFrom, type ChesscomGame, type LichessGame } from '../src/lib/gameSources.ts';
+import type { ClubBook } from '../src/lib/spar.ts';
 import type { Catalog, MoveScore, Opening, Sidelines } from '../src/lib/types.ts';
 
 const ROOT = process.env.CONTENT_DIR ?? path.join(import.meta.dirname, '..', 'content');
@@ -332,4 +334,101 @@ test('imports read both sites, from the learner’s side of the board', () => {
   assert.equal(usernameFrom('@hikaru'), 'hikaru');
   assert.equal(usernameFrom('no spaces please'), null);
   assert.equal(usernameFrom('../etc'), null);
+});
+
+/** A London game that leaves at the learner's first move the verdicts score but the course doesn't play. */
+function londonMiss() {
+  const line = london.lines[0];
+  const tree = buildTree(london, 'white');
+  const at = line.plies.findIndex((p, i) => i > 2 && toMove(p) === 'w' && !!p.verdicts);
+  const taught = new Set(tree.nodes[positionKey(line.plies[at])].moves.map((e) => bareSan(e.san)));
+  const wrong = Object.values(line.plies[at].verdicts!).find(([san]) => !taught.has(bareSan(san)))![0];
+  return { line, at, wrong, moves: [...sans(line).slice(0, at), wrong, 'a6'] };
+}
+
+const londonClub = read('club/london.json') as ClubBook;
+
+test('a prep report for the learner’s own miss scores both moves from shipped data and opens the chapter there', () => {
+  const { line, at, wrong, moves } = londonMiss();
+  const w = walkCourse(london, 'white', moves, replay(moves));
+  const d = deviationOf(london, w)!;
+  const r = prepReport(london, w, { moves, positions: replay(moves) }, d, londonClub);
+  assert.equal(r.prep.kind, 'you');
+  assert.equal(prepBadge(r.prep), `Left prep at ${moveNum(at, wrong)}`);
+  const verdict = line.plies[at].verdicts!;
+  const played = Object.values(verdict).find(([san]) => san === wrong)!;
+  assert.deepEqual(r.yours!.played.score, { ev: played[1], mate: played[3] });
+  const main = r.yours!.course.find((c) => c.num === line.plies[at + 1].num)!;
+  assert.ok(main.score, 'the course move has no shipped score');
+  assert.equal(r.practice!.slug, line.slug);
+  assert.equal(r.practice!.chapter, 1);
+  // One move early, so the opponent's move that sets the question is played first.
+  assert.equal(r.practice!.ply, at - 1);
+  assert.equal(r.upTo, at);
+});
+
+test('an uncovered opponent move is new territory, with its club share and the engine’s shipped answer', () => {
+  // Find a club move that leaves the course and has an engine answer from exits.py.
+  const tree = buildTree(london, 'white');
+  let tried = 0;
+  for (const [key, replies] of Object.entries(londonClub.positions)) {
+    const node = tree.nodes[key];
+    if (!node || node.toMove !== 'b') continue;
+    const sansHere = new Set(node.moves.map((e) => bareSan(e.san)));
+    const out = replies.find(([san]) => !sansHere.has(bareSan(san)));
+    if (!out) continue;
+    const line = london.lines.find((l) => l.plies.some((p) => positionKey(p) === key));
+    if (!line) continue;
+    const i = line.plies.findIndex((p) => positionKey(p) === key);
+    const moves = [...sans(line).slice(0, i), out[0]];
+    const positions = replay(moves);
+    if (!londonClub.answers?.[positions.at(-1)!.key]) continue;
+    const w = walkCourse(london, 'white', moves, positions);
+    if (w.outcome !== 'them') continue;
+    const r = prepReport(london, w, { moves, positions }, null, londonClub);
+    assert.equal(r.prep.kind, 'new');
+    assert.equal(prepBadge(r.prep), `They left at ${moveNum(i, out[0])}`);
+    assert.ok(r.theirs!.engine, 'no engine answer');
+    assert.equal(r.upTo, i + 1);
+    const total = replies.reduce((n, x) => n + x[1], 0);
+    if (total >= 20) assert.equal(r.theirs!.club!.pct, Math.max(1, Math.round((100 * out[1]) / total)));
+    tried++;
+    if (tried > 3) break;
+  }
+  assert.ok(tried > 0);
+});
+
+test('a sideline the course answers, played to its end, is prep that held', () => {
+  const chapterKeys = new Set(london.lines.flatMap((l) => l.plies.map(positionKey)));
+  const s = london.sidelines!.items.find(
+    (x) => x.line && x.kind === 'answer' && x.line.plies.slice(0, (x.line.start ?? 0) + 1).every((p) => chapterKeys.has(positionKey(p))),
+  )!;
+  const moves = sans(s.line!);
+  const w = walkCourse(london, 'white', moves, replay(moves));
+  const r = prepReport(london, w, { moves, positions: replay(moves) }, null, londonClub);
+  assert.equal(r.prep.kind, 'covered');
+  assert.equal(r.theirs!.sideline!.slug, s.slug);
+  assert.ok(r.theirs!.answer!.found, 'the learner played the answer');
+  assert.equal(r.upTo, w.met!.ply + 1);
+});
+
+test('a whole chapter is in book to its last move; the summary counts held prep and the commonest leak', () => {
+  const line = london.lines[0];
+  const full = walkCourse(london, 'white', sans(line));
+  const p = prepOf(full, sans(line));
+  assert.equal(p.kind, 'book');
+  assert.equal(p.bookTo, Math.floor((line.plies.length - 2) / 2) + 1);
+
+  const { moves } = londonMiss();
+  const games = [game(moves, 'white', { id: 'b' }), game(sans(line), 'white', { id: 'a' }), game(moves, 'white', { id: 'c', opponent: 'older' })];
+  const learned = new Map([['london', new Map([[line.slug, new Date('2026-01-01')]])]]);
+  const { matched } = buildReport(games, openings, new Set(['london']), learned);
+  const sum = prepSummary(matched, new Set(['london']), () => 'London System');
+  assert.deepEqual([sum.games, sum.held], [3, 1]);
+  assert.equal(sum.leak!.times, 2);
+  assert.equal(sum.leak!.kind, 'you');
+  assert.equal(sum.leak!.game.id, 'b');
+  const origins = gameOrigins(matched);
+  const origin = origins.get(`london|${matched[0].deviation!.key}`)!;
+  assert.deepEqual(origin, { href: '/games/lichess/b', opponent: 'someone', move: Math.floor(depthOf(matched[0].walk!) / 2) + 1 });
 });

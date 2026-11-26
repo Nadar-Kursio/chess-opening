@@ -3,6 +3,7 @@ import { Play, Swords } from '@/components/ui/icons';
 import { trapCourses } from '@/lib/catalog';
 import { getOpening } from '@/lib/content';
 import { REIMPORT_MS, loadReport } from '@/lib/gameImport';
+import { prepSummary } from '@/lib/gamePrep';
 import { SITES } from '@/lib/gameSources';
 import { SITE_NAME, depthOf, practiceKeys, scorePct, type CourseReport, type Departure, type Forgotten, type Matched } from '@/lib/games';
 import { playFrom, sparTraps } from '@/lib/playRecord';
@@ -10,16 +11,19 @@ import { getProgress, learnerTimezone } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import { trapEntries } from '@/lib/trapAlbum';
 import Accounts, { type AccountView } from './Accounts';
-import { PositionBoard, ResultChip, TallyBar, movesText, plural, sideName, teachLink } from './parts';
+import { GameRow, PositionBoard, TallyBar, movesText, plural, sideName, teachLink } from './parts';
 import TrapsSection from './TrapsSection';
 import '../../games.css';
 import '../../trapdex.css';
+import '../../prep.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Your games' };
 
 const FORGOTTEN_SHOWN = 6;
 const DEPARTURES_SHOWN = 6;
+/** Games listed before the rest fold away. */
+const GAMES_SHOWN = 8;
 /** Games each side of the comparison needs before a difference in score means anything. */
 const INSIGHT_GAMES = 3;
 
@@ -132,6 +136,8 @@ export default async function GamesPage() {
         ) : null}
         <Accounts accounts={views} />
       </section>
+
+      {report.games ? <GameByGame matched={matched} studied={studied} date={date} /> : null}
 
       {report.games || play.traps.length ? (
         <TrapsSection entries={entries} studied={studied} progress={progress} total={trapOps.length} date={date} />
@@ -257,7 +263,7 @@ function CourseSection({ c, date }: { c: CourseReport; date: (d: Date) => string
         </summary>
         <ul>
           {c.games.map((m) => (
-            <GameRow key={`${m.game.site}${m.game.id}`} m={m} date={date} />
+            <GameRow key={`${m.game.site}${m.game.id}`} m={m} date={date} studied={c.studied} />
           ))}
         </ul>
       </details>
@@ -357,30 +363,61 @@ function DepartureRow({ d, c }: { d: Departure; c: CourseReport }) {
   );
 }
 
-const OUTCOME: Record<NonNullable<Matched['walk']>['outcome'], (m: Matched) => string> = {
-  you: (m) => `You left at ${m.deviation?.played.num}`,
-  them: (m) => `They left at ${m.walk!.met?.num}`,
-  end: (m) => `In book to the course’s end, ${movesText(depthOf(m.walk!))}`,
-  over: () => 'Finished in book',
-};
-
-function GameRow({ m, date }: { m: Matched; date: (d: Date) => string }) {
-  const w = m.walk!;
+function GameByGame({ matched, studied, date }: { matched: Matched[]; studied: Set<string>; date: (d: Date) => string }) {
+  const summary = prepSummary(matched, studied, (id) => getOpening(id).name);
+  const leak = summary.leak;
+  const row = (m: Matched) => {
+    const course = m.walk ? `${getOpening(m.walk.openingId).name}${studied.has(m.walk.openingId) ? '' : ' (not started)'}` : m.game.openingName;
+    return (
+      <GameRow
+        key={`${m.game.site}${m.game.id}`}
+        m={m}
+        date={date}
+        course={course}
+        studied={!!m.walk && studied.has(m.walk.openingId)}
+      />
+    );
+  };
   return (
-    <li>
-      <Link href={`/games/${m.game.site}/${m.game.id}`} className="game-row">
-        <ResultChip result={m.game.result} />
-        <span className="game-row__who">
-          <b>
-            {m.game.opponent}
-            {m.game.opponentRating ? <span className="muted"> ({m.game.opponentRating})</span> : null}
-          </b>
-          <span className="muted small">
-            {date(m.game.playedAt)} · {m.game.speed} · {SITE_NAME[m.game.site]}
-          </span>
-        </span>
-        <span className={`game-row__exit game-row__exit--${w.outcome}`}>{OUTCOME[w.outcome](m)}</span>
-      </Link>
-    </li>
+    <section className="card prep-games" aria-label="Game by game">
+      <header className="prep-games__head">
+        <span className="eyebrow">Game by game</span>
+        {summary.games ? (
+          <>
+            <h2>
+              Your prep held in {summary.held} of {plural(summary.games, 'game')}
+            </h2>
+            <div
+              className="prep-games__meter"
+              role="img"
+              aria-label={`${summary.held} of ${summary.games} games stayed in your prep until you or the course ran out`}
+            >
+              <span style={{ width: `${Math.round((100 * summary.held) / summary.games)}%` }} />
+            </div>
+            <p className="muted small">Held means you never left the course first: your opponent did, or the course ran out.</p>
+          </>
+        ) : (
+          <h2>How each game’s opening went</h2>
+        )}
+        {leak ? (
+          <p className="prep-games__leak">
+            Most common leak:{' '}
+            <Link href={`/games/${leak.game.site}/${leak.game.id}`}>
+              <b className={`move${leak.kind === 'you' ? ' move--bad' : ''}`}>{leak.num}</b> in the {leak.course}
+            </Link>
+            , {plural(leak.times, 'game')}. {leak.kind === 'you' ? 'You left the course there yourself.' : 'The course has no answer to it yet.'}
+          </p>
+        ) : null}
+      </header>
+      <ul className="prep-games__list">{matched.slice(0, GAMES_SHOWN).map(row)}</ul>
+      {matched.length > GAMES_SHOWN ? (
+        <details className="games-list">
+          <summary>
+            <h3>All {plural(matched.length, 'game')}</h3>
+          </summary>
+          <ul>{matched.slice(GAMES_SHOWN).map(row)}</ul>
+        </details>
+      ) : null}
+    </section>
   );
 }

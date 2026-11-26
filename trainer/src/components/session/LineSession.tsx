@@ -44,6 +44,8 @@ interface Props {
   /** Learn only: the recorded coach, when this line has been narrated. */
   narration: NarrationProps | null;
   engineView: boolean;
+  /** Learn and Drill from a deep link (`?ply=`): the board opens on this ply, the moves before it played. */
+  startAt?: number | null;
 }
 
 const SEV_WORD: Record<Severity, string> = {
@@ -73,19 +75,20 @@ function Run({
   shared,
   narration,
   engineView,
+  startAt,
   restart,
 }: Props & { restart: () => void }) {
   const plies = line.plies;
   const last = plies.length - 1;
   const opensAt = line.start ?? 0;
-  const [start, setStart] = useState(opensAt);
+  const [start, setStart] = useState(startAt ?? opensAt);
   const mine = plies.map((p, i) => i > start && p.turn === side);
   const asked = mine.filter(Boolean).length;
   const opponent = colourName(side === 'w' ? 'b' : 'w');
 
   const make = useMessages();
   const { orientation, flip } = useFlip(side);
-  const [ply, setPly] = useState(opensAt);
+  const [ply, setPly] = useState(startAt ?? opensAt);
   const review = useMoveReview(plies.slice(0, ply + 1));
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     make({ kind: 'intro', title: line.name, html: line.note, clip: 'intro' }),
@@ -106,6 +109,7 @@ function Run({
             ? `You play ${colourName(side)}. Find each move yourself. Tap Hint if you get stuck.`
             : `You play ${colourName(side)}. The whole line from memory: no hints, and the notes wait until the end.`,
     }),
+    ...(startAt ? [make({ kind: 'info', text: `Starting after ${plies[startAt].num}. The moves before it are on the move list.` })] : []),
   ]);
   const [tone, setTone] = useState<Tone>('idle');
   const [flash, setFlash] = useState<BoardFlash | null>(null);
