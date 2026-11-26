@@ -1,8 +1,19 @@
 import Link from 'next/link';
-import { Retry, Play } from '@/components/ui/icons';
-import { deckByCourse, endOfDay, forecast, syncDeck } from '@/lib/cards';
-import { learnerTimezone } from '@/lib/progress';
+import { LevelRing } from '@/components/fun/LevelChip';
+import { Bolt, Book, Check, ChevronRight, Flame, Play, Retry, Swords, Target } from '@/components/ui/icons';
+import { deckByCourse, dueDates, endOfDay, syncDeck, type CourseMemory } from '@/lib/cards';
+import { courseCard, courses, isFeatured } from '@/lib/catalog';
+import { STEP_INFO } from '@/lib/course';
+import { dayName, dueByDay, nextDue } from '@/lib/dueDays';
+import { getFun } from '@/lib/fun';
+import { LEVEL_LABEL, LEVEL_NOTE, tallyWords, type Level } from '@/lib/mastery';
+import { getProgress, getPulse, lastOpening, learnerTimezone, type Pulse } from '@/lib/progress';
+import { ROUND_SIZE } from '@/lib/recall';
 import { requirePageUser } from '@/lib/session';
+import type { Level as XpLevel } from '@/lib/xp';
+import Forecast, { type ForecastDay } from './Forecast';
+import '../../repertoire.css';
+import '../../recall-home.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Recall' };
@@ -10,164 +21,312 @@ export const metadata = { title: 'Recall' };
 /** Seconds a Recall question takes, replay included: for the time estimate only. */
 const SECONDS_PER_MOVE = 12;
 
-const STRENGTHS = [
-  { key: 'mastered', label: 'Long-term', note: 'Recalled at gaps of three weeks or more' },
-  { key: 'familiar', label: 'Familiar', note: 'Holding for a week or more' },
-  { key: 'learning', label: 'Learning', note: 'Still fresh: asked again within days' },
-  { key: 'new', label: 'New', note: 'Learned, not yet recalled' },
-] as const;
+/** Strongest first, so each course's bar fills from the left like progress towards long-term memory. */
+const STRONGEST_FIRST = ['mastered', 'familiar', 'learning', 'new'] as const;
+/** The order a move climbs in, for the key. */
+const CLIMB = ['new', 'learning', 'familiar', 'mastered'] as const;
+
+const list = new Intl.ListFormat('en-GB', { type: 'conjunction' });
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export default async function RecallPage() {
   const user = await requirePageUser('/recall');
   const tz = await learnerTimezone();
   await syncDeck(user.id);
-  const [decks, days] = await Promise.all([deckByCourse(user.id, endOfDay(tz)), forecast(user.id, tz)]);
+  const end = endOfDay(tz);
+  const [decks, schedule, pulse, fun, progress, recent] = await Promise.all([
+    deckByCourse(user.id, end),
+    dueDates(user.id),
+    getPulse(user.id),
+    getFun(user.id),
+    getProgress(user.id),
+    lastOpening(user.id),
+  ]);
+
+  const names = new Map(courses().map((o) => [o.id, o.name]));
   const due = decks.reduce((n, d) => n + d.due, 0);
   const cards = decks.reduce((n, d) => n + d.counts.new + d.counts.learning + d.counts.familiar + d.counts.mastered, 0);
+  const days: ForecastDay[] = dueByDay(schedule, end).map((d) => ({
+    ...dayName(d.offset, tz),
+    total: d.total,
+    courses: d.courses.map((c) => ({ name: names.get(c.id) ?? c.id, n: c.n })),
+  }));
+  const next = nextDue(schedule, end);
+
+  // The same pick as Home's "Continue": the course last played, else the first repertoire course with a step left.
+  const cardsByCourse = courses().map((o) => courseCard(o, progress.get(o.id)));
+  const resume =
+    cardsByCourse.find((c) => c.summary.id === recent && c.progress.next) ??
+    cardsByCourse.find((c) => isFeatured(c.summary.id) && c.summary.section !== 'traps' && c.progress.next) ??
+    null;
+  const step = resume?.progress.next
+    ? {
+        href: `/openings/${resume.summary.id}/${resume.progress.next.slug}/${resume.progress.next.step}`,
+        title: resume.progress.next.step === 'learn' ? 'Learn the next chapter' : 'Pick up where you left off',
+        where:
+          `${resume.summary.name}: ${resume.progress.next.name}` +
+          (resume.progress.next.step === 'learn' ? '' : `, ${STEP_INFO[resume.progress.next.step].label} next`),
+      }
+    : null;
+
+  if (!cards) {
+    return (
+      <main className="page">
+        <section className="card rh-hero rh-hero--empty">
+          <div className="rh-hero__main rh-rise">
+            <span className="eyebrow rh-eyebrow">
+              <Retry size={16} /> Recall
+            </span>
+            <h1>Your memory deck is empty</h1>
+            <p className="lead">
+              Every move you learn joins it. Recall then asks each one again just before you’d forget it, so your openings
+              stay with you.
+            </p>
+            {step ? (
+              <Link href={step.href} className="btn btn--primary btn--lg">
+                <Play size={18} /> Learn your first chapter
+              </Link>
+            ) : null}
+            {step ? <span className="muted small">{step.where}</span> : null}
+          </div>
+          <div className="rh-hero__side rh-panel rh-rise" style={{ '--i': 1 } as React.CSSProperties}>
+            <h2 className="rh-side-title">How a move sticks</h2>
+            <Climb />
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const dueCourses = decks.filter((d) => d.due).sort((a, b) => b.due - a.due);
+  const round = Math.min(due, ROUND_SIZE);
+  const minutes = Math.max(1, Math.round((round * SECONDS_PER_MOVE) / 60));
   const mastered = decks.reduce((n, d) => n + d.counts.mastered, 0);
-  const minutes = Math.max(1, Math.round((Math.min(due, 20) * SECONDS_PER_MOVE) / 60));
-  const peak = Math.max(1, ...days);
-  const labels = days.map((_, i) =>
-    i === 0
-      ? 'Today'
-      : i === 1
-        ? 'Tmrw'
-        : new Date(Date.now() + i * 86_400_000).toLocaleDateString('en-GB', { weekday: 'short', timeZone: tz }),
-  );
+  const answered = decks.some((d) => d.odds !== null);
 
   return (
     <main className="page">
-      <section className="recall-hero card">
-        <div className="recall-hero__body">
-          <span className="eyebrow">
-            <Retry size={16} /> Recall
-          </span>
-          {!cards ? (
-            <>
-              <h1>Your memory deck is empty</h1>
-              <p className="lead">
-                Every move you learn joins it. Learn a chapter, and Recall will ask its moves again just before you’d forget them.
-              </p>
-              <Link href="/" className="btn btn--primary btn--lg">
-                <Play size={18} /> Learn a chapter
-              </Link>
-            </>
-          ) : due ? (
-            <>
-              <h1>
-                {due} move{due === 1 ? '' : 's'} to recall
-              </h1>
-              <p className="lead">
-                About {minutes} minute{minutes === 1 ? '' : 's'} for a round of {Math.min(due, 20)}. The board replays each line
-                and stops where it’s your move.
-              </p>
-              <Link href="/recall/session" className="btn btn--primary btn--lg">
-                <Play size={18} /> Start recall
-              </Link>
-            </>
-          ) : (
-            <>
-              <h1>All caught up</h1>
-              <p className="lead">
-                {days[1]
-                  ? `Nothing due today. ${days[1]} move${days[1] === 1 ? '' : 's'} come back tomorrow.`
-                  : 'Nothing due today. Learn a new chapter to grow your deck.'}
-              </p>
-            </>
-          )}
-        </div>
-        {cards ? (
-          <div className="recall-hero__stats">
-            <div className="recall-stat">
-              <b>{cards}</b>
-              <span>moves in your deck</span>
-            </div>
-            <div className="recall-stat recall-stat--gold">
-              <b>{mastered}</b>
-              <span>in long-term memory</span>
-            </div>
+      {due ? (
+        <section className="card rh-hero">
+          <div className="rh-hero__main rh-rise">
+            <span className="eyebrow rh-eyebrow">
+              <Retry size={16} /> Recall
+            </span>
+            <h1>{plural(due, 'move')} to recall</h1>
+            <p className="lead">
+              {list.format(dueCourses.map((d) => `${d.due} in ${d.name}`))}. A round of {round} takes about{' '}
+              {plural(minutes, 'minute')}.
+            </p>
+            <Link href="/recall/session" className="btn btn--primary btn--lg">
+              <Play size={18} /> Start recall
+            </Link>
+            <p className="rh-due-note">
+              A move is due when you’re likely to start forgetting it. Find it today and the next gap grows.
+            </p>
           </div>
-        ) : null}
-      </section>
+          <PulseTiles pulse={pulse} level={fun.level} />
+        </section>
+      ) : (
+        <section className="card rh-hero rh-hero--done">
+          <div className="rh-hero__main rh-rise">
+            <span className="rh-medal" aria-hidden="true">
+              <Check size={30} />
+            </span>
+            <h1>All caught up</h1>
+            <p className="lead">
+              Nothing left to recall today.{' '}
+              {next ? (
+                <>
+                  Next: <b>{plural(next.n, 'move')}</b> {dayName(next.offset, tz).phrase}.
+                </>
+              ) : (
+                'Learn a new chapter and its moves join your deck.'
+              )}
+            </p>
+            <p className="rh-deck">
+              <b>{mastered}</b> of your <b>{cards}</b> learned moves are in long-term memory.
+            </p>
+          </div>
+          <PulseTiles pulse={pulse} level={fun.level} />
+        </section>
+      )}
 
-      {cards ? (
-        <div className="course-layout">
-          <section className="section" aria-label="Courses">
-            <h2 className="section__title">By course</h2>
-            <div className="memory-list">
-              {decks.map((d) => {
-                const known = d.counts.new + d.counts.learning + d.counts.familiar + d.counts.mastered;
-                return (
-                  <article key={d.id} className="card memory">
-                    <div className="memory__head">
-                      <span className={`pawn pawn--${d.orientation}`} aria-hidden="true">
-                        <img src={`/pieces/${d.orientation === 'white' ? 'w' : 'b'}P.svg`} alt="" />
-                      </span>
-                      <div className="memory__titles">
-                        <h3>
-                          <Link href={`/openings/${d.id}`}>{d.name}</Link>
-                        </h3>
-                        <span className="muted small">
-                          {d.counts.mastered} of {d.total} moves in long-term memory
-                          {d.odds !== null ? ` · ${d.odds}% likely to recall today` : ''}
-                        </span>
-                      </div>
-                      {d.due ? (
-                        <Link href={`/recall/session?course=${d.id}`} className="btn btn--secondary btn--sm">
-                          {d.due} due
-                        </Link>
-                      ) : (
-                        <span className="chip chip--done">Caught up</span>
-                      )}
-                    </div>
-                    <div className="strength" role="img" aria-label={STRENGTHS.map((s) => `${d.counts[s.key]} ${s.label.toLowerCase()}`).join(', ')}>
-                      {STRENGTHS.map((s) =>
-                        d.counts[s.key] ? (
-                          <span key={s.key} className={`strength__part strength__part--${s.key}`} style={{ flexGrow: d.counts[s.key] }} />
-                        ) : null,
-                      )}
-                      {d.total > known ? <span className="strength__part" style={{ flexGrow: d.total - known }} /> : null}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-            <ul className="strength-key">
-              {STRENGTHS.map((s) => (
-                <li key={s.key} title={s.note}>
-                  <i className={`strength__part strength__part--${s.key}`} /> {s.label}
-                </li>
-              ))}
-              <li>
-                <i className="strength__part" /> Not learned yet
-              </li>
-            </ul>
-          </section>
+      {due ? null : (
+        <section className="section" aria-label="What to do next">
+          <h2 className="section__title">While your moves settle</h2>
+          <div className="rh-steps">
+            {step ? <StepLink href={step.href} icon={<Book size={22} />} title={step.title} sub={step.where} primary i={0} /> : null}
+            {answered ? (
+              <StepLink href="/stats/practice" icon={<Target size={22} />} title="Practise your shakiest moves" sub="The ten you’re likeliest to forget, asked early" i={1} />
+            ) : null}
+            <StepLink href="/play/spar" icon={<Swords size={22} />} title="Spar a club player" sub="Play your openings against moves real players choose" i={2} />
+            <StepLink href="/play/rush" icon={<Bolt size={22} />} title="Opening Rush" sub="Find your moves against the clock" i={3} />
+          </div>
+        </section>
+      )}
 
-          <aside className="sidebar">
-            <div className="card side-card">
-              <h3>Coming up</h3>
-              <ol className="forecast" aria-label="Moves due each day this week">
-                {days.map((n, i) => (
-                  <li key={i} className={i === 0 ? 'forecast__day forecast__day--today' : 'forecast__day'}>
-                    <span className="forecast__n">{n || ''}</span>
-                    <span className="forecast__bar" style={{ height: `${Math.round((n / peak) * 100)}%` }} />
-                    <span className="forecast__label">{labels[i]}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div className="card side-card">
-              <h3>How Recall works</h3>
-              <ol className="how">
-                <li>Every move you learn joins your deck.</li>
-                <li>Recall asks it again just before you’d forget it, in the line where it’s played.</li>
-                <li>Find it and the next gap grows: days, then weeks, then months. Miss it and it’s back tomorrow.</li>
-              </ol>
-            </div>
-          </aside>
-        </div>
-      ) : null}
+      <div className="course-layout">
+        <section className="section" aria-label="Memory by course">
+          <div>
+            <h2 className="section__title">Memory by course</h2>
+            <p className="muted">Each bar is every move the course can ask you, the ones you’ll keep longest on the left.</p>
+          </div>
+          <div className="rh-courses">
+            {decks.map((d) => (
+              <CourseRow key={d.id} deck={d} />
+            ))}
+          </div>
+        </section>
+
+        <aside className="sidebar">
+          <div className="card side-card">
+            <h3>Coming up</h3>
+            <p className="muted small">Moves due each day. Today also holds any you didn’t get to. Tap a day for its courses.</p>
+            <Forecast days={days} />
+          </div>
+          <div className="card side-card">
+            <h3>How a move sticks</h3>
+            <Climb />
+          </div>
+        </aside>
+      </div>
     </main>
+  );
+}
+
+function PulseTiles({ pulse, level }: { pulse: Pulse; level: XpLevel }) {
+  const today = pulse.week[pulse.week.length - 1];
+  const left = Math.max(0, pulse.goal - pulse.today);
+  return (
+    <div className="rh-pulse">
+      <Link href="/stats" className={`rh-tile rh-rise${pulse.streak ? '' : ' rh-tile--cold'}`} style={{ '--i': 1 } as React.CSSProperties}>
+        <span className="rh-flame" aria-hidden="true">
+          <Flame size={30} />
+        </span>
+        <span className="rh-tile__body">
+          <b>{plural(pulse.streak, 'day')}</b>
+          <span className="rh-tile__label">
+            {today.practised ? 'Streak, and today counts' : pulse.streak ? 'Streak: practise today to keep it' : 'Practise today to start a streak'}
+          </span>
+          <span className="week rh-week" aria-label="This week">
+            {pulse.week.map((d) => (
+              <span
+                key={d.day}
+                className={`week__day${d.practised ? ' week__day--on' : ''}${d.today ? ' week__day--today' : ''}`}
+                title={d.day}
+              >
+                <span className="week__dot">{d.practised ? <Flame size={12} /> : null}</span>
+                {d.label}
+              </span>
+            ))}
+          </span>
+        </span>
+      </Link>
+      <Link href="/profile" className="rh-tile rh-rise" style={{ '--i': 2 } as React.CSSProperties}>
+        <GoalRing share={Math.min(1, pulse.today / pulse.goal)} />
+        <span className="rh-tile__body">
+          <b>
+            {pulse.today}/{pulse.goal}
+          </b>
+          <span className="rh-tile__label">{left ? `${plural(left, 'move')} to today’s goal` : 'Today’s goal done'}</span>
+        </span>
+      </Link>
+      <Link href="/achievements" className="rh-tile rh-rise" style={{ '--i': 3 } as React.CSSProperties}>
+        <LevelRing level={level.level} share={level.share} />
+        <span className="rh-tile__body">
+          <b>
+            Level {level.level} · {level.name}
+          </b>
+          <span className="rh-tile__label">{level.span - level.into} XP to the next level</span>
+        </span>
+      </Link>
+    </div>
+  );
+}
+
+function GoalRing({ share }: { share: number }) {
+  return (
+    <svg viewBox="0 0 48 48" className="rh-goal" aria-hidden="true">
+      <circle cx="24" cy="24" r="20" className="rh-goal__track" />
+      <circle cx="24" cy="24" r="20" pathLength={100} className="rh-goal__fill" strokeDasharray={`${share * 100} 100`} transform="rotate(-90 24 24)" />
+      {share >= 1 ? <path d="M16 24.5l5.5 5.5L32 19.5" className="rh-goal__check" /> : null}
+    </svg>
+  );
+}
+
+function StepLink({ href, icon, title, sub, primary, i }: { href: string; icon: React.ReactNode; title: string; sub: string; primary?: boolean; i: number }) {
+  return (
+    <Link href={href} className={`card rh-step rh-rise${primary ? ' rh-step--primary' : ''}`} style={{ '--i': i + 2 } as React.CSSProperties}>
+      <span className="rh-step__icon">{icon}</span>
+      <span className="rh-step__body">
+        <b>{title}</b>
+        <span className="muted small">{sub}</span>
+      </span>
+      <ChevronRight size={20} className="rh-step__go" />
+    </Link>
+  );
+}
+
+function CourseRow({ deck: d }: { deck: CourseMemory }) {
+  const learned = d.counts.new + d.counts.learning + d.counts.familiar + d.counts.mastered;
+  const tally: Record<Level, number> = { none: Math.max(0, d.total - learned), ...d.counts };
+  const parts = [...STRONGEST_FIRST, 'none' as const].filter((l) => tally[l]);
+  return (
+    <article className="card rh-course">
+      <div className="rh-course__head">
+        <span className={`pawn pawn--${d.orientation}`} aria-hidden="true">
+          <img src={`/pieces/${d.orientation === 'white' ? 'w' : 'b'}P.svg`} alt="" />
+        </span>
+        <div className="rh-course__titles">
+          <h3>
+            <Link href={`/openings/${d.id}`}>{d.name}</Link>
+          </h3>
+          <span className="muted small">
+            {d.counts.mastered} of {d.total} moves in long-term memory
+          </span>
+        </div>
+        {d.due ? (
+          <Link href={`/recall/session?course=${d.id}`} className="btn btn--secondary btn--sm">
+            {d.due} due
+          </Link>
+        ) : (
+          <span className="chip chip--done">Caught up</span>
+        )}
+      </div>
+      <span className="rh-bar" role="img" aria-label={`${d.name}: ${tallyWords({ ...tally, weak: 0 })}`}>
+        {parts.map((l) => (
+          <span key={l} className={`rh-bar__part lvl--${l}`} style={{ flexGrow: tally[l] }} />
+        ))}
+      </span>
+      <ul className="rh-counts" aria-hidden="true">
+        {parts.map((l) => (
+          <li key={l}>
+            <span className={`lvl-dot lvl--${l}`} />
+            <b>{tally[l]}</b> {LEVEL_LABEL[l].toLowerCase()}
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
+
+/** The key, as the path a move takes: each level with what it means. */
+function Climb() {
+  return (
+    <ol className="rh-climb">
+      {CLIMB.map((l) => (
+        <li key={l}>
+          <span className={`lvl-dot lvl--${l}`} aria-hidden="true" />
+          <span>
+            <b>{LEVEL_LABEL[l]}</b>
+            <span className="muted small">{LEVEL_NOTE[l]}</span>
+          </span>
+        </li>
+      ))}
+      <li className="rh-climb__miss">
+        <span className="lvl-dot lvl--none" aria-hidden="true" />
+        <span className="muted small">Miss one and it slips back, and Recall asks it again tomorrow.</span>
+      </li>
+    </ol>
   );
 }

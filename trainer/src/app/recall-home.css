@@ -1,0 +1,441 @@
+/* The Recall page: what's due, the learner's pulse, memory by course and the week ahead. The memory
+   colours are the explorer's level ramp (.lvl--*, repertoire.css), so a level looks the same on
+   every page. */
+
+/* Backwards, not both: once the entrance ends, a card's own hover lift applies again. */
+.rh-rise {
+  animation: rh-rise var(--slow) var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * var(--fast) * 0.6);
+}
+@keyframes rh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-3));
+  }
+}
+
+/* ---------- hero ---------- */
+
+.rh-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--side));
+  gap: var(--space-6);
+  align-items: center;
+}
+.rh-hero--done {
+  background: linear-gradient(180deg, var(--green-soft), var(--surface) 70%);
+}
+.rh-hero__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.rh-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--purple);
+}
+.rh-due-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.rh-medal {
+  display: grid;
+  place-items: center;
+  width: var(--recall-icon);
+  height: var(--recall-icon);
+  border-radius: var(--radius-pill);
+  background: var(--green);
+  color: var(--on-accent);
+  animation:
+    rh-pop var(--slow) var(--ease) backwards,
+    rh-halo calc(var(--slow) * 3) var(--ease) var(--slow) 2;
+}
+@keyframes rh-pop {
+  from {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+  }
+}
+@keyframes rh-halo {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 var(--space-4) color-mix(in srgb, var(--green) 0%, transparent);
+  }
+}
+.rh-deck {
+  margin: 0;
+  color: var(--ink-soft);
+}
+.rh-deck b {
+  color: var(--ink);
+}
+.rh-panel {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+.rh-side-title {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-3);
+}
+
+/* ---------- streak, goal, level ---------- */
+
+.rh-pulse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.rh-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background var(--fast) var(--ease);
+}
+.rh-tile:hover {
+  background: var(--surface-3);
+}
+.rh-tile__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rh-tile__body b {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.2;
+}
+.rh-tile__label {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.rh-flame {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--recall-icon);
+  height: var(--recall-icon);
+  border-radius: var(--radius-pill);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.rh-tile--cold .rh-flame {
+  background: var(--surface-3);
+  color: var(--muted);
+}
+.rh-week {
+  margin-top: var(--space-2);
+  gap: var(--space-1);
+}
+.rh-week .week__dot {
+  width: var(--icon);
+  height: var(--icon);
+}
+.rh-tile .level-ring {
+  width: var(--recall-icon);
+  height: var(--recall-icon);
+}
+.rh-tile .level-ring b {
+  font-size: var(--text-lg);
+}
+.rh-goal {
+  flex: none;
+  width: var(--recall-icon);
+  height: var(--recall-icon);
+}
+.rh-goal__track,
+.rh-goal__fill,
+.rh-goal__check {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.rh-goal__track {
+  stroke: var(--surface-3);
+}
+.rh-goal__fill,
+.rh-goal__check {
+  stroke: var(--green);
+}
+.rh-goal__fill {
+  animation: rh-fill calc(var(--slow) * 2) var(--ease) backwards;
+  animation-delay: var(--mid);
+}
+.rh-goal__check {
+  stroke-width: 3.5;
+}
+@keyframes rh-fill {
+  from {
+    stroke-dasharray: 0 100;
+  }
+}
+
+/* ---------- what next ---------- */
+
+.rh-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--play-card-min)), 1fr));
+  gap: var(--space-3);
+}
+.rh-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.rh-step__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--recall-icon);
+  height: var(--recall-icon);
+  border-radius: var(--radius-md);
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+.rh-step--primary .rh-step__icon {
+  background: var(--green);
+  color: var(--on-accent);
+}
+.rh-step--primary {
+  border-color: var(--green);
+}
+.rh-step__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.rh-step__body b {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+.rh-step__go {
+  flex: none;
+  color: var(--muted);
+}
+
+/* ---------- memory by course ---------- */
+
+.rh-courses {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.rh-course {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.rh-course__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.rh-course__titles {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.rh-course__titles a {
+  color: inherit;
+  text-decoration: none;
+}
+.rh-course__titles a:hover {
+  text-decoration: underline;
+}
+.rh-bar {
+  display: flex;
+  gap: var(--border);
+  height: var(--strength-bar);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.rh-bar__part {
+  min-width: var(--border);
+}
+.rh-bar__part.lvl--none {
+  box-shadow: none;
+  background: var(--surface-3);
+}
+.rh-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.rh-counts li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.rh-counts b {
+  color: var(--ink);
+}
+
+/* ---------- the key ---------- */
+
+.rh-climb {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.rh-climb li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.rh-climb li > span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+.rh-climb .lvl-dot {
+  margin-top: var(--space-1);
+}
+.rh-climb__miss {
+  padding-top: var(--space-3);
+  border-top: var(--hairline) solid var(--line);
+}
+
+/* ---------- the week ahead ---------- */
+
+.rh-forecast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.rh-forecast__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+  height: calc(var(--forecast) + var(--space-12));
+}
+.rh-forecast__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-1) 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.rh-forecast__day:hover {
+  background: var(--surface-2);
+}
+.rh-forecast__day[aria-pressed='true'] {
+  background: var(--purple-soft);
+  color: var(--ink);
+}
+.rh-forecast__n {
+  display: grid;
+  place-items: center;
+  min-height: var(--icon);
+  color: var(--ink-soft);
+}
+.rh-forecast__n svg {
+  color: var(--green);
+}
+.rh-forecast__slot {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.rh-forecast__bar {
+  width: 70%;
+  max-width: var(--chart-bar);
+  min-height: var(--space-1);
+  border-radius: var(--space-1) var(--space-1) 0 0;
+  background: var(--purple);
+  transform-origin: bottom;
+  animation: rh-grow var(--slow) var(--ease) backwards;
+}
+@keyframes rh-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+.rh-forecast__detail {
+  margin: 0;
+  min-height: calc(var(--text-sm) * 3);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+@media (max-width: 960px) {
+  .rh-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .rh-hero {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+  .rh-hero h1 {
+    font-size: var(--text-2xl);
+  }
+  .rh-hero__main .btn--lg {
+    align-self: stretch;
+    white-space: normal;
+    text-align: center;
+  }
+  .rh-course__head {
+    flex-wrap: wrap;
+  }
+  .rh-course__titles {
+    flex-basis: calc(100% - var(--tap) - var(--space-3));
+  }
+  .rh-course__head > :last-child {
+    margin-left: calc(var(--tap) + var(--space-3));
+  }
+  .rh-pulse {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rh-pulse .rh-tile:first-child {
+    grid-column: 1 / -1;
+  }
+  .rh-pulse .rh-tile:not(:first-child) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .rh-panel {
+    padding: var(--space-4);
+  }
+}

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import RecallSession from '@/components/session/RecallSession';
 import { dueCards, endOfDay, syncDeck } from '@/lib/cards';
 import { getOpening, hasOpening } from '@/lib/content';
@@ -20,17 +20,8 @@ export default async function RecallSessionPage({ searchParams }: PageProps<'/re
   const runs = buildRuns(due, getOpening);
   const asked = runs.reduce((n, run) => n + run.asks.length, 0);
 
-  if (!runs.length) {
-    return (
-      <div className="empty-state">
-        <h1>All caught up</h1>
-        <p className="muted">Nothing is due{courseId ? ` in the ${getOpening(courseId).name}` : ''} today. Come back tomorrow, or learn a new chapter.</p>
-        <Link className="btn btn--primary" href="/recall">
-          Back to Recall
-        </Link>
-      </div>
-    );
-  }
+  // Also reached when saving the round that cleared the day refreshes this page: the Recall page is the caught-up screen.
+  if (!runs.length) redirect('/recall');
 
   return (
     <RecallSession
