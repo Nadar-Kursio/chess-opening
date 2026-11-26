@@ -651,6 +651,11 @@
   font-weight: 700;
 }
 
+/* Recall's summary scrolls inside the side panel at every width: its last Rewind scrolls clear of the companion. */
+.session:has(.mascot-cheer) .session__side:has(> .recap) {
+  padding-bottom: calc(var(--mascot-md) + var(--space-4));
+}
+
 /* A phone's session footer sits in the flow instead of fixed, so it anchors the mascot itself. */
 @media (max-width: 960px) and (orientation: portrait) {
   .session__foot:has(> .mascot-cheer) {
