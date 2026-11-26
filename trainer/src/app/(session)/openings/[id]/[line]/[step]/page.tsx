@@ -60,8 +60,9 @@ export default async function StepPage({ params, searchParams }: Params) {
   });
 
   const at = Number(ply);
+  // Drill only: finishing Learn puts every move of the chapter into Recall, so it starts at the top.
   const startAt =
-    (found.step === 'learn' || found.step === 'drill') && Number.isInteger(at) && at > (line.start ?? 0) && at < line.plies.length - 1 ? at : null;
+    found.step === 'drill' && Number.isInteger(at) && at > (line.start ?? 0) && at < line.plies.length - 1 ? at : null;
   const clips = found.step === 'learn' ? narrationFor(id, line, lineSide(op, line), settings.voice) : {};
   return (
     <LineSession

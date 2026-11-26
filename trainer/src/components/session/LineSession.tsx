@@ -44,7 +44,7 @@ interface Props {
   /** Learn only: the recorded coach, when this line has been narrated. */
   narration: NarrationProps | null;
   engineView: boolean;
-  /** Learn and Drill from a deep link (`?ply=`): the board opens on this ply, the moves before it played. */
+  /** Drill from a deep link (`?ply=`): the board opens on this ply, the moves before it played. */
   startAt?: number | null;
 }
 

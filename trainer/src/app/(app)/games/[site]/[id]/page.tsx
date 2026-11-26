@@ -335,10 +335,10 @@ const yourMoves = (w: Walk) => w.steps.filter((s, i) => i > 0 && s.book && (i % 
 
 function practiceHref(openingId: string, p: PracticeLink, learned: boolean) {
   const what = p.sideline ? 'the sideline' : `chapter ${p.chapter}`;
-  const step = learned ? 'drill' : 'learn';
+  if (!learned) return { href: `/openings/${openingId}/${p.slug}/learn`, label: `Learn ${what}` };
   return {
-    href: `/openings/${openingId}/${p.slug}/${step}${p.ply !== null ? `?ply=${p.ply}` : ''}`,
-    label: `${learned ? 'Drill' : 'Learn'} ${what} from here`,
+    href: `/openings/${openingId}/${p.slug}/drill${p.ply !== null ? `?ply=${p.ply}` : ''}`,
+    label: `Drill ${what} from here`,
   };
 }
 
