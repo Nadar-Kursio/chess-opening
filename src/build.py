@@ -54,7 +54,8 @@ WEB_CONTENT = os.path.join(os.path.dirname(SRC), "web", "content")
 PORTED = ["ruylopez", "scholarsmate", "friedliver", "london", "sicilian", "scandinavian",
           "londonb2", "londonh5hunt", "portuguesepin", "timmanknight", "legalsmate",
           "blackburneshilling", "siberiantrap", "magnussmith", "englundtrap", "elephanttrap",
-          "noahsark", "fishingpole", "queensgambit", "jobava", "jobavafork", "jobavaqa5"]
+          "noahsark", "fishingpole", "queensgambit", "jobava", "jobavafork", "jobavaqa5",
+          "carokann", "carokannf7", "carokannh4"]
 
 OPENING_NOTE = ("The starting position. White moves first, and that single tempo "
                 "is the whole reason opening theory exists.")

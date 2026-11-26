@@ -108,7 +108,7 @@ on the page is measured again at depth 20 in step 6.
    other course's move whose `why` says why this course plays its own. A conflict inside a
    generated sideline is fixed in the other course, never in the sideline file.
 5. Traps: the dossier's candidates and the opening's Wikipedia/Wikibooks traps, then
-   `flock ... nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/trap-scan.py <id>`
+   `nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/trap-scan.py <id> --lock /home/ec2-user/chess-opening/.worktrees/.heavy.lock`
    (about 10 minutes) once chapters and deviations exist. A `NEW` trap met in 0.05%+ of
    the course's games, or by 300+ club games, is a trap course to write
    ([Trap courses](../opening-research/SKILL.md#trap-courses)). A one-move capture is a
