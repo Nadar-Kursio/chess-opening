@@ -1,24 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BoardArrow, BoardFlash } from '@/components/Board';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import type { BoardArrow, BoardBadge, BoardFlash } from '@/components/Board';
 import { Flame } from '@/components/ui/icons';
 import type { Graded } from '@/lib/cards';
 import { colourName, otherTurn } from '@/lib/course';
 import { verdictOf, verdictWords } from '@/lib/engineView';
 import { saveGrade, saveSession } from '@/lib/outbox';
-import { retryRun, type Run } from '@/lib/recall';
+import { judgeTry, learnHref, retryRun, type Run, type Where, type WrongMove } from '@/lib/recall';
 import { play, type SoundSet } from '@/lib/sound';
 import type { Severity } from '@/lib/types';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 import { squareIndex } from './LineSession';
-import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
+import { MoveTape, SessionBoard, useMoveReview, type BoardStep } from './SessionBoard';
+import '@/app/recall.css';
 
 /* A round of Recall: the board replays the moves leading to each due position and the learner
-   finds the move from memory. A right answer is graded and the round flows on; a miss shows the
-   move, makes the learner play it, and brings the position back a few runs later until it's found
-   — the correction is part of the learning, not just the score. */
+   finds the move from memory. A right answer is graded and the round flows on. A wrong one is
+   played out, crossed, scored where the course ships a score, and taken back for a second try; a
+   second miss shows the move and makes the learner play it. Only the first try grades the card,
+   and a missed position comes back a few runs later until it's found — the correction is part of
+   the learning, not just the score. */
 
 interface Props {
   runs: Run[];
@@ -29,9 +32,11 @@ interface Props {
   againHref: string;
   sound: SoundSet;
   coordinates: boolean;
+  /** Shown when the round has nothing to ask. */
+  empty?: ReactNode;
 }
 
-type Phase = 'replay' | 'ask' | 'reveal' | 'answered' | 'done';
+type Phase = 'replay' | 'ask' | 'tried' | 'reveal' | 'answered' | 'done';
 type Queued = Run & { retry?: boolean };
 
 interface Answer {
@@ -39,11 +44,21 @@ interface Answer {
   course: string;
   num: string;
   hit: boolean;
+  where: Where | null;
   graded?: Graded | null;
+}
+
+/** A wrong move on the board for a beat, before it's taken back. */
+interface Tried {
+  from: string;
+  to: string;
+  move: WrongMove;
+  then: 'ask' | 'reveal';
 }
 
 const REPLAY_MS = 380;
 const ANSWERED_MS = 1200;
+const TRIED_MS = 1100;
 /** Runs later that a missed move is asked again. */
 const RETRY_GAP = 2;
 
@@ -69,9 +84,21 @@ function badgeFor(g: Graded | null) {
   return `Next ${interval(g.days)}`;
 }
 
+/** "the London System", and "the Elephant Trap" rather than "the The Elephant Trap". */
+const theCourse = (name: string) => (name.startsWith('The ') ? `the ${name.slice(4)}` : `the ${name}`);
+
+export const whereText = (w: Where) => (w.chapter ? `Chapter ${w.chapter}: ${w.name}` : `Sideline: ${w.name}`);
+
 /** Each run opens with the course it comes from. */
 function opening(run: Queued): Omit<Msg, 'id'> {
-  if (run.retry) return { kind: 'hint', title: 'One more look', text: `The move you missed in the ${run.course}.` };
+  if (run.retry) {
+    const where = run.asks[0].where;
+    return {
+      kind: 'hint',
+      title: 'One more look',
+      text: `The move you missed in ${theCourse(run.course)}${where ? `, in ${where.chapter ? `chapter ${where.chapter}, ` : 'the sideline '}“${where.name}”` : ''}.`,
+    };
+  }
   return {
     kind: 'intro',
     title: run.course,
@@ -82,7 +109,7 @@ function opening(run: Queued): Omit<Msg, 'id'> {
   };
 }
 
-export default function RecallSession({ runs, remaining: left, title, closeHref, againHref, sound, coordinates }: Props) {
+export default function RecallSession({ runs, remaining: left, title, closeHref, againHref, sound, coordinates, empty = null }: Props) {
   // Saving the round revalidates the page with a fresh one: hold the round this one started with.
   const [queue, setQueue] = useState<Queued[]>(runs);
   const [remaining] = useState(left);
@@ -90,9 +117,14 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
   const [r, setR] = useState(0);
   const run = queue[r] as Queued | undefined;
   const [ply, setPly] = useState(run?.start ?? 0);
-  const review = useMoveReview(run ? run.plies.slice(0, ply + 1) : []);
   const [k, setK] = useState(0);
   const [phase, setPhase] = useState<Phase>('replay');
+  /** Wrong tries at the question being asked. */
+  const [misses, setMisses] = useState(0);
+  const [tried, setTried] = useState<Tried | null>(null);
+  const [undo, setUndo] = useState<{ from: string; to: string } | null>(null);
+  /** A try at this question has moved the bar, so it no longer hides the position's score. */
+  const [barShown, setBarShown] = useState(false);
   const [auto, setAuto] = useState(false);
   const [flipped, setFlipped] = useState(false);
   const [tone, setTone] = useState<Tone>('idle');
@@ -113,6 +145,26 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
 
   const ask = run?.asks[k];
   const expected = ask && run ? run.plies[ask.at + 1] : undefined;
+  const played: BoardStep[] = run ? run.plies.slice(0, ply + 1) : [];
+  const review = useMoveReview(
+    tried && run
+      ? [
+          ...played,
+          {
+            fen: tried.move.fen,
+            from: tried.from,
+            to: tried.to,
+            check: tried.move.check,
+            turn: run.side,
+            san: tried.move.san,
+            num: `${expected?.num.match(/^\d+\.+/)?.[0] ?? ''}${tried.move.san}`,
+            ev: tried.move.ev,
+            mate: tried.move.mate,
+          },
+        ]
+      : played,
+  );
+  const rewind = ask?.where && run ? { href: learnHref(run.openingId, ask.where), label: 'Rewind in Learn' } : undefined;
 
   // The replay: the line plays itself up to the next question.
   useEffect(() => {
@@ -166,6 +218,10 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
     setAuto(false);
     setFlash(null);
     setTone('idle');
+    setMisses(0);
+    setTried(null);
+    setUndo(null);
+    setBarShown(false);
     if (k + 1 < run.asks.length) {
       setK(k + 1);
       setPhase('replay');
@@ -187,10 +243,24 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
     return () => clearTimeout(t);
   }, [phase, auto, advance, review.isReviewing]);
 
+  // The wrong move stays a beat, then slides back for the next try or the answer.
+  useEffect(() => {
+    if (phase !== 'tried' || !tried) return;
+    const t = setTimeout(() => {
+      play('move', sound);
+      setUndo({ from: tried.to, to: tried.from });
+      setTried(null);
+      setFlash(null);
+      setTone(tried.then === 'reveal' ? 'bad' : 'idle');
+      setPhase(tried.then);
+    }, TRIED_MS);
+    return () => clearTimeout(t);
+  }, [phase, tried, sound]);
+
   /** Saves a first attempt and tags the coach's message with when the move comes back. */
   const grade = (hit: boolean, msgId: number) => {
     if (!run || !ask || !expected) return;
-    const answer: Answer = { openingId: run.openingId, course: run.course, num: expected.num, hit };
+    const answer: Answer = { openingId: run.openingId, course: run.course, num: expected.num, hit, where: ask.where };
     setAnswers((list) => [...list, answer]);
     const ms = Math.round(performance.now() - askedAt.current);
     saveGrade({ openingId: run.openingId, key: ask.key, hit, ms }, (state) => {
@@ -203,58 +273,76 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
       answer.graded = g;
       tag(msgId, { badge: badgeFor(g) });
       if (g?.mastered) {
-        say({ kind: 'done', title: '★ In long-term memory', text: `${expected.num} in the ${run.course} won’t need asking for weeks.` });
+        say({ kind: 'done', title: '★ In long-term memory', text: `${expected.num} in ${theCourse(run.course)} won’t need asking for weeks.` });
         play('done', sound);
       }
     });
   };
 
-  const miss = (from: string | null, to: string | null) => {
-    if (!run || !ask || !expected) return;
-    const alt = from ? ask.alternatives.find((a) => a.from === from && a.to === to) : undefined;
-    const position = run.plies[ask.at];
-    const verdict = from && to ? verdictOf(position, from, to, alt?.sev) : null;
-    const words = verdict && verdictWords(verdict, position, expected.num);
-    play('bad', sound);
-    setTone('bad');
-    setFlash(from && to ? { sq: to, kind: 'bad', verdict } : null);
+  /** The first miss at a question: graded unless this is already a retry, and asked again later. */
+  const missed = (msgId: number) => {
+    if (!run || !ask) return;
+    if (judgeTry(misses, false, !!run.retry).grade !== null) grade(false, msgId);
+    if (misses > 0) return;
     setCombo(0);
-    const id = say(
-      !from
-        ? { kind: 'hint', title: `The move is ${expected.num}`, text: 'Play it to lock it in.' }
-        : alt
-          ? {
-              kind: 'oops',
-              title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` (${alt.name})` : ''}`,
-              html: `${alt.why} <em>The course plays ${expected.num}: play it.</em>`,
-            }
-          : {
-              kind: 'oops',
-              title: words?.title ?? 'Not this time',
-              text: `${words ? `${words.text} ` : ''}The move here is ${expected.num}. Play it to carry on.`,
-            },
-    );
-    if (!run.retry) grade(false, id);
     // Found again later in the round, a miss is relearned while the correction is fresh.
     const again: Queued = { ...retryRun(run, ask), retry: true };
     setQueue((q) => {
       const at = Math.min(q.length, r + 1 + RETRY_GAP);
       return [...q.slice(0, at), again, ...q.slice(at)];
     });
-    setPhase('reveal');
+  };
+
+  const wrongTry = (from: string, to: string, capture: boolean) => {
+    if (!run || !ask || !expected) return;
+    const { reveal } = judgeTry(misses, false, !!run.retry);
+    const position = run.plies[ask.at];
+    const alt = ask.alternatives.find((a) => a.from === from && a.to === to);
+    const verdict = verdictOf(position, from, to, alt?.sev);
+    const words = verdict && verdictWords(verdict, position, expected.num);
+    const then = reveal ? `The move here is ${expected.num}. Play it to lock it in.` : 'Taking it back. Have another go.';
+    const move = ask.wrong?.[from + to];
+    play(capture ? 'capture' : 'move', sound);
+    play('bad', sound);
+    setTone('bad');
+    setUndo(null);
+    const id = say({
+      ...(alt
+        ? { kind: 'oops', title: `${alt.san} is ${SEV_WORD[alt.sev]}${alt.name ? ` (${alt.name})` : ''}`, html: `${alt.why} <em>${then}</em>` }
+        : { kind: 'oops', title: words?.title ?? 'Not this time', text: `${words ? `${words.text} ` : ''}${then}` }),
+      link: reveal ? rewind : undefined,
+    });
+    missed(id);
+    setMisses(misses + 1);
+    if (move) {
+      if (move.ev !== undefined) setBarShown(true);
+      setTried({ from, to, move, then: reveal ? 'reveal' : 'ask' });
+      setFlash({ sq: to, kind: 'bad' });
+      setPhase('tried');
+    } else {
+      setFlash({ sq: to, kind: 'bad', verdict });
+      setPhase(reveal ? 'reveal' : 'ask');
+    }
   };
 
   const onMove = (from: string, to: string) => {
     if (!run || !ask || !expected) return;
     const capture = run.plies[ask.at].fen[squareIndex(to)] !== '.';
     if (phase === 'ask' && ask.accept.includes(from + to)) {
+      const { grade: first } = judgeTry(misses, true, !!run.retry);
       play(capture ? 'capture' : 'move', sound);
       play('good', sound);
+      setUndo(null);
       setFlash({ sq: expected.to!, kind: 'good' });
       setTone('good');
       setPly(ask.at + 1);
-      if (run.retry) {
-        say({ kind: 'yours', title: `${expected.num} ✓`, text: 'Found it this time.' });
+      if (first === null) {
+        say({
+          kind: 'yours',
+          title: `${expected.num} ✓`,
+          text: misses ? 'Found it on the second try. It comes back once more this round.' : 'Found it this time.',
+          link: misses ? rewind : undefined,
+        });
       } else {
         const streak = combo + 1;
         setCombo(streak);
@@ -269,6 +357,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
     }
     if (phase === 'reveal' && from === expected.from && to === expected.to) {
       play(capture ? 'capture' : 'move', sound);
+      setUndo(null);
       setFlash({ sq: to, kind: 'good' });
       setTone('info');
       setPly(ask.at + 1);
@@ -278,7 +367,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
       return;
     }
     if (phase === 'ask') {
-      miss(from, to);
+      wrongTry(from, to, capture);
       return;
     }
     if (phase === 'reveal') {
@@ -288,16 +377,27 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
   };
 
   const showMe = () => {
-    if (phase === 'ask') miss(null, null);
+    if (phase !== 'ask' || !expected) return;
+    play('bad', sound);
+    setTone('bad');
+    setUndo(null);
+    setFlash(null);
+    const id = say({ kind: 'hint', title: `The move is ${expected.num}`, text: 'Play it to lock it in.', link: rewind });
+    missed(id);
+    setPhase('reveal');
   };
 
   usePrimaryKey(phase === 'answered' ? advance : phase === 'done' && remaining > 0 ? () => (window.location.href = againHref) : null);
 
-  if (!run) return null;
+  if (!run) return empty;
   const hits = answers.filter((a) => a.hit).length;
   const orientation = flipped ? otherTurn(run.side) : run.side;
   const arrows: BoardArrow[] =
     phase === 'reveal' && expected?.from && expected.to ? [{ from: expected.from, to: expected.to, kind: 'hint' }] : [];
+  const cross: BoardBadge | null = tried ? { sq: tried.to, glyph: '✕', mark: 'wrong' } : null;
+  const barOn = barShown || phase === 'reveal' || phase === 'answered' || phase === 'done';
+  // A wrong move the course has no score for leaves the bar where it was.
+  const engine = run.engineView ? { hidden: !barOn, upTo: tried && tried.move.ev === undefined ? ask?.at : undefined } : null;
 
   const footer =
     phase === 'done' ? (
@@ -326,22 +426,32 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
           <strong>
             {phase === 'answered'
               ? tone === 'good'
-                ? PRAISE[answers.length % PRAISE.length]
+                ? misses
+                  ? 'Got there'
+                  : PRAISE[answers.length % PRAISE.length]
                 : 'Locked in'
-              : phase === 'reveal'
-                ? 'Play the arrow'
-                : phase === 'ask'
-                  ? 'Your move'
-                  : 'Watch the line'}
+              : phase === 'tried'
+                ? 'Not this one'
+                : phase === 'reveal'
+                  ? 'Play the arrow'
+                  : phase === 'ask'
+                    ? misses
+                      ? 'One more try'
+                      : 'Your move'
+                    : 'Watch the line'}
           </strong>
           <span>
             {phase === 'ask'
               ? 'From memory.'
-              : phase === 'reveal'
-                ? `The move is ${expected?.num}`
-                : phase === 'answered' && tone !== 'good'
-                  ? 'You’ll get it again this round.'
-                  : run.course}
+              : phase === 'tried'
+                ? tried?.then === 'reveal'
+                  ? 'The answer is next.'
+                  : 'Taking it back.'
+                : phase === 'reveal'
+                  ? `The move is ${expected?.num}`
+                  : phase === 'answered' && (tone !== 'good' || misses)
+                    ? 'You’ll get it again this round.'
+                    : run.course}
           </span>
         </div>
         {phase === 'ask' ? (
@@ -373,8 +483,10 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
           onMove={onMove}
           arrows={arrows}
           flash={flash}
+          badge={cross}
+          undo={undo}
           coordinates={coordinates}
-          engine={run.engineView ? { hidden: phase !== 'answered' && phase !== 'done' } : null}
+          engine={engine}
         />
       }
       side={
@@ -386,6 +498,10 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
               <CoachAvatar />
               <Combo combo={combo} />
             </div>
+            <p className="recall-where">
+              <b>{run.course}</b>
+              {ask?.where ? <span>{whereText(ask.where)}</span> : null}
+            </p>
             <Coach msgs={msgs} />
             <MoveTape review={review} marks={run.engineView} />
           </>
@@ -446,7 +562,15 @@ function Summary({ answers, best }: { answers: Answer[]; best: number }) {
           <ul>
             {missed.map((a, i) => (
               <li key={i}>
-                <b>{a.num}</b> <span className="muted">· {a.course}</span>
+                <span>
+                  <b>{a.num}</b> <span className="muted">· {a.course}</span>
+                  {a.where ? <span className="recap__where">{whereText(a.where)}</span> : null}
+                </span>
+                {a.where ? (
+                  <Link className="btn btn--secondary btn--sm recap__rewind" href={learnHref(a.openingId, a.where)}>
+                    Rewind in Learn
+                  </Link>
+                ) : null}
               </li>
             ))}
           </ul>

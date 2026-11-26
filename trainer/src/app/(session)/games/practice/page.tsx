@@ -5,6 +5,7 @@ import { loadReport } from '@/lib/gameImport';
 import { practiceKeys } from '@/lib/games';
 import { getSettings } from '@/lib/progress';
 import { buildRuns, isCard, type Due } from '@/lib/recall';
+import { withWrongMoves } from '@/lib/recallMoves';
 import { requirePageUser } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export default async function GamesPracticePage({ searchParams }: PageProps<'/ga
         ? [{ openingId: courseId, key }]
         : []
       : practiceKeys(report, courseId).map(({ openingId, key }) => ({ openingId, key }));
-  const runs = buildRuns(due, getOpening);
+  const runs = withWrongMoves(buildRuns(due, getOpening), getOpening);
 
   if (!runs.length) {
     return (

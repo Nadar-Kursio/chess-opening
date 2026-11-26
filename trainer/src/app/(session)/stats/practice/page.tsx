@@ -4,6 +4,7 @@ import { endOfDay, syncDeck } from '@/lib/cards';
 import { getOpening } from '@/lib/content';
 import { getSettings, learnerTimezone } from '@/lib/progress';
 import { buildRuns } from '@/lib/recall';
+import { withWrongMoves } from '@/lib/recallMoves';
 import { deckFacts } from '@/lib/repertoireData';
 import { requirePageUser } from '@/lib/session';
 import { weakest } from '@/lib/stats';
@@ -16,7 +17,7 @@ export default async function WeakestPracticePage() {
   const user = await requirePageUser('/stats/practice');
   const [tz, settings] = await Promise.all([learnerTimezone(), getSettings(user.id), syncDeck(user.id)]);
   const weak = weakest(await deckFacts(user.id, endOfDay(tz)), 10);
-  const runs = buildRuns(weak.map((w) => ({ openingId: w.openingId, key: w.key })), getOpening);
+  const runs = withWrongMoves(buildRuns(weak.map((w) => ({ openingId: w.openingId, key: w.key })), getOpening), getOpening);
 
   if (!runs.length) {
     return (

@@ -43,6 +43,8 @@ interface Props {
   shared: { plies: number; chapter: string } | null;
   /** Learn only: the recorded coach, when this line has been narrated. */
   narration: NarrationProps | null;
+  /** Learn only: start partway through the line, its earlier moves already on the board. */
+  opensAt?: number;
   engineView: boolean;
 }
 
@@ -73,11 +75,12 @@ function Run({
   shared,
   narration,
   engineView,
+  opensAt: picksUpAt,
   restart,
 }: Props & { restart: () => void }) {
   const plies = line.plies;
   const last = plies.length - 1;
-  const opensAt = line.start ?? 0;
+  const opensAt = picksUpAt ?? line.start ?? 0;
   const [start, setStart] = useState(opensAt);
   const mine = plies.map((p, i) => i > start && p.turn === side);
   const asked = mine.filter(Boolean).length;
@@ -96,6 +99,9 @@ function Run({
             text: `In ${line.record.games.toLocaleString('en-GB')} master games that reached ${line.plies[line.record.at]?.num ?? 'this line'}: White won ${line.record.white}%, ${line.record.draw}% were drawn, Black won ${line.record.black}%.`,
           }),
         ]
+      : []),
+    ...(picksUpAt !== undefined
+      ? [make({ kind: 'info', text: `Picking up after ${plies[picksUpAt].num}, with the moves before it already played.` })]
       : []),
     make({
       kind: 'info',
