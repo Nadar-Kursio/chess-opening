@@ -19,6 +19,7 @@ ORDER = [
     "londonb2", "londonh5hunt", "portuguesepin", "timmanknight",
     "legalsmate", "blackburneshilling", "siberiantrap", "magnussmith",
     "englundtrap", "elephanttrap", "noahsark", "fishingpole", "jobavafork", "jobavaqa5",
+    "carokannf7", "carokannh4",
 ]
 
 

@@ -316,6 +316,9 @@ def main():
             break
         board.push_san(sans.pop())
         shared.add(board.epd())
+    # A Black course answers one first move, the one its chapters start with: 1.d4 against the
+    # Caro-Kann is another opening, not a way of leaving this one.
+    first = {line["moves"].split()[0] for line in chapters} if learner == chess.BLACK else None
     moment_at = {}      # (chapter or None, position) -> moment index
     moment_ply = {}     # (chapter or None, moment index) -> plies played before it
     # Moments run as deep as the grown sidelines look, so every one of them has one.
@@ -327,7 +330,7 @@ def main():
         board = chess.Board()
         asked = 0
         for i, san in enumerate(moves):
-            if board.turn != learner:
+            if board.turn != learner and not (first and i == 0):
                 counts = positions.get(board.epd())
                 if asked >= depth or not counts:
                     board.push_san(san)
@@ -389,7 +392,7 @@ def main():
             # By share as well as count: with a whole month of the explorer behind every
             # position, 25 games is a sliver of a busy one, and following every sliver walks a
             # tree many times the course's size.
-            if count < ENOUGH or count / total < COMMON:
+            if count < ENOUGH or count / total < COMMON or (first and not moves and reply not in first):
                 continue
             b = board.copy()
             b.push_san(reply)
@@ -514,6 +517,8 @@ def main():
         counts = positions.get(epd)
         if not counts or depth >= MOVES:
             return
+        if first and depth == 0:
+            counts = {r: n for r, n in counts.items() if r in first}
         total = sum(counts.values())
         for reply, count in counts.items():
             b = board.copy()
