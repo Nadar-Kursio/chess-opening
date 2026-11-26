@@ -179,6 +179,17 @@ OPENING = {
             19: "Castle, so a knight landing on c2 can no longer fork king and rook.",
         },
     },
+    "branches": {
+        # Black's 5th, after 5.Bxd3: the moves that hold
+        "e4 c6 Nf3 d5 d3 dxe4 Ng5 exd3 Bxd3": [
+            {"san": "Nd7", "severity": "playable", "tier": "Foundation",
+             "why": "The antidote. The knight heads for e5 to hit the bishop on d3, and nothing is left loose on the d-file. 6.Nxh7 Ne5 7.Nxf8 Nxd3+ and the bishops come off; the game is level.",
+             "line": "Nxh7 Ne5 Nxf8 Nxd3+ Qxd3"},
+            {"san": "e5", "severity": "playable", "tier": "Foundation",
+             "why": "The other move that holds: the pawn frees the f8-bishop and gives the queen e7. 6.Qf3 hits f7 again, and 6...Nf6 blocks the f-file in front of it.",
+             "line": "Qf3 Nf6 Bc4"},
+        ],
+    },
     "progression": {
         "arc": "One trap, two chairs: spring it as White after 3.d3, and never walk into it as a Caro-Kann player.",
         "stages": [
