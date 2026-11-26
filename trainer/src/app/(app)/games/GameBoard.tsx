@@ -1,11 +1,11 @@
 'use client';
 
 import type { BoardArrow } from '@/components/Board';
-import { SessionBoard, useMoveReview, type BoardStep } from '@/components/session/SessionBoard';
+import { MoveTape, SessionBoard, useMoveReview, type BoardStep } from '@/components/session/SessionBoard';
 import type { Turn } from '@/lib/types';
 
-/* An imported game, as far as it followed the course: it opens on the position where it left,
-   with the course's move and the move played drawn on it, and steps back through the book moves. */
+/* An imported game up to the position its prep report turns on, with the moves drawn on it, and
+   the moves that led there as a tape to step back through. */
 
 const noMove = () => {};
 
@@ -24,14 +24,17 @@ export default function GameBoard({
 }) {
   const review = useMoveReview(plies);
   return (
-    <SessionBoard
-      review={review}
-      orientation={orientation}
-      movable={null}
-      onMove={noMove}
-      arrows={arrows}
-      coordinates={coordinates}
-      engine={engine ? {} : null}
-    />
+    <>
+      <SessionBoard
+        review={review}
+        orientation={orientation}
+        movable={null}
+        onMove={noMove}
+        arrows={arrows}
+        coordinates={coordinates}
+        engine={engine ? {} : null}
+      />
+      <MoveTape review={review} marks={engine} />
+    </>
   );
 }

@@ -1,24 +1,30 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { BoardArrow } from '@/components/Board';
+import Burst from '@/components/fun/Burst';
+import type { BoardStep } from '@/components/session/SessionBoard';
 import { Play, Trap } from '@/components/ui/icons';
-import { getOpening } from '@/lib/content';
+import { getClub, getOpening } from '@/lib/content';
+import { evalText } from '@/lib/engineView';
 import { allOpenings, getGame, learnedLines } from '@/lib/gameImport';
+import { prepReport, type PracticeLink, type ScoredMove } from '@/lib/gamePrep';
 import { SITES } from '@/lib/gameSources';
 import { baitsOf, trapsInGame, type TrapOutcome } from '@/lib/gameTraps';
-import { SITE_NAME, depthOf, deviationOf, exitKey, forgot, gameFacts, gameKeys, matchGame, moveNum, resolveSan, walkPlies, type Site } from '@/lib/games';
+import { SITE_NAME, depthOf, deviationOf, forgot, gameFacts, gameKeys, matchGame, moveNum, walkPlies, type Site, type Walk } from '@/lib/games';
 import { trapTitle } from '@/lib/traps';
 import { gameXp } from '@/lib/xp';
 import { getSettings, learnerTimezone } from '@/lib/progress';
-import { isCard, treeFor } from '@/lib/recall';
+import { isCard } from '@/lib/recall';
 import { requirePageUser } from '@/lib/session';
+import type { Severity } from '@/lib/types';
 import GameBoard from '../../GameBoard';
-import { RESULT_LABEL, ResultChip, movesText, sideName, teachLink } from '../../parts';
+import { PrepBadge, RESULT_LABEL, ResultChip, plural, sideName } from '../../parts';
 import '../../../../games.css';
 import '../../../../trapdex.css';
+import '../../../../prep.css';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Your game' };
+export const metadata = { title: 'How your opening went' };
 
 const TRAP_WORDS: Record<TrapOutcome, (bait: string, missed?: string) => string> = {
   sprung: (bait, missed) => `they took the bait with ${bait}${missed ? `, but ${missed} was the punishment` : ''}`,
@@ -105,33 +111,34 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
   }
 
   const isStudied = studied.has(op.id);
-  const tree = treeFor(op, walk.side);
-  const exit = tree.nodes[exitKey(walk)];
-  const plies = walkPlies(op, walk).map(({ san, fen, from, to, num, turn, check, ev, mate, mark }) => ({
-    san,
-    fen,
-    from,
-    to,
-    num,
-    turn,
-    check,
-    ev,
-    mate,
-    mark,
-  }));
+  const club = getClub(op.id);
+  const report = prepReport(op, walk, game, deviation, club);
+  const { prep, yours, theirs, practice } = report;
+  const plies: BoardStep[] = walkPlies(op, walk)
+    .slice(0, report.upTo + 1)
+    .map(({ san, fen, from, to, num, turn, check, ev, mate, mark }) => ({ san, fen, from, to, num, turn, check, ev, mate, mark }));
+  if (report.upTo === plies.length) {
+    const p = game.positions![depth];
+    // The engine's answer from here was searched ahead of time with its score: the bar shows that.
+    const engine = theirs?.engine;
+    plies.push({ san: game.moves[depth], fen: p.fen, from: p.from, to: p.to, num: prep.num, turn: depth % 2 ? 'b' : 'w', check: p.check, ev: engine?.ev, mate: engine?.mate });
+  }
   const arrows: BoardArrow[] = [];
-  if (deviation) {
-    if (deviation.played.arrow) arrows.push({ ...deviation.played.arrow, kind: 'bad' });
-    arrows.push({ ...deviation.course[0].arrow, kind: 'good' });
-  } else if (walk.outcome === 'them' && walk.played) {
-    const a = resolveSan(exit, walk.played);
-    if (a) arrows.push({ ...a, kind: 'bad' });
+  if (yours) {
+    if (yours.played.arrow) arrows.push({ ...yours.played.arrow, kind: 'bad' });
+    if (yours.course[0].arrow) arrows.push({ ...yours.course[0].arrow, kind: 'good' });
+  } else if (theirs?.engine) {
+    arrows.push({ from: theirs.engine.from, to: theirs.engine.to, kind: 'engine' });
+  } else if (theirs?.answer?.arrow) {
+    arrows.push({ ...theirs.answer.arrow, kind: 'good' });
   }
   const met = walk.met;
   const sideline = met?.kind === 'sideline' ? op.sidelines?.items.find((s) => s.slug === met.slug) : undefined;
-  const learn = deviation ? teachLink(op.id, deviation, op.lines) : null;
   const canPractise = !!deviation?.learnedAt && isCard(op, deviation.key);
   const cover = walk.cover ? getOpening(walk.cover) : null;
+  const practiseLink = practice ? practiceHref(op.id, practice, !!learned.get(op.id)?.has(practice.slug)) : null;
+  // Every score is White's, as on the eval bar; a Black player reading "+0.6" beside the course's move would take it as theirs.
+  const whiteScores = walk.side === 'black' ? <p className="muted small">Scores are from White’s side, so as Black you want them low.</p> : null;
 
   return (
     <main className="page games">
@@ -150,23 +157,30 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
             coordinates={settings.coordinates}
           />
         </div>
-        <div className="game-view__side">
-          <Link href={`/openings/${op.id}`} className="chip game-view__course">
-            <img src={`/pieces/${walk.side === 'white' ? 'w' : 'b'}P.svg`} alt="" />
-            {op.name}
-            {isStudied ? '' : ' · not started'}
-          </Link>
+        <div className="game-view__prep">
+          <div className="prep-course">
+            <Link href={`/openings/${op.id}`} className="chip game-view__course">
+              <img src={`/pieces/${walk.side === 'white' ? 'w' : 'b'}P.svg`} alt="" />
+              {op.name}
+              {isStudied ? '' : ' · not started'}
+            </Link>
+            <PrepBadge prep={prep} />
+          </div>
 
-          {deviation ? (
-            <section className="card game-exit game-exit--you">
-              <span className="eyebrow">You left the course</span>
+          {prep.kind === 'you' && yours && deviation ? (
+            <section className="card prep prep--you" aria-label="How your opening went">
+              <span className="eyebrow">You left your prep</span>
               <h2>
                 You played <span className="move move--bad">{deviation.played.num}</span>
               </h2>
-              <p>
-                The course plays <b className="move move--good">{deviation.course.map((c) => c.num).join(' or ')}</b> here, after{' '}
-                {movesText(depth)} in book.
-              </p>
+              <p className="muted small">In book to move {prep.bookTo}.</p>
+              <ul className="prep-moves">
+                <ScoredRow kind="bad" label="You played" move={yours.played} />
+                {yours.course.map((c, i) => (
+                  <ScoredRow key={c.num} kind="good" label={i ? 'Or' : 'The course plays'} move={c} />
+                ))}
+              </ul>
+              {yours.played.score || yours.course.some((c) => c.score) ? whiteScores : null}
               {deviation.verdict ? (
                 <p className={`forgot__verdict forgot__verdict--${deviation.verdict.sev}`}>
                   <b>{deviation.verdict.title}</b> {deviation.verdict.text}
@@ -179,51 +193,97 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
                   : deviation.learnedAt
                     ? 'You learned this move after the game.'
                     : isStudied
-                      ? `You haven’t learned the ${learn?.label.endsWith('sideline') ? 'sideline' : 'chapter'} that teaches it yet.`
+                      ? `You haven’t learned the ${practice?.sideline ? 'sideline' : 'chapter'} that teaches it yet.`
                       : 'Start the course to learn it.'}
               </p>
               <div className="game-exit__actions">
                 {canPractise ? (
-                  <Link
-                    href={`/games/practice?course=${op.id}&key=${encodeURIComponent(deviation.key)}`}
-                    className="btn btn--primary"
-                  >
-                    <Play size={18} /> Practise this position
+                  <Link href={`/games/practice?course=${op.id}&key=${encodeURIComponent(deviation.key)}`} className="btn btn--primary">
+                    <Play size={18} /> Practise this
                   </Link>
-                ) : learn ? (
-                  <Link href={learn.href} className="btn btn--primary" title={learn.name}>
-                    {learn.label}
+                ) : null}
+                {practiseLink ? (
+                  <Link href={practiseLink.href} className={`btn ${canPractise ? 'btn--secondary' : 'btn--primary'}`} title={practice!.name}>
+                    {practiseLink.label}
                   </Link>
                 ) : null}
               </div>
             </section>
-          ) : walk.outcome === 'them' ? (
-            <section className="card game-exit game-exit--them">
-              <span className="eyebrow">Your opponent left the course</span>
+          ) : prep.kind === 'new' && theirs ? (
+            <section className="card prep prep--new" aria-label="How your opening went">
+              <span className="eyebrow">New territory</span>
               <h2>
-                They played <span className="move">{moveNum(depth, walk.played!)}</span>
+                They played <span className="move">{theirs.num}</span>
               </h2>
               <p>
-                You were in book for {movesText(depth)}. The {op.name} course doesn’t cover {moveNum(depth, walk.played!)} yet
-                {cover ? `, but the ${cover.name} course does` : ''}.
+                The course stops here: it has no answer to {theirs.num} yet. You were in book to move {prep.bookTo}
+                {cover ? `, and the ${cover.name} course goes on from here` : ''}.
               </p>
+              {theirs.club && club ? <ClubLine share={theirs.club} elo={club.elo} /> : null}
+              {theirs.engine ? (
+                <div className="prep-engine">
+                  <span className="eyebrow prep-engine__label">The engine’s reply</span>
+                  <span>
+                    <b className="move">{theirs.engine.num}</b> <Score score={theirs.engine} />
+                  </span>
+                  <span className="muted small">
+                    {theirs.engine.line}. Stockfish’s choice, searched ahead of time, not course theory.
+                  </span>
+                  {whiteScores}
+                </div>
+              ) : null}
               {cover ? (
                 <Link href={`/openings/${cover.id}`} className="btn btn--secondary game-cover-btn">
                   See the {cover.name}
                 </Link>
               ) : null}
             </section>
-          ) : (
-            <section className="card game-exit game-exit--book">
-              <span className="eyebrow">In book all the way</span>
-              <h2>{walk.outcome === 'over' ? 'The game ended inside the course' : 'You played the course to its last move'}</h2>
+          ) : prep.kind === 'covered' && theirs ? (
+            <section className="card prep prep--covered" aria-label="How your opening went">
+              <span className="eyebrow">They left the main line. Your course was ready.</span>
+              <h2>
+                They played <span className="move">{theirs.num}</span>
+              </h2>
               <p>
-                {movesText(depth)} of prep, and you knew every one of yours.
-                {walk.outcome === 'end' ? ' From here the game was your own.' : ''}
+                {theirs.sideline ? 'A sideline the course teaches' : SEV_WORDS[theirs.sev ?? 'playable']}
+                {theirs.name ? ` (${theirs.name})` : ''}.
+                {prep.over ? ' The game ended inside your prep.' : ` You stayed in book to move ${prep.bookTo}.`}
+              </p>
+              {theirs.club && club ? <ClubLine share={theirs.club} elo={club.elo} /> : null}
+              {theirs.answer ? (
+                <ul className="prep-moves">
+                  <ScoredRow kind="good" label="The course answers" move={theirs.answer} found={theirs.answer.found} />
+                </ul>
+              ) : null}
+              {theirs.answer?.score ? whiteScores : null}
+              {theirs.why ? <p className="muted" dangerouslySetInnerHTML={{ __html: theirs.why }} /> : null}
+              {theirs.sideline && !theirs.why ? <p className="muted">{theirs.sideline.short}</p> : null}
+              <div className="game-exit__actions">
+                {theirs.sideline ? (
+                  <Link href={`/openings/${op.id}/${theirs.sideline.slug}/learn`} className="btn btn--secondary">
+                    Learn the sideline
+                  </Link>
+                ) : theirs.sev && theirs.sev !== 'playable' ? (
+                  <Link href={`/openings/${op.id}/punish`} className="btn btn--secondary">
+                    Practise punishing mistakes
+                  </Link>
+                ) : null}
+              </div>
+            </section>
+          ) : (
+            <section className="card prep prep--book" aria-label="How your opening went">
+              <Burst />
+              <span className="eyebrow">In book all the way</span>
+              <h2>{prep.over ? 'The game ended inside your prep' : `In book to move ${prep.bookTo}`}</h2>
+              <p>
+                {plural(yourMoves(walk), 'move')} of yours, and every one was the course’s.
+                {prep.over ? '' : ' The course ends there, so from then on the game was your own.'}
               </p>
             </section>
           )}
 
+        </div>
+        <div className="game-view__side">
           {walk.detours.length ? (
             <p className="muted small game-view__detour">
               The game left the course at {moveNum(walk.detours[0].from, game.moves[walk.detours[0].from])} and came back to it at{' '}
@@ -231,14 +291,14 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
             </p>
           ) : null}
 
-          {met && met.kind !== 'uncovered' ? (
+          {met && met.kind !== 'uncovered' && prep.kind !== 'covered' ? (
             <section className="card game-met">
               <p>
-                At <b className="move">{met.num}</b> your opponent left the chapters
+                Earlier, at <b className="move">{met.num}</b>, your opponent left the chapters
                 {met.kind === 'sideline' ? ' for a sideline the course teaches' : ' for a move the course has an answer to'}
                 {met.name ? ` (${met.name})` : ''}.
               </p>
-              {sideline && learn?.href !== `/openings/${op.id}/${sideline.slug}/learn` ? (
+              {sideline && practice?.slug !== sideline.slug ? (
                 <Link href={`/openings/${op.id}/${sideline.slug}/learn`} className="btn btn--secondary btn--sm">
                   Learn the sideline
                 </Link>
@@ -247,7 +307,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
           ) : null}
 
           <section className="card game-moves" aria-label="The moves">
-            <h3>The moves</h3>
+            <h3>The whole game</h3>
             <ol className="game-moves__list">
               {game.moves.map((san, i) => (
                 <li
@@ -269,3 +329,48 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
   );
 }
 
+const SEV_WORDS: Record<Severity, string> = {
+  blunder: 'A mistake the course punishes',
+  inaccuracy: 'An inaccuracy the course punishes',
+  playable: 'A sound move the course answers',
+};
+
+/** The learner's own moves the game played in the course's tree. */
+const yourMoves = (w: Walk) => w.steps.filter((s, i) => i > 0 && s.book && (i % 2 === 1) === (w.side === 'white')).length;
+
+function practiceHref(openingId: string, p: PracticeLink, learned: boolean) {
+  const what = p.sideline ? 'the sideline' : `chapter ${p.chapter}`;
+  if (!learned) return { href: `/openings/${openingId}/${p.slug}/learn`, label: `Learn ${what}` };
+  return {
+    href: `/openings/${openingId}/${p.slug}/drill${p.ply !== null ? `?ply=${p.ply}` : ''}`,
+    label: `Drill ${what} from here`,
+  };
+}
+
+function Score({ score }: { score: Parameters<typeof evalText>[0] | null }) {
+  return score ? <span className="prep-score">{evalText(score)}</span> : null;
+}
+
+function ScoredRow({ kind, label, move, found }: { kind: 'good' | 'bad'; label: string; move: ScoredMove; found?: boolean }) {
+  return (
+    <li className={`prep-move prep-move--${kind}`}>
+      <span className="prep-move__label">{label}</span>
+      <b className={`move move--${kind}`}>{move.num}</b>
+      <Score score={move.score} />
+      {found ? <span className="prep-move__found">You found it</span> : null}
+    </li>
+  );
+}
+
+function ClubLine({ share, elo }: { share: { pct: number; games: number }; elo: [number, number] }) {
+  return (
+    <p className="prep-club">
+      <span className="prep-club__meter" aria-hidden="true">
+        <span style={{ width: `${share.pct}%` }} />
+      </span>
+      <span>
+        Club players rated {elo[0]}-{elo[1]} choose it in <b>{share.pct}%</b> of {share.games.toLocaleString('en-GB')} games here.
+      </span>
+    </p>
+  );
+}

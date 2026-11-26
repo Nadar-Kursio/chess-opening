@@ -186,6 +186,8 @@
   --games-dep-num: 84px;
   --games-dep-num-sm: 56px;
   --games-spinner: 14px;
+  /* Game prep reports */
+  --prep-meter: 72px;
   /* fun: XP, levels, badges, quests, Opening Rush */
   --tier-bronze: #d28a4e;
   --tier-bronze-deep: #9a5a26;

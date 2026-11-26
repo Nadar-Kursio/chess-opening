@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import RecallSession from '@/components/session/RecallSession';
 import { dueCards, endOfDay, syncDeck } from '@/lib/cards';
 import { getOpening, hasOpening } from '@/lib/content';
+import { gameCards } from '@/lib/gameImport';
+import { withGames } from '@/lib/gamePrep';
 import { getSettings, learnerTimezone } from '@/lib/progress';
 import { buildRuns } from '@/lib/recall';
 import { requirePageUser } from '@/lib/session';
@@ -15,9 +17,9 @@ export default async function RecallSessionPage({ searchParams }: PageProps<'/re
   const courseId = typeof course === 'string' && hasOpening(course) ? course : undefined;
   const here = `/recall/session${courseId ? `?course=${courseId}` : ''}`;
   const user = await requirePageUser(here);
-  const [tz, settings] = await Promise.all([learnerTimezone(), getSettings(user.id), syncDeck(user.id)]);
+  const [tz, settings, fromGames] = await Promise.all([learnerTimezone(), getSettings(user.id), gameCards(user.id), syncDeck(user.id)]);
   const due = await dueCards(user.id, endOfDay(tz), courseId);
-  const runs = buildRuns(due, getOpening);
+  const runs = withGames(buildRuns(due, getOpening), fromGames);
   const asked = runs.reduce((n, run) => n + run.asks.length, 0);
 
   // Also reached when saving the round that cleared the day refreshes this page: the Recall page is the caught-up screen.
