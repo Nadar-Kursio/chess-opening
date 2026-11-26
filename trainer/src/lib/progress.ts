@@ -64,6 +64,10 @@ export async function getProgress(userId: string, openingId?: string) {
   return byOpening;
 }
 
+/** Whether a lesson is learned, in what getProgress read. */
+export const learnedIn = (progress: Awaited<ReturnType<typeof getProgress>>) => (openingId: string, slug: string) =>
+  !!progress.get(openingId)?.get(slug)?.learned_at;
+
 /** The opening the learner practised most recently, so Home can pick up where they left off. */
 export async function lastOpening(userId: string) {
   const row = await queryOne<{ opening_id: string }>(

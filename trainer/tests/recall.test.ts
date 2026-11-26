@@ -3,9 +3,10 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { Rating } from 'ts-fsrs';
-import { lineSide, positionKey, toMove, turnOf } from '../src/lib/course.ts';
+import { alternativesAt, lineBySlug, lineSide, positionKey, toMove, turnOf } from '../src/lib/course.ts';
 import { MASTERED_DAYS, daysUntil, newCard, ratingFor, review, strengthOf, SLOW_MS } from '../src/lib/memory.ts';
-import { buildRuns, courseCards, isCard, lineCards, retryRun, ROUND_SIZE, type Due } from '../src/lib/recall.ts';
+import { buildRuns, byLearned, courseCards, isCard, judgeTry, learnHref, lineCards, retryRun, ROUND_SIZE, TRIES, type Due } from '../src/lib/recall.ts';
+import { withWrongMoves } from '../src/lib/recallMoves.ts';
 import type { Opening, Ply } from '../src/lib/types.ts';
 
 const ROOT = process.env.CONTENT_DIR ?? path.join(import.meta.dirname, '..', 'content');
@@ -111,4 +112,102 @@ test('right answers stretch the gap; a miss brings the card back tomorrow', () =
   const lapsed = review(card, now, Rating.Again);
   assert.equal(daysUntil(lapsed, now), 1);
   assert.equal(lapsed.lapses, 1);
+});
+
+test('only the first try grades a card, and a second miss shows the move', () => {
+  assert.deepEqual(judgeTry(0, true, false), { grade: true, reveal: false });
+  assert.deepEqual(judgeTry(0, false, false), { grade: false, reveal: false });
+  // Found on the second try: practice, not evidence.
+  assert.deepEqual(judgeTry(1, true, false), { grade: null, reveal: false });
+  assert.deepEqual(judgeTry(TRIES - 1, false, false), { grade: null, reveal: true });
+  // A retry later in the round never grades.
+  assert.deepEqual(judgeTry(0, true, true), { grade: null, reveal: false });
+  assert.deepEqual(judgeTry(0, false, true), { grade: null, reveal: false });
+
+  // A miss then a find schedules the card as the miss alone would: back tomorrow.
+  const now = new Date('2026-10-01T09:00:00Z');
+  let card = newCard(now);
+  for (const [misses, hit] of [[0, false], [1, true]] as const) {
+    const { grade } = judgeTry(misses, hit, false);
+    if (grade !== null) card = review(card, now, ratingFor(grade));
+  }
+  assert.equal(card.reps, 1);
+  assert.equal(daysUntil(card, now), 1);
+});
+
+test('every card names its chapter, and Rewind opens that chapter just before the move', () => {
+  for (const op of openings.values()) {
+    const runs = buildRuns([...courseCards(op)].map((key) => ({ openingId: op.id, key })), opening, Infinity);
+    for (const run of runs) {
+      for (const ask of run.asks) {
+        const where = ask.where;
+        assert.ok(where, `${op.id}: ${ask.key} has no chapter`);
+        const line = lineBySlug(op, where.slug)!;
+        assert.ok(line, `${op.id}: ${where.slug} is not a lesson`);
+        assert.ok(where.ply >= (line.start ?? 0) && where.ply < line.plies.length - 1, `${op.id}/${where.slug}: ply ${where.ply} is off the lesson`);
+        // Learn reaches the card one ply after opening (on it, for a first move), or opens where the
+        // opponent's deviation to it leaves the line.
+        const own = positionKey(line.plies[where.ply + 1]) === ask.key || (where.ply === 0 && positionKey(line.plies[0]) === ask.key);
+        const deviation = alternativesAt(op, line, where.ply).some((b) => b.plies.some((q) => positionKey(q) === ask.key));
+        assert.ok(own || deviation, `${op.id}/${where.slug}: Learn opens away from the move`);
+        assert.equal(where.chapter, op.lines.includes(line) ? op.lines.indexOf(line) + 1 : null);
+        assert.equal(learnHref(op.id, where), `/openings/${op.id}/${where.slug}/learn?ply=${where.ply}`);
+      }
+    }
+  }
+});
+
+test('a run names a shared position by the chapter it replays', () => {
+  const op = opening('london');
+  const deep = op.lines.find((l) => l.slug !== op.lines[0].slug && l.plies[1].san === op.lines[0].plies[1].san)!;
+  const [run] = buildRuns(lineCards(op, deep.slug).map((key) => ({ openingId: op.id, key })), opening, Infinity);
+  assert.ok(run.asks.every((a) => a.where?.slug === deep.slug), 'the first move is named by the chapter being replayed');
+});
+
+test('a card is named by a chapter the learner has learned, or by none', () => {
+  const op = opening('london');
+  const [first, second] = op.lines;
+  const shared = lineCards(op, second.slug).filter((key) => lineCards(op, first.slug).includes(key));
+  assert.ok(shared.length, 'the London chapters share their first moves');
+  const runs = buildRuns(shared.map((key) => ({ openingId: op.id, key })), opening, Infinity);
+  const onlySecond = byLearned(runs, opening, (id, slug) => id === op.id && slug === second.slug);
+  assert.ok(onlySecond.flatMap((r) => r.asks).every((a) => a.where?.slug === second.slug));
+  const none = byLearned(runs, opening, () => false);
+  assert.ok(none.flatMap((r) => r.asks).every((a) => a.where === null), 'no Rewind into an unlearned chapter');
+});
+
+test('a wrong answer has its board, and only the asked positions carry verdicts', () => {
+  for (const op of openings.values()) {
+    // The board after each authored alternative is shipped by the build: the replay must agree.
+    const shipped = new Map<string, string>();
+    for (const line of op.lines) {
+      line.plies.forEach((p, i) => {
+        for (const b of alternativesAt(op, line, i)) if (b.plies[0].from) shipped.set(positionKey(p) + b.plies[0].from + b.plies[0].to, b.plies[0].fen);
+      });
+    }
+    const due = [...courseCards(op)].map((key) => ({ openingId: op.id, key }));
+    const runs = withWrongMoves(buildRuns(due, opening, Infinity), opening);
+    let checked = 0;
+    for (const run of runs) {
+      const asked = new Set(run.asks.map((a) => a.at));
+      run.plies.forEach((p, i) => assert.ok(asked.has(i) || !p.verdicts, `${op.id}: verdicts left on ${p.num}`));
+      for (const ask of run.asks) {
+        const at = run.plies[ask.at];
+        assert.ok(ask.wrong, `${op.id}: no wrong moves at ${at.num}`);
+        const legal = new Set(at.legal!.match(/.{4}/g));
+        for (const uci of ask.accept) legal.delete(uci);
+        assert.deepEqual(new Set(Object.keys(ask.wrong)), legal, `${op.id}: wrong moves at ${ask.key} aren't the other legal moves`);
+        for (const [uci, w] of Object.entries(ask.wrong)) {
+          assert.match(w.fen, /^[.pnbrqkPNBRQK]{64}$/);
+          const fen = shipped.get(ask.key + uci);
+          if (fen) {
+            assert.equal(w.fen, fen, `${op.id}: ${w.san} lands somewhere else than the course has it`);
+            assert.ok(w.ev !== undefined, `${op.id}: ${w.san} is shipped with a score the replay lost`);
+            checked++;
+          }
+        }
+      }
+    }
+    if (op.id === 'london') assert.ok(checked > 0, 'the London has alternatives to check against');
+  }
 });

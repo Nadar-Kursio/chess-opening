@@ -22,6 +22,8 @@ export interface Msg {
   clip?: string;
   /** A short tag beside the title, e.g. when Recall will ask this move again. */
   badge?: string;
+  /** Somewhere to go from here; it opens in a new tab, so the session keeps its place. */
+  link?: { href: string; label: string };
 }
 
 /** What the coach panel needs from useNarration to show and control the voice. */
@@ -133,6 +135,11 @@ export function Coach({
           <Bubble key={m.id} kind={m.kind} title={m.title} badge={m.badge} clip={m.clip} voice={voice}>
             {m.html ? <div className="bubble__text" dangerouslySetInnerHTML={{ __html: m.html }} /> : null}
             {m.text ? <p className="bubble__text">{m.text}</p> : null}
+            {m.link ? (
+              <a className="bubble__link" href={m.link.href} target="_blank" rel="noopener" title="Opens in a new tab">
+                {m.link.label}
+              </a>
+            ) : null}
           </Bubble>
         ))}
         {children}

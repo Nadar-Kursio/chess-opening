@@ -4,6 +4,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { yourMoveIndexes } from '../src/lib/course.ts';
 import { evalBarText, evalShare, evalText, hasScores, verdictOf, verdictWords } from '../src/lib/engineView.ts';
+import { courseCards } from '../src/lib/recall.ts';
 import type { Catalog, Line, Opening, Ply } from '../src/lib/types.ts';
 
 // The real compiled course: CONTENT_DIR, else trainer/content (npm run content).
@@ -88,4 +89,14 @@ test('every course gets the eval bar, trap courses and courses without a coachin
     assert.equal(scored, op.lines.reduce((n, l) => n + l.plies.length, 0), `${id}: every ply has a score`);
   }
   assert.equal(hasScores([{ plies: [{ fen: '' } as Ply] }]), false);
+});
+
+test('every course scores every wrong move Recall can be answered with', () => {
+  const { openings } = read('catalog.json') as Catalog;
+  for (const { id } of openings) {
+    const op = read(`openings/${id}.json`) as Opening;
+    const { verdicts } = read(`coaching/${id}.json`) as { verdicts: Record<string, unknown> };
+    const missing = [...courseCards(op)].filter((key) => !verdicts[key]);
+    assert.deepEqual(missing, [], `${id}: Recall cards without verdicts, run move-verdicts.py ${id}`);
+  }
 });

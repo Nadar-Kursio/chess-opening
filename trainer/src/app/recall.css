@@ -1,0 +1,61 @@
+/* Recall sessions: where each card comes from, the cross on a wrong move, and the misses' way back to Learn. */
+
+.recall-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.recall-where b {
+  color: var(--ink-soft);
+  font-weight: 800;
+}
+
+/* Scaled with the square on a small board, so the cross never hides the piece it marks. */
+.mark-badge.mark-badge--wrong {
+  min-width: 0;
+  width: min(var(--mark-badge), 45%);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 0;
+  background: var(--red);
+  animation: recall-cross var(--mid) var(--ease);
+}
+@keyframes recall-cross {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+.bubble__link {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-weight: 800;
+  color: var(--blue-ink);
+}
+
+.recap__missed li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.recap__where {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+.recap__rewind {
+  flex: none;
+}
+
+/* Beside the board the side panel has the board's height: a long list of misses scrolls inside it
+   instead of running on under the fixed footer, where its last Rewind can't be reached. */
+.session__side:has(> .recap) {
+  overflow-y: auto;
+}
