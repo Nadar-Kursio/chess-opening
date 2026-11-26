@@ -4,7 +4,7 @@ import QuizSession from '@/components/session/QuizSession';
 import { getOpening, hasOpening } from '@/lib/content';
 import { STEP_INFO, STEP_KINDS, alternativesAt, lineBySlug, lineSide, quizFor, sharedStart, sidelineLine, toMove, turnOf, type StepKind } from '@/lib/course';
 import { narrationFor } from '@/lib/narration';
-import { getSettings } from '@/lib/progress';
+import { getProgress, getSettings, learnedIn } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import { nextAfter, shuffled } from '@/lib/steps';
 
@@ -31,7 +31,9 @@ export default async function StepPage({ params, searchParams }: Params) {
   const found = resolve(id, slug, step);
   if (!found) notFound();
   const user = await requirePageUser(`/openings/${id}/${slug}/${step}`);
-  const settings = await getSettings(user.id);
+  const at = Number(ply);
+  const wantsPly = typeof ply === 'string' && Number.isInteger(at) && at > (found.line.start ?? 0) && at < found.line.plies.length - 1;
+  const [settings, progress] = await Promise.all([getSettings(user.id), wantsPly && found.step === 'learn' ? getProgress(user.id, id) : null]);
   const { op, line } = found;
   const side = turnOf(lineSide(op, line));
   const title = `${STEP_INFO[found.step].label} · ${line.name}`;
@@ -59,10 +61,9 @@ export default async function StepPage({ params, searchParams }: Params) {
     if (alts.length) alternatives[i] = alts;
   });
 
-  const at = Number(ply);
-  // Drill only: finishing Learn puts every move of the chapter into Recall, so it starts at the top.
-  const startAt =
-    found.step === 'drill' && Number.isInteger(at) && at > (line.start ?? 0) && at < line.plies.length - 1 ? at : null;
+  // Learn only in a chapter already learned: finishing Learn puts every move of the chapter into
+  // Recall, so an unlearned chapter starts at the top.
+  const startAt = wantsPly && (found.step === 'drill' || (progress && learnedIn(progress)(id, slug))) ? at : null;
   const clips = found.step === 'learn' ? narrationFor(id, line, lineSide(op, line), settings.voice) : {};
   return (
     <LineSession
