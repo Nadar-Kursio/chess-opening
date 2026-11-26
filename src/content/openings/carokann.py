@@ -440,11 +440,6 @@ OPENING = {
              "name": "Breyer Variation",
              "why": "Unambitious and sound. White plans Nd2, Ngf3, g3 and a King's Indian Attack. 2...d5 and then 3...e5 gives you the centre and a free game with the queens still on.",
              "line": "d5 Nd2 e5 Ngf3 Bd6"},
-            {"san": "c4", "severity": "playable", "tier": "Plans",
-             "name": "Accelerated Panov",
-             "why": "White hits d5 before you get there. 2...d5 3.exd5 cxd5 4.d4 Nf6 is the Panov a move early, and everything in that chapter still holds.",
-             "line": "d5 exd5 cxd5 d4 Nf6",
-             "see": "carokann#panov"},
         ],
 
         # ── White's third move after 2.d4 d5 ───────────────────────────────
@@ -498,10 +493,6 @@ OPENING = {
              "name": "Van der Wiel Attack",
              "why": "White develops and prepares g2–g4. Meet it with 4...e6, and if 5.g4 the bishop goes to g6, then ...c5 and ...h5 attack the advanced pawns.",
              "line": "e6 g4 Bg6 Nge2 c5"},
-            {"san": "g4", "severity": "playable", "tier": "Mastery",
-             "name": "Bayonet Attack",
-             "why": "The most violent version, and the pawn in front of White's king is gone before castling. Step forward with 4...Be4, not back: 5.f3 Bg6 and then ...e6 and ...c5 hit a centre with nothing behind it.",
-             "line": "Be4 f3 Bg6 h4 h5"},
         ],
 
         # ── White's fifth move after 4.Nf3 e6 ──────────────────────────────
@@ -513,19 +504,6 @@ OPENING = {
             {"san": "Nc3", "severity": "playable", "tier": "Structure",
              "why": "Development that blocks the c-pawn, so d4 can only be held by pieces. 5...Nd7, the engine's choice, and if 6.Bd3 take the bishop: 6...Bxd3 and White has to recapture with the queen or the c-pawn.",
              "line": "Nd7 Bd3 Bxd3 Qxd3 Ne7"},
-            {"san": "c3", "severity": "playable", "tier": "Foundation",
-             "why": "The same chapter in another order. 5...c5 6.Be2 Nc6 7.O-O and you are back in the main line.",
-             "line": "c5 Be2 Nc6 O-O cxd4"},
-            {"san": "c4", "severity": "playable", "tier": "Plans",
-             "why": "White hits d5 from the side before developing. Don't take on c4; develop with check, 5...Bb4+, and after 6.Nbd2 Ne7 the bishop pins a knight that would like to recapture on c4 or e4.",
-             "line": "Bb4+ Nbd2 Ne7 a3 Bxd2+"},
-        ],
-
-        # ── your fifth move after 5.Be2 ───────────────────────────────────
-        "e4 c6 d4 d5 e5 Bf5 Nf3 e6 Be2": [
-            {"san": "Nd7", "severity": "playable", "tier": "Mastery",
-             "why": "Playable, and the masters' most common move. The knight covers e5 and c5 and waits for ...Ne7. The course plays 5...c5 at once, because the break is simpler to learn and club players rarely punish it.",
-             "line": "O-O Ne7 Nbd2 h6"},
         ],
 
         # ── White's sixth move in the quiet system ────────────────────────
@@ -534,19 +512,9 @@ OPENING = {
              "name": "Short System",
              "why": "The masters' main line, and club players with Black score badly against it. White holds d4 with a piece and keeps c2–c4 in reserve. Take on d4 and develop with ...Ne7 and ...Nbc6; the knight on d4 is the one piece you can attack.",
              "line": "cxd4 Nxd4 Ne7 c4 Nbc6"},
-            {"san": "O-O", "severity": "playable", "tier": "Structure",
-             "why": "Castling first. 6...Nc6 7.c3 cxd4 8.cxd4 Nge7 reaches the chapter by another order.",
-             "line": "Nc6 c3 cxd4 cxd4 Nge7"},
             {"san": "dxc5", "severity": "inaccuracy", "tier": "Foundation",
              "why": "Giving up the centre to hold a pawn it cannot keep. 6...Bxc5 and your bishop takes the a7–g1 diagonal, and the pawn on e5 has lost its pawn support.",
              "line": "Bxc5 O-O Nc6 c3 Nge7"},
-        ],
-
-        # ── White's ninth move ─────────────────────────────────────────────
-        "e4 c6 d4 d5 e5 Bf5 Nf3 e6 Be2 c5 c3 Nc6 O-O cxd4 cxd4 Nge7": [
-            {"san": "a3", "severity": "playable", "tier": "Plans",
-             "why": "Taking b4 away from your pieces. 9...Ng6 hits e5 at once, and after 10.Nc3 Be7 you have the plan of the chapter with the bishop still on f5.",
-             "line": "Ng6 Nc3 Be7 Be3 O-O"},
         ],
 
         # ── White's sixth move after the bishop trade ──────────────────────
@@ -554,12 +522,6 @@ OPENING = {
             {"san": "Ne2", "severity": "playable", "tier": "Structure",
              "why": "The masters' choice: the knight goes to e2 so the f-pawn can come to f4 and the c-pawn to c3. 6...c5 7.c3 Nc6 and the plan is the same, with d4 the target.",
              "line": "c5 c3 Nc6 O-O Qb6"},
-            {"san": "f4", "severity": "playable", "tier": "Plans",
-             "why": "White props up e5 with a pawn, and blocks the c1-bishop to do it. 6...Ne7 heads for f5, a square no white pawn can attack now that the f-pawn has passed it.",
-             "line": "Ne7 Nf3 c5 c3 Nf5"},
-            {"san": "c3", "severity": "playable", "tier": "Structure",
-             "why": "Holding d4 first. 6...c5 and then ...Nc6 and ...Qb6, exactly as in the chapter.",
-             "line": "c5 Nf3 Nc6 O-O cxd4"},
         ],
 
         # ── White's seventh move after 6...c5 ──────────────────────────────
@@ -567,12 +529,6 @@ OPENING = {
             {"san": "dxc5", "severity": "playable", "tier": "Structure",
              "why": "White gives up the centre and takes a pawn that cannot be kept. 7...Bxc5 and your bishop is on the a7–g1 diagonal, with e5 now defended only by the knight on f3.",
              "line": "Bxc5 O-O Nc6 Qe2 Nge7"},
-            {"san": "O-O", "severity": "playable", "tier": "Structure",
-             "why": "Castling first. 7...Nc6 8.c3 cxd4 9.cxd4 Nge7 is the chapter.",
-             "line": "Nc6 c3 cxd4 cxd4 Nge7"},
-            {"san": "Qb5+", "severity": "playable", "tier": "Plans",
-             "why": "A check aimed at b7. Block with the queen, 7...Qd7, and offer the trade: White's queen has spent two moves to reach a square it has to leave.",
-             "line": "Qd7 Qxd7+ Nxd7 c3 Ne7"},
         ],
 
         # ── White's eighth move ────────────────────────────────────────────
@@ -594,10 +550,6 @@ OPENING = {
 
         # ── White's fourth move after 2.d4 d5 3.exd5 cxd5 ──────────────────
         "e4 c6 d4 d5 exd5 cxd5": [
-            {"san": "Nf3", "severity": "playable", "tier": "Foundation",
-             "why": "The most common move here. 4...Nf6 and you are in the Exchange chapters: 5.Nc3 Nc6 is one, 5.Bd3 Nc6 the other.",
-             "line": "Nf6 Nc3 Nc6 Bb5 Bg4",
-             "see": "carokann#exchange-nc3"},
             {"san": "Nc3", "severity": "playable", "tier": "Structure",
              "why": "Development that gives up the c4 break. 4...Nf6 and after 5.Nf3 Nc6 it is the chapter where White plays Nc3.",
              "line": "Nf6 Nf3 Nc6 Bb5 Bg4",
@@ -607,9 +559,6 @@ OPENING = {
              "why": "The classical Exchange. 4...Nc6 5.c3 Nf6 6.Bf4 Bg4 7.Qb3 Qd7 is the masters' main line, and club players with Black score badly here because they don't know it. Your queen guards b7, the bishops come off with ...Bd6, and the queenside plan of the Bd3 chapter follows.",
              "line": "Nc6 c3 Nf6 Bf4 Bg4 Qb3 Qd7 Nd2 e6",
              "see": "carokann#exchange-bd3"},
-            {"san": "c3", "severity": "playable", "tier": "Plans",
-             "why": "The pawn first, with Bd3 and Nf3 to come. 4...Nc6 and 5...Nf6, and it usually becomes the Bd3 chapter.",
-             "line": "Nc6 Bd3 Nf6 Nf3 Bg4"},
         ],
 
         # ── White's fifth move after 4...Nf6 ──────────────────────────────
@@ -621,12 +570,6 @@ OPENING = {
              "why": "The Panov by another order. 5...e6 6.Nc3 Bb4 is the chapter's position.",
              "line": "e6 Nc3 Bb4 cxd5 Nxd5",
              "see": "carokann#panov"},
-            {"san": "c3", "severity": "playable", "tier": "Plans",
-             "why": "A pawn on c3 before the bishop. 5...Nc6 6.Bd3 Bg4 is the Bd3 chapter.",
-             "line": "Nc6 Bd3 Bg4 O-O e6"},
-            {"san": "Be2", "severity": "playable", "tier": "Plans",
-             "why": "Modest. 5...Nc6 6.O-O Bg4 and the bishop is out with nothing aimed at your king.",
-             "line": "Nc6 O-O Bg4 c3 e6"},
         ],
 
         # ── White's sixth move in the 5.Nc3 chapter ───────────────────────
@@ -634,15 +577,6 @@ OPENING = {
             {"san": "Bg5", "severity": "playable", "tier": "Structure",
              "why": "The second most common move here. Pin back with 6...Bg4, the club's and the masters' choice, and the same trade on f3 is coming.",
              "line": "Bg4 Be2 e6 O-O Be7"},
-            {"san": "Bf4", "severity": "playable", "tier": "Plans",
-             "why": "The bishop on f4 covers e5 and c7. 6...Bg4 and the plan is the same: trade on f3 and aim at d4.",
-             "line": "Bg4 Bb5 e6 h3 Bxf3"},
-            {"san": "Be3", "severity": "playable", "tier": "Plans",
-             "why": "The bishop defends d4 from e3. 6...Bg4 7.h3 Bxf3 8.Qxf3 e6, and the bishop on e3 is blocked by its own pawn on d4.",
-             "line": "Bg4 h3 Bxf3 Qxf3 e6"},
-            {"san": "Bd3", "severity": "playable", "tier": "Plans",
-             "why": "Natural and a little passive. 6...Bg4 7.Be2 e6 and White has spent two moves on the bishop.",
-             "line": "Bg4 Be2 e6 O-O Bd6"},
         ],
 
         # ── White's seventh move after 6...Bg4 ────────────────────────────
@@ -650,9 +584,6 @@ OPENING = {
             {"san": "O-O", "severity": "playable", "tier": "Structure",
              "why": "Castling instead of asking the bishop. 7...e6 and ...Be7, and the bishop stays on g4 holding the knight that guards d4.",
              "line": "e6 h3 Bxf3 Qxf3 Be7"},
-            {"san": "Bxc6+", "severity": "playable", "tier": "Plans",
-             "why": "White gives up the bishop pair to double your pawns. 7...bxc6 recaptures toward the centre and opens the b-file for your rook, and the pawn on c6 supports d5.",
-             "line": "bxc6 h3 Bxf3 Qxf3 e6"},
         ],
 
         # ── your seventh move after 7.h3 ───────────────────────────────────
@@ -667,16 +598,6 @@ OPENING = {
             {"san": "Bg5", "severity": "playable", "tier": "Structure",
              "why": "The club's most common move here. 9...Be7 breaks the pin on f6, and after 10.O-O O-O the knight on c6 is free.",
              "line": "Be7 O-O O-O Bxf6 Bxf6"},
-            {"san": "Be3", "severity": "playable", "tier": "Plans",
-             "why": "The bishop becomes the only piece guarding d4, which says how much the pawn needed one. 9...Bd6 and castle.",
-             "line": "Bd6 O-O O-O Bxc6 bxc6"},
-        ],
-
-        # ── your fifth move in the Bd3 chapter ─────────────────────────────
-        "e4 c6 Nf3 d5 exd5 cxd5 d4 Nf6 Bd3": [
-            {"san": "Bg4", "severity": "playable", "tier": "Mastery",
-             "why": "Playable, and Karpov's order in the model game: the bishop first and the knight after. The course plays 5...Nc6 first, because it hits d4 and keeps the choice of ...Bg4 for after c3.",
-             "line": "O-O Nc6 c3 e6"},
         ],
 
         # ── White's sixth move in the Bd3 chapter ─────────────────────────
@@ -684,9 +605,6 @@ OPENING = {
             {"san": "O-O", "severity": "playable", "tier": "Foundation",
              "why": "The most common club move here, four times in ten. 6...Bg4 7.c3 e6 is the chapter's position.",
              "line": "Bg4 c3 e6 Bg5 Be7"},
-            {"san": "h3", "severity": "playable", "tier": "Plans",
-             "why": "White stops ...Bg4 before it happens. Develop the other way: 6...g6 and the bishop goes to g7, aiming down the long diagonal at d4.",
-             "line": "g6 O-O Bg7 c3 O-O"},
         ],
 
         # ── White's seventh move in the Bd3 chapter ───────────────────────
@@ -694,9 +612,6 @@ OPENING = {
             {"san": "h3", "severity": "playable", "tier": "Structure",
              "why": "White asks the bishop at once. Keep the pin with 7...Bh5: from h5 it still holds the knight, and it can drop back to g6 to trade for White's bishop on d3.",
              "line": "Bh5 O-O e6 Bf4 Bd6"},
-            {"san": "Bf4", "severity": "playable", "tier": "Plans",
-             "why": "The bishop takes the b8–h2 diagonal. 7...e6 and 8...Bd6 offers to trade it, and the trade takes away White's best defender of e5.",
-             "line": "e6 O-O Bd6 Bxd6 Qxd6"},
             {"san": "Qb3", "severity": "inaccuracy", "tier": "Plans",
              "why": "The queen hits b7, which your bishop left, and it costs White about half a pawn. Guard it with 7...Qd7, and the knight on f3 stays pinned.",
              "line": "Qd7 Nbd2 e6 O-O Bd6"},
@@ -710,25 +625,13 @@ OPENING = {
             {"san": "Re1", "severity": "playable", "tier": "Plans",
              "why": "The rook takes the e-file. 8...Bd6 points the bishop at h2 and gets ready to castle.",
              "line": "Bd6 Nbd2 O-O Nf1 Qc7"},
-            {"san": "Bf4", "severity": "playable", "tier": "Plans",
-             "why": "Nine masters in ten answer 8...Bd6 and offer the trade. With the dark-squared bishops gone, e5 has one guard fewer.",
-             "line": "Bd6 Bxd6 Qxd6 Nbd2 O-O"},
-            {"san": "Nbd2", "severity": "playable", "tier": "Plans",
-             "why": "Development first. 8...Bd6 and castle, and the queenside plan is the same.",
-             "line": "Bd6 Re1 O-O Nf1 Qc7"},
         ],
 
         # ── White's fifth move in the Panov ───────────────────────────────
         "e4 c6 d4 d5 exd5 cxd5 c4 Nf6": [
-            {"san": "Nf3", "severity": "playable", "tier": "Structure",
-             "why": "The other order. 5...e6 6.Nc3 Bb4 is the chapter.",
-             "line": "e6 Nc3 Bb4 cxd5 Nxd5"},
             {"san": "cxd5", "severity": "playable", "tier": "Structure",
              "why": "White takes first. 5...Nxd5 recaptures with the piece, and after 6.Nc3 Nc6 7.Nf3 Bg4 you hit d4 with everything.",
              "line": "Nxd5 Nc3 Nc6 Nf3 Bg4"},
-            {"san": "c5", "severity": "playable", "tier": "Plans",
-             "why": "White grabs queenside space and closes the c-file. The pawn on c5 has no support from b4 yet: 5...e5! hits the centre at once, and 6.dxe5 Ne4 attacks c5 again.",
-             "line": "e5 dxe5 Ne4 Nf3 Nc6"},
         ],
 
         # ── White's sixth move in the Panov ───────────────────────────────
@@ -739,9 +642,6 @@ OPENING = {
             {"san": "cxd5", "severity": "playable", "tier": "Structure",
              "why": "White takes at once. 6...exd5 and the isolated pawn is yours instead, with your c8-bishop free again. It is a different structure and a fair one.",
              "line": "exd5 Nf3 Nc6 Bb5 Bd6"},
-            {"san": "c5", "severity": "playable", "tier": "Plans",
-             "why": "White declines the isolated pawn and takes space on the queenside. Develop first: 6...Be7 and castle, then ...b6 hits the pawn's base once your king is safe.",
-             "line": "Be7 b4 O-O Nf3 b6"},
         ],
 
         # ── White's seventh move in the Panov ─────────────────────────────
@@ -752,9 +652,6 @@ OPENING = {
             {"san": "Bd2", "severity": "playable", "tier": "Structure",
              "why": "Unpinning first, the club's most common move. 7...O-O, and the trade on c3 is worth more later than now.",
              "line": "O-O a3 Bxc3 Bxc3 Ne4"},
-            {"san": "a3", "severity": "playable", "tier": "Plans",
-             "why": "Putting the question to the bishop. Take: 7...Bxc3+ 8.bxc3 and White has doubled c-pawns for the rest of the game.",
-             "line": "Bxc3+ bxc3 O-O Bd3 dxc4"},
         ],
 
         # ── White's eighth move in the Panov ──────────────────────────────
@@ -772,21 +669,6 @@ OPENING = {
             {"san": "f3", "severity": "inaccuracy", "tier": "Plans",
              "why": "A gambit in the Blackmar-Diemer style, and it costs White more than half a pawn. Take it: 4...exf3 5.Nxf3 Nf6 and you are a pawn up, with your bishop still free to come to f5.",
              "line": "exf3 Nxf3 Nf6 h3 Bf5"},
-            {"san": "Bc4", "severity": "inaccuracy", "tier": "Plans",
-             "why": "White develops and leaves the pawn, which costs nearly a pawn. 4...Nf6 holds the extra pawn on e4, and White has to work to win it back.",
-             "line": "Nf6 Nge2 Bf5 O-O e6"},
-        ],
-
-        # ── your fourth move in the Classical ─────────────────────────────
-        "e4 c6 d4 d5 Nc3 dxe4 Nxe4": [
-            {"san": "Nf6", "severity": "playable", "tier": "Mastery",
-             "name": "Tartakower / Bronstein-Larsen",
-             "why": "Playable, and the club's most common move. After 5.Nxf6+ you choose which pawn recaptures: ...exf6 gives up the structure for quick development. The course plays 4...Bf5, because it keeps your pawns healthy.",
-             "line": "Nxf6+ exf6 c3 Bd6"},
-            {"san": "Nd7", "severity": "playable", "tier": "Mastery",
-             "name": "Smyslov-Karpov Variation",
-             "why": "Playable, and Karpov's system: the knight covers f6 so ...Ngf6 never spoils the pawns. One thing to know before playing it: 5.Qe2 Ngf6?? 6.Nd6 is mate. The course plays 4...Bf5.",
-             "line": "Nf3 Ngf6 Nxf6+ Nxf6"},
         ],
 
         # ── White's fifth move in the Classical ───────────────────────────
@@ -797,25 +679,13 @@ OPENING = {
             {"san": "Bd3", "severity": "inaccuracy", "tier": "Structure",
              "why": "The bishop offers the trade and leaves d4 behind. Take it: 5...Qxd4, and after 6.Nf3 Qd8 you are a pawn up. The bishop on d3 has cut the queen off from d4, and nothing else defended it.",
              "line": "Qxd4 Nf3 Qd8 O-O e6"},
-            {"san": "f3", "severity": "playable", "tier": "Plans",
-             "why": "The knight stays on e4 and the f-pawn holds it. 5...e6 and then ...Nd7 and ...Ngf6, and White's f-pawn has taken the knight's best square.",
-             "line": "e6 g4 Bg6 h4 h6"},
-            {"san": "Nc3", "severity": "playable", "tier": "Plans",
-             "why": "The knight goes home. White has spent three moves to put it back on c3. 5...e6 and 6...Nf6, and your bishop is already out.",
-             "line": "e6 Nf3 Nf6 Bd3 Bxd3"},
         ],
 
         # ── White's sixth move in the Classical ───────────────────────────
         "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6": [
-            {"san": "c3", "severity": "playable", "tier": "Plans",
-             "why": "A solid pawn move. 6...e6 and ...Nd7 and ...Ngf6, the same set-up as the chapter.",
-             "line": "e6 Nf3 Nd7 Bd3 Bxd3"},
             {"san": "Bc4", "severity": "playable", "tier": "Structure",
              "why": "The bishop takes the a2–g8 diagonal instead of offering itself on d3. 6...e6 blocks that diagonal, and your bishop on g6 keeps its job.",
              "line": "e6 Nf3 Nd7 O-O Ngf6"},
-            {"san": "N1e2", "severity": "playable", "tier": "Plans",
-             "why": "The second knight heads for f4. 6...Nf6 7.Nf4 e5 hits the knight before White has finished developing.",
-             "line": "Nf6 Nf4 e5 Nxg6 hxg6"},
         ],
 
         # ── White's seventh move in the 6.Nf3 chapter ──────────────────────
@@ -823,12 +693,6 @@ OPENING = {
             {"san": "h4", "severity": "playable", "tier": "Foundation",
              "why": "The h-pawn a move later. 7...h6 and the bishop has its retreat square; then 8.h5 Bh7 and the same plans as the 6.h4 chapter.",
              "line": "h6 h5 Bh7 Bd3 Bxd3"},
-            {"san": "Bc4", "severity": "playable", "tier": "Structure",
-             "why": "One club player in five. 7...e6 shuts the bishop's diagonal, and ...Ngf6 and ...Be7 follow.",
-             "line": "e6 O-O Ngf6 Qe2 Be7"},
-            {"san": "Nh4", "severity": "playable", "tier": "Plans",
-             "why": "The knight chases the bishop off the diagonal. 7...e6 8.Nxg6 hxg6 and your h-pawn has moved toward the centre and opened the h-file for your rook.",
-             "line": "e6 Nxg6 hxg6 Bd3 Ngf6"},
         ],
 
         # ── your seventh move against 7.Bd3 ────────────────────────────────
@@ -843,9 +707,6 @@ OPENING = {
             {"san": "Bxg6", "severity": "playable", "tier": "Structure",
              "why": "A quarter of club players take at once. 8...hxg6, toward the centre, and the h-file is open for your rook. Then ...Ngf6, ...Be7 or ...Bd6, and castle.",
              "line": "hxg6 O-O Ngf6 c4 Bd6"},
-            {"san": "c3", "severity": "playable", "tier": "Plans",
-             "why": "A pawn on c3 before castling. 8...Bd6 and ...Ngf6, and the plans are the same.",
-             "line": "Bd6 O-O Ngf6 Re1 O-O"},
         ],
 
         # ── your eighth move ───────────────────────────────────────────────
@@ -855,24 +716,11 @@ OPENING = {
              "line": "Re1 Ngf6 Nf5 Bxf5 Bxf5"},
         ],
 
-        # ── White's ninth move in the 6.Nf3 chapter ────────────────────────
-        "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 Nf3 Nd7 Bd3 e6 O-O Ngf6": [
-            {"san": "c3", "severity": "playable", "tier": "Structure",
-             "why": "Solid. 9...Be7 and castle; after a trade on g6, hxg6 as always.",
-             "line": "Be7 Bxg6 hxg6 Qe2 c5"},
-            {"san": "Bg5", "severity": "playable", "tier": "Plans",
-             "why": "The pin. 9...Be7 breaks it, and after 10.Bxg6 hxg6 your rook on h8 looks down the half-open h-file.",
-             "line": "Be7 Bxg6 hxg6 Qe2 Qc7"},
-        ],
-
         # ── your sixth move against 6.h4 ───────────────────────────────────
         "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4": [
             {"san": "e6", "severity": "inaccuracy", "tier": "Foundation",
              "why": "The most expensive natural move in the variation. 7.h5! attacks the bishop while h7 is still occupied by your own pawn, so it has to go to f5, where 8.Nxf5 takes it. Spend the move on ...h6 first; it is not a waiting move, it is the retreat square.",
              "line": "h5 Bf5 Nxf5 exf5 Nf3"},
-            {"san": "h5", "severity": "inaccuracy", "tier": "Plans",
-             "why": "Stopping the pawn with a pawn is the right reflex in the Advance and the wrong one here. 7.Nh3 heads for f4, where the knight attacks g6 and h5 at once.",
-             "line": "Nh3 e6 Nf4 Bh7 Bc4"},
         ],
 
         # ── White's seventh move after 6...h6 ──────────────────────────────
@@ -880,16 +728,6 @@ OPENING = {
             {"san": "h5", "severity": "playable", "tier": "Foundation",
              "why": "The club's most common move here. 7...Bh7 and the bishop sits on h7 exactly as in the chapter. After 8.Nf3 e6 it is the same position.",
              "line": "Bh7 Nf3 e6 Ne5 Nd7"},
-            {"san": "Bd3", "severity": "playable", "tier": "Structure",
-             "why": "Offering the trade early. Take it: 7...Bxd3 8.Qxd3 e6 and you have the main-line structure without the discussion on h7.",
-             "line": "Bxd3 Qxd3 e6 Nf3 Nd7"},
-        ],
-
-        # ── your seventh move after 7.Nf3 ──────────────────────────────────
-        "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4 h6 Nf3": [
-            {"san": "Nd7", "severity": "playable", "tier": "Structure",
-             "why": "Playable, and the masters' most common move. After 8.h5 Bh7 9.Bd3 Bxd3 10.Qxd3 e6 it usually comes to the same thing. The course plays 7...e6, Carlsen's move in the model game.",
-             "line": "h5 Bh7 Bd3 Bxd3 Qxd3 e6"},
         ],
 
         # ── White's eighth move after 7...e6 ───────────────────────────────
@@ -897,32 +735,6 @@ OPENING = {
             {"san": "h5", "severity": "playable", "tier": "Foundation",
              "why": "Fixing the h-pawn first, the club's most common move. 8...Bh7 9.Bd3 Bxd3 10.Qxd3 Nd7 and the only change from the chapter is that White's pawn is on h5, which shuts the h-file for good.",
              "line": "Bh7 Bd3 Bxd3 Qxd3 Nd7"},
-            {"san": "Bd3", "severity": "playable", "tier": "Structure",
-             "why": "The trade without the knight jump first. 8...Bxd3 9.Qxd3 Nf6 and you are a move further on than in the chapter.",
-             "line": "Bxd3 Qxd3 Nf6 Bd2 Nbd7"},
-        ],
-
-        # ── White's eleventh move ──────────────────────────────────────────
-        "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4 h6 Nf3 e6 Ne5 Bh7 Bd3 Bxd3 Qxd3 Nd7": [
-            {"san": "Qe2", "severity": "playable", "tier": "Structure",
-             "why": "The queen steps off the d-file and keeps the knight on e5 without committing the f-pawn. 11...Ngf6 12.Bd2 Be7 and castle.",
-             "line": "Ngf6 Bd2 Be7 O-O-O O-O"},
-            {"san": "Bf4", "severity": "playable", "tier": "Structure",
-             "why": "Developing the last minor piece. 11...Nxe5 12.Bxe5 Nf6 and the bishop on e5 is the only active white piece left.",
-             "line": "Nxe5 Bxe5 Nf6 O-O-O Be7"},
-            {"san": "Nxd7", "severity": "playable", "tier": "Plans",
-             "why": "White trades the strong knight for your passive one. Recapture with the queen, 11...Qxd7, and the d8-square is free for a rook.",
-             "line": "Qxd7 Bf4 Ngf6 O-O-O Be7"},
-        ],
-
-        # ── your eleventh move after 11.f4 ─────────────────────────────────
-        "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4 h6 Nf3 e6 Ne5 Bh7 Bd3 Bxd3 Qxd3 Nd7 f4": [
-            {"san": "Be7", "severity": "playable", "tier": "Structure",
-             "why": "Playable, and the engine rates it level with the check. The course plays 11...Bb4+ first, Carlsen's move, because the check makes White commit the c-pawn or the king before your bishop comes back.",
-             "line": "Bd2 Ngf6 O-O-O O-O"},
-            {"san": "Nxe5", "severity": "inaccuracy", "tier": "Plans",
-             "why": "Trading the strong knight at once is the right idea at the wrong moment. 12.fxe5 gives White a pawn on e5 and the half-open f-file, and you have used your best trade before your pieces are out.",
-             "line": "fxe5 c5 Qb5+ Qd7 Qxd7+ Kxd7"},
         ],
 
         # ── White's fourth move in the Two Knights ─────────────────────────
@@ -933,9 +745,6 @@ OPENING = {
             {"san": "Be2", "severity": "playable", "tier": "Structure",
              "why": "Breaking the pin in advance. 4...e6 and ...Nf6, and the bishop on g4 stays on its diagonal.",
              "line": "e6 d4 Nf6 e5 Nfd7"},
-            {"san": "d4", "severity": "playable", "tier": "Plans",
-             "why": "The centre at once. 4...e6 and the position is a Classical where White has not been able to chase your bishop with Ng3.",
-             "line": "e6 h3 Bxf3 Qxf3 Nf6"},
         ],
 
         # ── your fourth move after 4.h3 ────────────────────────────────────
@@ -950,15 +759,6 @@ OPENING = {
             {"san": "exd5", "severity": "playable", "tier": "Structure",
              "why": "A third of club players trade here. 6...cxd5 and then 7.d4 Nc6: it is a quiet Exchange in which White has the bishop pair and you have the better development.",
              "line": "cxd5 d4 Nc6 Be3 Nf6"},
-            {"san": "d3", "severity": "playable", "tier": "Structure",
-             "why": "White keeps the centre closed and plays for g3, Bg2 and the long diagonal. 6...Nd7, the masters' move, and then ...Ngf6 and ...Bc5 or ...Bd6.",
-             "line": "Nd7 Be2 Bd6 O-O Ngf6"},
-            {"san": "Be2", "severity": "playable", "tier": "Plans",
-             "why": "The masters' most common move. 6...Nf6 and if 7.O-O then ...Nbd7 and ...Bc5 or ...Bd6.",
-             "line": "Nf6 O-O Nbd7 d3 Bd6"},
-            {"san": "g3", "severity": "playable", "tier": "Plans",
-             "why": "The fianchetto. 6...Nf6 7.Bg2 d4 and the knight on c3 has to move.",
-             "line": "Nf6 Bg2 d4 Ne2 e5"},
         ],
 
         # ── White's seventh move in the Two Knights ────────────────────────
@@ -966,19 +766,6 @@ OPENING = {
             {"san": "Bd3", "severity": "playable", "tier": "Structure",
              "why": "The masters' move, offering the d-pawn. 7...dxe4 8.Nxe4 Qxd4 takes it, and White's lead in development is what you have to deal with next: 9.c3 Qd8 and the queen comes home.",
              "line": "dxe4 Nxe4 Qxd4 c3 Qd8"},
-            {"san": "Bg5", "severity": "playable", "tier": "Plans",
-             "why": "The pin on f6. 7...Be7 breaks it, and if White trades on f6 your bishop recaptures.",
-             "line": "Be7 Bd3 Nbd7 O-O dxe4"},
-        ],
-
-        # ── White's eighth move in the Two Knights ─────────────────────────
-        "e4 c6 Nf3 d5 Nc3 Bg4 h3 Bxf3 Qxf3 e6 d4 Nf6 e5 Nfd7": [
-            {"san": "Ne2", "severity": "playable", "tier": "Plans",
-             "why": "The knight heads for f4. 8...c5 9.c3 Nc6 and d4 is under fire from two pieces and a pawn.",
-             "line": "c5 c3 Nc6 Qg3 Qb6"},
-            {"san": "Be3", "severity": "playable", "tier": "Plans",
-             "why": "The bishop holds d4. 8...c5 anyway, and after 9.dxc5 Bxc5 the bishops come off on c5.",
-             "line": "c5 dxc5 Bxc5 Bxc5 Nxc5"},
         ],
 
         # ── White's fourth move after 2.Bc4 ────────────────────────────────
@@ -996,9 +783,6 @@ OPENING = {
             {"san": "Qf3", "severity": "inaccuracy", "tier": "Plans",
              "why": "The queen hits f7 and d5. 5...Nf6 covers both, and the queen is a target on f3 for your bishop and knights.",
              "line": "Nf6 d3 e6 Ne2 Bd6"},
-            {"san": "d3", "severity": "playable", "tier": "Plans",
-             "why": "Modest. 5...Nf6 and ...e5: with White's pawn on d3, the centre is yours.",
-             "line": "Nf6 Nf3 e5 O-O Bd6"},
         ],
 
         # ── White's sixth move after 5.d4 Nf6 ──────────────────────────────
@@ -1013,9 +797,6 @@ OPENING = {
             {"san": "O-O", "severity": "inaccuracy", "tier": "Structure",
              "why": "Castling leaves d4 hanging. 7...Bxf3 8.Qxf3 Nxd4 and the pawn goes, as in the chapter. Eight club players in ten miss it and play 7...e6.",
              "line": "Bxf3 Qxf3 Nxd4 Qd3 Nc6"},
-            {"san": "c3", "severity": "playable", "tier": "Structure",
-             "why": "The engine's choice: the pawn guards d4 so the trade on f3 wins nothing. 7...e6 and the usual set-up with ...Bd6 and castling.",
-             "line": "e6 Nbd2 Bd6 O-O O-O"},
         ],
     },
     "games": [
