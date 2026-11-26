@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { Rating } from 'ts-fsrs';
 import { alternativesAt, lineBySlug, lineSide, positionKey, toMove, turnOf } from '../src/lib/course.ts';
 import { MASTERED_DAYS, daysUntil, newCard, ratingFor, review, strengthOf, SLOW_MS } from '../src/lib/memory.ts';
-import { buildRuns, courseCards, isCard, judgeTry, learnHref, lineCards, retryRun, ROUND_SIZE, TRIES, type Due } from '../src/lib/recall.ts';
+import { buildRuns, byLearned, courseCards, isCard, judgeTry, learnHref, lineCards, retryRun, ROUND_SIZE, TRIES, type Due } from '../src/lib/recall.ts';
 import { withWrongMoves } from '../src/lib/recallMoves.ts';
 import type { Opening, Ply } from '../src/lib/types.ts';
 
@@ -162,6 +162,18 @@ test('a run names a shared position by the chapter it replays', () => {
   const deep = op.lines.find((l) => l.slug !== op.lines[0].slug && l.plies[1].san === op.lines[0].plies[1].san)!;
   const [run] = buildRuns(lineCards(op, deep.slug).map((key) => ({ openingId: op.id, key })), opening, Infinity);
   assert.ok(run.asks.every((a) => a.where?.slug === deep.slug), 'the first move is named by the chapter being replayed');
+});
+
+test('a card is named by a chapter the learner has learned, or by none', () => {
+  const op = opening('london');
+  const [first, second] = op.lines;
+  const shared = lineCards(op, second.slug).filter((key) => lineCards(op, first.slug).includes(key));
+  assert.ok(shared.length, 'the London chapters share their first moves');
+  const runs = buildRuns(shared.map((key) => ({ openingId: op.id, key })), opening, Infinity);
+  const onlySecond = byLearned(runs, opening, (id, slug) => id === op.id && slug === second.slug);
+  assert.ok(onlySecond.flatMap((r) => r.asks).every((a) => a.where?.slug === second.slug));
+  const none = byLearned(runs, opening, () => false);
+  assert.ok(none.flatMap((r) => r.asks).every((a) => a.where === null), 'no Rewind into an unlearned chapter');
 });
 
 test('a wrong answer has its board, and only the asked positions carry verdicts', () => {

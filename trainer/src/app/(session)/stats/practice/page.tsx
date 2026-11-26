@@ -2,8 +2,8 @@ import Link from 'next/link';
 import RecallSession from '@/components/session/RecallSession';
 import { endOfDay, syncDeck } from '@/lib/cards';
 import { getOpening } from '@/lib/content';
-import { getSettings, learnerTimezone } from '@/lib/progress';
-import { buildRuns } from '@/lib/recall';
+import { getProgress, getSettings, learnedIn, learnerTimezone } from '@/lib/progress';
+import { buildRuns, byLearned } from '@/lib/recall';
 import { withWrongMoves } from '@/lib/recallMoves';
 import { deckFacts } from '@/lib/repertoireData';
 import { requirePageUser } from '@/lib/session';
@@ -15,9 +15,10 @@ export const metadata = { title: 'Weakest positions' };
 /** The stats page's ten weakest positions, asked the way Recall asks: each replayed in its line. */
 export default async function WeakestPracticePage() {
   const user = await requirePageUser('/stats/practice');
-  const [tz, settings] = await Promise.all([learnerTimezone(), getSettings(user.id), syncDeck(user.id)]);
+  const [tz, settings, progress] = await Promise.all([learnerTimezone(), getSettings(user.id), getProgress(user.id), syncDeck(user.id)]);
   const weak = weakest(await deckFacts(user.id, endOfDay(tz)), 10);
-  const runs = withWrongMoves(buildRuns(weak.map((w) => ({ openingId: w.openingId, key: w.key })), getOpening), getOpening);
+  const due = weak.map((w) => ({ openingId: w.openingId, key: w.key }));
+  const runs = withWrongMoves(byLearned(buildRuns(due, getOpening), getOpening, learnedIn(progress)), getOpening);
 
   if (!runs.length) {
     return (

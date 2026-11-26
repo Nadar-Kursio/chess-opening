@@ -365,6 +365,19 @@ export function judgeTry(misses: number, hit: boolean, retry: boolean): { grade:
   return { grade: misses === 0 && !retry ? hit : null, reveal: !hit && misses + 1 >= TRIES };
 }
 
+/**
+ * Names each card by a lesson the learner has learned, the one that put it in their deck. Finishing
+ * Learn adds every move of its chapter to Recall, so Rewind must never open a chapter they haven't
+ * learned, even when that chapter meets the position first.
+ */
+export function byLearned(runs: Run[], opening: (id: string) => Opening, learned: (openingId: string, slug: string) => boolean): Run[] {
+  return runs.map((run) => {
+    const { where } = pathsFor(opening(run.openingId), run.side === 'w' ? 'white' : 'black');
+    const isLearned = (w: Where | null | undefined) => !!w && learned(run.openingId, w.slug);
+    return { ...run, asks: run.asks.map((a) => (isLearned(a.where) ? a : { ...a, where: where.get(a.key)?.find(isLearned) ?? null })) };
+  });
+}
+
 /** The card's chapter in Learn, opened just before its move. */
 export function learnHref(openingId: string, where: Where) {
   return `/openings/${openingId}/${where.slug}/learn?at=${where.ply}`;

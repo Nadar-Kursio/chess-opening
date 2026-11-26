@@ -4,7 +4,7 @@ import QuizSession from '@/components/session/QuizSession';
 import { getOpening, hasOpening } from '@/lib/content';
 import { STEP_INFO, STEP_KINDS, alternativesAt, lineBySlug, lineSide, quizFor, sharedStart, sidelineLine, toMove, turnOf, type StepKind } from '@/lib/course';
 import { narrationFor } from '@/lib/narration';
-import { getSettings } from '@/lib/progress';
+import { getProgress, getSettings, learnedIn } from '@/lib/progress';
 import { requirePageUser } from '@/lib/session';
 import { nextAfter, shuffled } from '@/lib/steps';
 
@@ -31,7 +31,9 @@ export default async function StepPage({ params, searchParams }: Params) {
   const found = resolve(id, slug, step);
   if (!found) notFound();
   const user = await requirePageUser(`/openings/${id}/${slug}/${step}`);
-  const settings = await getSettings(user.id);
+  const from = Number(at);
+  const wantsAt = found.step === 'learn' && typeof at === 'string' && Number.isInteger(from);
+  const [settings, progress] = await Promise.all([getSettings(user.id), wantsAt ? getProgress(user.id, id) : null]);
   const { op, line } = found;
   const side = turnOf(lineSide(op, line));
   const title = `${STEP_INFO[found.step].label} · ${line.name}`;
@@ -60,12 +62,10 @@ export default async function StepPage({ params, searchParams }: Params) {
   });
 
   const clips = found.step === 'learn' ? narrationFor(id, line, lineSide(op, line), settings.voice) : {};
-  // Learn opened at a move, from Recall: anywhere inside the lesson, never past its last move.
-  const from = Number(at);
+  // Learn opened at a move, from Recall: anywhere inside the lesson, never past its last move. Only
+  // in a chapter already learned, since finishing Learn puts every move of the chapter into Recall.
   const opensAt =
-    found.step === 'learn' && typeof at === 'string' && Number.isInteger(from) && from > (line.start ?? 0) && from < line.plies.length - 1
-      ? from
-      : undefined;
+    wantsAt && progress && learnedIn(progress)(id, slug) && from > (line.start ?? 0) && from < line.plies.length - 1 ? from : undefined;
   return (
     <LineSession
       {...common}
