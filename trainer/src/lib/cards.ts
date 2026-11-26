@@ -4,6 +4,7 @@ import { courses } from './catalog';
 import { MAX_CROWN, crownOf } from './crowns';
 import { getOpening, hasOpening } from './content';
 import { query, transaction } from './db';
+import type { DueCard } from './dueDays';
 import { MASTERED_DAYS, daysUntil, newCard, ratingFor, recallOdds, review, strengthOf, type CardState, type Strength } from './memory';
 import { courseCards, isCard, lineCards, type Due } from './recall';
 
@@ -273,6 +274,12 @@ export async function forecast(userId: string, tz: string, days = 7, now = new D
     if (k < days) counts[k]++;
   }
   return counts;
+}
+
+/** When each card in the deck falls due, by course: dueDays.ts groups them into learner days. */
+export async function dueDates(userId: string): Promise<DueCard[]> {
+  const rows = await query<{ opening_id: string; due: Date }>(`select opening_id, due from review_cards where user_id = $1`, [userId]);
+  return rows.filter((r) => hasOpening(r.opening_id)).map((r) => ({ openingId: r.opening_id, due: r.due }));
 }
 
 /**
