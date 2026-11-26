@@ -53,3 +53,9 @@
 .recap__rewind {
   flex: none;
 }
+
+/* Beside the board the side panel has the board's height: a long list of misses scrolls inside it
+   instead of running on under the fixed footer, where its last Rewind can't be reached. */
+.session__side:has(> .recap) {
+  overflow-y: auto;
+}
