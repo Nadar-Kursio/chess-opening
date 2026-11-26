@@ -137,6 +137,8 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
   const canPractise = !!deviation?.learnedAt && isCard(op, deviation.key);
   const cover = walk.cover ? getOpening(walk.cover) : null;
   const practiseLink = practice ? practiceHref(op.id, practice, !!learned.get(op.id)?.has(practice.slug)) : null;
+  // Every score is White's, as on the eval bar; a Black player reading "+0.6" beside the course's move would take it as theirs.
+  const whiteScores = walk.side === 'black' ? <p className="muted small">Scores are from White’s side, so as Black you want them low.</p> : null;
 
   return (
     <main className="page games">
@@ -178,6 +180,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
                   <ScoredRow key={c.num} kind="good" label={i ? 'Or' : 'The course plays'} move={c} />
                 ))}
               </ul>
+              {yours.played.score || yours.course.some((c) => c.score) ? whiteScores : null}
               {deviation.verdict ? (
                 <p className={`forgot__verdict forgot__verdict--${deviation.verdict.sev}`}>
                   <b>{deviation.verdict.title}</b> {deviation.verdict.text}
@@ -226,6 +229,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
                   <span className="muted small">
                     {theirs.engine.line}. Stockfish’s choice, searched ahead of time, not course theory.
                   </span>
+                  {whiteScores}
                 </div>
               ) : null}
               {cover ? (
@@ -251,6 +255,7 @@ export default async function GamePage({ params }: PageProps<'/games/[site]/[id]
                   <ScoredRow kind="good" label="The course answers" move={theirs.answer} found={theirs.answer.found} />
                 </ul>
               ) : null}
+              {theirs.answer?.score ? whiteScores : null}
               {theirs.why ? <p className="muted" dangerouslySetInnerHTML={{ __html: theirs.why }} /> : null}
               {theirs.sideline && !theirs.why ? <p className="muted">{theirs.sideline.short}</p> : null}
               <div className="game-exit__actions">

@@ -6,7 +6,7 @@ import type { Opening, Ply, Severity } from './types.ts';
 
 /* "How did my opening go?": one imported game read as a prep report. Built on the walk games.ts
    makes; every score, share and answer here is looked up in the shipped course, coaching and club
-   files, never worked out. Pure, so tests/gamePrep.test.ts drives it against the real course. */
+   files, never worked out. Pure, so tests/games.test.ts drives it against the real course. */
 
 /**
  * you: the learner played a move the course doesn't; new: the opponent did, and the course has
