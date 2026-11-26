@@ -4,7 +4,7 @@ OPENING = {
     "eco": "B12",
     "section": "traps",
     "orientation": "white",
-    "tagline": "3.e5 Bf5 4.h4, and the automatic 4...e6? loses the bishop. Two pawn moves, g4 and f3, and it has no square left.",
+    "tagline": "3.e5 Bf5 4.h4, and the automatic 4...e6? loses the bishop. Three pawn moves, g4, f3 and h5, and it has no square left.",
     "level": "Beginner → Intermediate",
     "theory": {
         "big_idea": "In the Advance Caro-Kann Black's bishop comes out to f5 before ...e6, and that is the whole point of the opening. It also means the bishop stands in front of its own pawns. After 1.e4 c6 2.d4 d5 3.e5 Bf5 4.h4, the move Black has played in every other line, 4...e6, takes away the bishop's last retreat. 5.g4 hits it, and from e4 or g6 it is chased again by f3 or h5. With h7 occupied by Black's own pawn and every other square covered by a white pawn, the bishop is lost for one or two pawns. One club player in five plays 4...e6 here.",
@@ -172,7 +172,7 @@ OPENING = {
                 "point": "A pawn up: White's d-pawn has gone and nothing came back for it. White is ahead in development and your queen has moved four times, which is why the engine calls the position about level. The next few moves are about getting your pieces out.",
                 "next": [
                     "...e6 and ...Nd7, then the f8-bishop out and castle.",
-                    "Watch the queen: White's knights will come to d4 and h4 to hit it, so have a retreat ready.",
+                    "Watch the queen: Nd4 hits it from the centre, so have a retreat ready.",
                 ],
             },
             "notes": {
@@ -188,7 +188,7 @@ OPENING = {
                 4: "You challenge e4.",
                 6: "The bishop comes out.",
                 8: "Answer a pawn with a pawn.",
-                10: "The bishop on g5 has left the queenside, so the queen hits b2 and d4 together.",
+                10: "The bishop on g5 has left the queenside, so the queen hits b2 and d4 together. Not 5...e6??, which opens the diagonal from g5 to your queen on d8.",
                 12: "Take the pawn on d4.",
                 14: "The queen steps to g4, where it attacks the bishop on g5 and the pawn on g2 and still guards your bishop on f5.",
                 16: "Take back. You are a pawn up, and White has development for it.",

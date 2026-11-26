@@ -22,7 +22,7 @@ OPENING = {
             "In the Exchange, play on the queenside: ...Rc8, ...b5 and ...b4 against a pawn on c3.",
         ],
         "traps": [
-            "In the Advance after 3.e5 Bf5 4.h4, the automatic 4...e6? loses the bishop: 5.g4 Be4 6.f3 and it has no square left. Answer 4...h5, and the position is level. The trap course plays it from both chairs.",
+            "In the Advance after 3.e5 Bf5 4.h4, the automatic 4...e6? loses the bishop: 5.g4 Be4 6.f3 Bg6 7.h5, and it has no square left. Answer 4...h5, and the position is level. The trap course plays it from both chairs.",
             "After 2.Nf3 d5 3.d3 dxe4 4.Ng5 exd3 5.Bxd3, the natural 5...Nf6? loses to 6.Nxf7!, and 6...Kxf7 7.Bg6+ wins the queen down the d-file. 5...Nd7 is the move. The trap course has the details.",
             "Club players sacrifice on f7 in the Classical: 1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Bf5 5.Ng5 e6 6.N1f3 h6 7.Nxf7? Kxf7 8.Ne5+ Ke8. Nine in ten play it, and it is unsound. Take the knight and walk the king back.",
             "In the Panov after 5...e6 6.Nf3 Bb4 7.cxd5 Nxd5, the natural 8.Bd3? drops the exchange to 8...Nxc3 9.bxc3 Bxc3+ 10.Bd2 Bxa1. The bishop on b4 has been looking at that rook since move six.",
@@ -43,7 +43,7 @@ OPENING = {
                 "point": "Material is level, seven pawns each, and the light-squared bishops are gone. The centre is fixed: White's pawns on d4 and e5, yours on d5 and e6, and the c-file is open with no pawn on it. Your knights on c6 and g6 both hit e5, and the only thing defending it is the pawn on d4. The masters' results lean to White, so this is a position to play carefully rather than one that plays itself.",
                 "next": [
                     "...Be7 and castle. Your king is the one still in the centre, and the f8-bishop is the last piece at home.",
-                    "Then ...f6. With both knights already on e5, the f-pawn break opens the f-file for the rook you have just castled.",
+                    "Then ...f6. With both knights already aimed at e5, the f-pawn break opens the f-file for the rook you have just castled.",
                     "...Qb6 at any moment: from b6 the queen hits d4 and b2 at once.",
                 ],
                 "endgame": "Your remaining bishop is the good one. Your centre pawns stand on light squares, d5 and e6, and White's on dark ones, d4 and e5, in the way of White's own dark-squared bishop. An ending with one bishop each favours you, so trade knights and keep the bishops.",
@@ -205,9 +205,9 @@ OPENING = {
                 "tier": "Structure",
                 "point": "Both c-pawns and White's e-pawn have left the board, so the c-file is completely open. White's spare centre pawn is the isolated one on d4 and yours is on e6; the wings are two against two and three against three. That single pawn is the whole game. It is strong for about fifteen moves, because it gives White the c5- and e5-squares and open lines for every piece, and weak for the rest of the game. Your job is to survive the fifteen.",
                 "next": [
-                    "...Rc8 or ...Bf6, and before White gets a rook to c1. The c-file is the only fully open file on the board, and both sides want it.",
+                    "...Bf6, the engine's choice against most of White's next moves. The bishop joins the knight on c6 against d4.",
                     "Keep the knight on d5. It is the reason the pawn on d4 can never advance, and d4–d5 is the one move that would stop the pawn being weak.",
-                    "Solve the c8-bishop with ...b6 and ...Bb7. Your spare pawn is on e6, so the bishop takes the long diagonal instead of e6.",
+                    "Solve the c8-bishop with ...b6 and ...Bb7, and the rook can come to c8. The c-file is the only fully open file on the board, and both sides want it.",
                 ],
                 "endgame": "This is the half of the game you are playing for. Two against two and three against three means neither side can make a passed pawn, so the only material that can be won is the pawn on d4, and no white pawn can ever defend it. With queens on it is an attacking asset; with queens off it is a target with a knight sitting in front of it. Trade the queens first and everything else afterwards.",
             },
@@ -266,7 +266,7 @@ OPENING = {
                 11: "Development. More than half of club players choose this over 6.h4.",
                 12: "The knight comes out first. From d7 it supports ...Ngf6 without allowing a trade on f6 that spoils your pawns, and it covers e5.",
                 13: "White offers the bishop trade on d3.",
-                14: "Don't take on d3. After 7...e6 White has to decide about the bishops, and if White takes on g6, your h-pawn recaptures toward the centre and opens the h-file. Two club players in three take on d3 here, and the engine rates it worse.",
+                14: "Don't take on d3. After 7...e6 White has to decide about the bishops, and if White takes on g6, your h-pawn recaptures toward the centre and opens the h-file. Two club players in three take on d3 here, and the engine rates it a little worse.",
                 15: "White castles.",
                 16: "The second knight, and now d7 backs it up, so a trade on f6 costs your structure nothing.",
                 17: "The rook takes the e-file, ready for a later Nf5 or Ne5.",
@@ -287,7 +287,7 @@ OPENING = {
                 "tier": "Plans",
                 "point": "Count the board before you worry about the space. Material is level and so are the pieces, because both light-squared bishops came off on move nine. The pawns are three a side on each wing, and each side has one centre pawn left: White's on d4, yours on e6. The check asks White a question, and both sensible answers suit you: 12.c3 spends a move and puts the pawn on c3 instead of c4, and 12.Bd2 Bxd2+ trades a pair of bishops.",
                 "next": [
-                    "After 12.c3, drop back with 12...Be7, then ...Ngf6 and castle. Short is right even when White castles long, because with the light-squared bishops traded there is no Bxh7 and the h-file stays shut while your pawn is on h6.",
+                    "After 12.c3, drop back with 12...Be7, then ...Ngf6 and castle short. That is right even when White castles long, because with the light-squared bishops traded there is no Bxh7 and the h-file stays shut while your pawn is on h6.",
                     "...Nxe5 at a moment of your choosing, then ...c5. The knight on e5 is White's best piece, held there by the pawns on d4 and f4. Take it off and White has a big centre with nothing behind it.",
                     "Trade pieces. There is no weakness in your structure, and each exchange takes an attacker away from a White player who has pushed three pawns forward.",
                 ],
@@ -327,7 +327,7 @@ OPENING = {
             "drill": True,
             "plan": {
                 "tier": "Foundation",
-                "point": "A clean extra pawn. White's d-pawn has gone and nothing came back for it, so you have seven pawns to six, and your knight on d4 is in the middle of the board hitting the queen on f3, the bishop on b3 and c2. White has the bishop pair and is ahead in development, so the next few moves are about getting the king out.",
+                "point": "A clean extra pawn. White's d-pawn has gone and nothing came back for it, so you have seven pawns to six, and your knight on d4 is in the middle of the board hitting the queen on f3, the bishop on b3 and c2. White has the bishop pair and is ahead in development, so the next few moves are about getting your king castled.",
                 "next": [
                     "...e5 or ...e6 and the f8-bishop out, then castle. Your king is the one piece still at home.",
                     "Against 9.Ba4+, block with 9...b5. The knight on d4 covers b5, so the bishop cannot take there for free.",
@@ -364,10 +364,10 @@ OPENING = {
             "record": {"at": 6, "games": 5370, "white": 30, "draw": 42, "black": 28},
             "plan": {
                 "tier": "Structure",
-                "point": "A French Advance in which your light-squared bishop has already been traded for a knight. White's pawns are on d4 and e5 and yours on d5 and e6, and the pawn on c5 hits the base of the chain. White has the bishop pair; you have the better pawn structure, because every white pawn in the centre is on a dark square and your remaining bishop is dark-squared.",
+                "point": "A French Advance in which your light-squared bishop has already been traded for a knight. White's pawns are on d4 and e5 and yours on d5 and e6, and the pawn on c5 hits the base of the chain. White has the bishop pair; you have the better bishop. Your centre pawns stand on light squares, out of the way of your dark-squared bishop, and White's stand on dark squares, in the way of White's.",
                 "next": [
                     "...Nc6 and ...Qb6, piling up on d4. White's knight has gone from f3, and nothing defends d4 at the moment.",
-                    "If White takes on c5, recapture with the bishop and hit the long diagonal toward g1.",
+                    "If White takes on c5, recapture with the bishop, which lands on the a7–g1 diagonal aimed at f2.",
                     "Castle short only when White's queen and bishop are not both aimed at h7.",
                 ],
                 "endgame": "Your knights against White's bishops in a closed centre is a fair fight, and the locked pawns favour the knights. Keep the centre closed.",
@@ -472,8 +472,8 @@ OPENING = {
              "name": "Botvinnik-Carls Defence",
              "why": "Playable, and a third of club players choose it. Black hits d4 at once and lets the c8-bishop wait. The course plays 3...Bf5, because the bishop outside the chain is the reason to play the Caro-Kann at all.",
              "line": "dxc5 e6 Be3 Nd7"},
-            {"san": "e6", "severity": "inaccuracy", "tier": "Foundation",
-             "why": "The move that throws the opening away. You reach a French Advance with the pawn on c6 doing nothing, the c8-bishop buried behind e6, and a ...c5 break that costs two moves instead of one.",
+            {"san": "e6", "severity": "playable", "tier": "Foundation",
+             "why": "The engine rates it close to 3...Bf5, and it gives away the reason you chose the Caro-Kann. It is a French Advance with the pawn on c6 instead of c5: the c8-bishop is shut in behind e6, and the ...c5 break now takes two moves instead of one.",
              "line": "c3 c5 Nf3 Nc6 Bd3"},
         ],
 
@@ -556,7 +556,7 @@ OPENING = {
              "see": "carokann#exchange-nc3"},
             {"san": "Bd3", "severity": "playable", "tier": "Foundation",
              "name": "Exchange Variation",
-             "why": "The classical Exchange. 4...Nc6 5.c3 Nf6 6.Bf4 Bg4 7.Qb3 Qd7 is the masters' main line, and club players with Black score badly here because they don't know it. Your queen guards b7, the bishops come off with ...Bd6, and the queenside plan of the Bd3 chapter follows.",
+             "why": "The classical Exchange. 4...Nc6 5.c3 Nf6 6.Bf4 Bg4 7.Qb3 Qd7 is the masters' main line, and club players with Black score badly here. Your queen guards b7, the bishops come off with ...Bd6, and the queenside plan of the Bd3 chapter follows.",
              "line": "Nc6 c3 Nf6 Bf4 Bg4 Qb3 Qd7 Nd2 e6",
              "see": "carokann#exchange-bd3"},
         ],
@@ -850,7 +850,7 @@ OPENING = {
                 36: "Eighteen moves, and the position is a wall. Queens off, all four knights off, one dark-squared bishop each, and a centre where no pawn can move: d4 against d5 and e5 against e6.",
                 38: "Carlsen starts on the queenside. His pawns are aimed at a king on c1, and White's are aimed at a corner nobody lives in.",
                 42: "The rook takes the c-file, looking at the pawn on c3 in front of White's king.",
-                50: "The position repeats, and the game was drawn here. Carlsen went on to win the match and the title, and this was the game where he showed the Caro-Kann was not going to be the way in.",
+                50: "The position repeats, and the game was drawn here. Carlsen went on to win the match and the title, and in this game White's attack never got going.",
             },
         },
     ],

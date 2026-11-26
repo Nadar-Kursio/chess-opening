@@ -138,7 +138,7 @@ OPENING = {
             "side": "black",
             "plan": {
                 "tier": "Foundation",
-                "point": "Material is level and nothing is aimed at f7: the knight that went to g5 is back on e4, and the d-file is still closed by White's pawn on d3. The engine has White about a fifth of a pawn better, the normal first-move edge.",
+                "point": "Material is level and nothing is aimed at f7: the knight that went to g5 is back on e4, and the d-file is still closed by White's pawn on d3. The engine calls the position equal.",
                 "next": [
                     "...e5 and ...Be7, then castle. With White's pawn on d3, the centre is yours to take.",
                     "Trade on e4 if the knight stays there: ...Nxe4 dxe4 leaves White's pawns doubled on the e-file.",
@@ -161,7 +161,7 @@ OPENING = {
     "deep": {
         "name": "Deep dive: the queen against two pieces",
         "slug": "bg6-check-deep",
-        "note": "The first line, two moves further. Black's knight comes out to attack the queen's escape squares, and White develops and castles.",
+        "note": "The first line, two moves further. Black's knight jumps to b4 to aim at c2, and White develops and castles out of the fork.",
         "moves": "e4 c6 Nf3 d5 d3 dxe4 Ng5 exd3 Bxd3 Nf6 Nxf7 Kxf7 Bg6+ hxg6 Qxd8 Na6 Nc3 Nb4 O-O",
         "tier": "Structure",
         "plan": {
