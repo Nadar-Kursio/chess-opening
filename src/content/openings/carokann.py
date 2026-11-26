@@ -484,7 +484,7 @@ OPENING = {
              "why": "The direct assault on the bishop, and it is sound. Everything turns on your reply. 4...h5! stops h4–h5 and the position is level. The automatic 4...e6? loses the bishop to 5.g4 Be4 6.f3, and one club player in five falls for it. Answer a pawn with a pawn.",
              "line": "h5 Bd3 Bxd3 Qxd3 e6"},
             {"san": "f4", "severity": "playable", "tier": "Structure",
-             "why": "White props up e5 with a second pawn. It costs a little time and blocks the c1-bishop. 4...e6 and 5...c5, the usual break, and White's pawn on f4 means e3 is a hole.",
+             "why": "White props up e5 with a second pawn. It costs a little time and blocks the c1-bishop. 4...e6 and 5...c5, the usual break, and White's pawn on f4 means e3 is a hole. If White chases the bishop with 5.g4 at once, 5...Qh4+ comes first and the king has to walk.",
              "line": "e6 Nf3 c5 c3 Nc6"},
             {"san": "c3", "severity": "playable", "tier": "Structure",
              "why": "Holding d4 with a pawn before anything else. 4...e6 and 5...c5, and after Nf3 and Be2 you are back in the quiet Advance.",
@@ -667,7 +667,7 @@ OPENING = {
         # ── White's fourth move in the Classical ───────────────────────────
         "e4 c6 d4 d5 Nc3 dxe4": [
             {"san": "f3", "severity": "inaccuracy", "tier": "Plans",
-             "why": "A gambit in the Blackmar-Diemer style, and it costs White more than half a pawn. Take it: 4...exf3 5.Nxf3 Nf6 and you are a pawn up, with your bishop still free to come to f5.",
+             "why": "A gambit in the Blackmar-Diemer style, and it costs White more than half a pawn. Take it: 4...exf3 5.Nxf3 Nf6 and you are a pawn up, with your bishop still free to come to f5. After 6.Bc4, don't pin with 6...Bg4?: 7.Bxf7+ Kxf7 8.Ne5+ and 9.Nxg4, and White has the gambit pawn back with your king in the open.",
              "line": "exf3 Nxf3 Nf6 h3 Bf5"},
         ],
 
@@ -819,7 +819,7 @@ OPENING = {
                 22: "The bishop drops back to offer the trade on g6. Polgar takes, and the h-pawn recaptures toward the centre.",
                 28: "The rook on the c-file, the first step of the plan.",
                 32: "The minority attack starts. The b-pawn heads for b4 to break up White's c3.",
-                36: "The knight heads for c4, the hole in front of the c3-pawn.",
+                36: "The knight heads for c4, the square in front of the c3-pawn. The engine rates this about a pawn worse than the best move at depth twenty; the plan is the point here, not the move order.",
                 42: "The pawn arrives on b4 and hits c3.",
                 44: "The queen takes on a2. White's queenside is breaking up while White's attack has not yet reached anything.",
                 54: "The queen takes on b2, the second pawn from the queenside.",
