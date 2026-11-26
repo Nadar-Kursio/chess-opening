@@ -365,6 +365,7 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
       progress={total ? answers.length / total : 0}
       counter={`${answers.length}/${total}`}
       tone={tone}
+      cheer={phase === 'done' ? (answers.filter((a) => !a.hit).length * 5 <= answers.length ? 'good' : 'mixed') : undefined}
       board={
         <SessionBoard
           review={review}

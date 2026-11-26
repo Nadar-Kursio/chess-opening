@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import OutboxSync from '@/components/OutboxSync';
 import LevelChip from '@/components/fun/LevelChip';
+import HeaderMascot from '@/components/mascot/HeaderMascot';
 import { Flame } from '@/components/ui/icons';
 import { countDue, endOfDay } from '@/lib/cards';
 import { getPulse, learnerTimezone } from '@/lib/progress';
@@ -33,9 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Ring share={goalShare} />
               {pulse.today}/{pulse.goal}
             </span>
-            <Link href="/profile" className="avatar" aria-label="Your profile">
-              {(user.name || user.email).slice(0, 1).toUpperCase()}
-            </Link>
+            <HeaderMascot userId={user.id} initial={(user.name || user.email).slice(0, 1).toUpperCase()} />
           </div>
         </div>
       </header>

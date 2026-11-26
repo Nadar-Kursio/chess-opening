@@ -3,9 +3,12 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { claimNews } from '@/app/fun-actions';
 import type { News } from '@/lib/fun';
 import { savedSessions, subscribeOutbox } from '@/lib/outbox';
+import MascotLevelUp, { ShareLevel } from '@/components/mascot/MascotLevelUp';
+import { updateMascot, useMascot } from '@/components/mascot/store';
 import Badge from './Badge';
 import Burst from './Burst';
 import '@/app/fun.css';
@@ -55,7 +58,10 @@ export default function FunNews({ refresh = false }: { refresh?: boolean }) {
 
   return (
     <>
-      {level && level.kind === 'level' ? <LevelUp key={level.id} item={level} onClose={() => dismiss(level.id)} /> : null}
+      {level && level.kind === 'level'
+        ? // On the body: inside the header, its backdrop blur would confine a fixed overlay to the header.
+          createPortal(<LevelUp key={level.id} item={level} onClose={() => dismiss(level.id)} />, document.body)
+        : null}
       {toasts.length ? (
         <div className="toasts" role="status">
           {toasts.map((t) => (
@@ -67,12 +73,13 @@ export default function FunNews({ refresh = false }: { refresh?: boolean }) {
   );
 }
 
-function useAutoClose(onClose: () => void, ms: number) {
+function useAutoClose(onClose: () => void, ms: number | null) {
   const close = useRef(onClose);
   useEffect(() => {
     close.current = onClose;
   });
   useEffect(() => {
+    if (ms === null) return;
     const t = setTimeout(() => close.current(), ms);
     return () => clearTimeout(t);
   }, [ms]);
@@ -147,23 +154,39 @@ function Toast({ item, onClose }: { item: Shown; onClose: () => void }) {
 }
 
 function LevelUp({ item, onClose }: { item: Extract<Shown, { kind: 'level' }>; onClose: () => void }) {
-  useAutoClose(onClose, LEVEL_MS);
+  const mascot = useMascot();
+  useEffect(() => {
+    updateMascot({ levelCard: true, level: item.level });
+    return () => updateMascot({ levelCard: false });
+  }, [item.level]);
+  // The card stays until dismissed when there's a mascot to show off, so it can be screenshotted.
+  useAutoClose(onClose, mascot?.id ? null : LEVEL_MS);
   return (
     <div className="level-up" role="dialog" aria-modal="false" aria-labelledby="level-up-title">
       <Burst big />
       <div className="level-up__card">
-        <span className="level-up__ring" aria-hidden="true">
-          {item.level}
-        </span>
-        <span className="toast__eyebrow">Level up</span>
-        <h2 id="level-up-title">
-          Level {item.level}: {item.name}
-        </h2>
-        <p className="muted">Keep finding moves to reach the next one.</p>
+        {mascot?.id ? (
+          <MascotLevelUp id={mascot.id} level={item.level} from={item.from} name={item.name} />
+        ) : (
+          <>
+            <span className="level-up__ring" aria-hidden="true">
+              {item.level}
+            </span>
+            <span className="toast__eyebrow">Level up</span>
+            <h2 id="level-up-title">
+              Level {item.level}: {item.name}
+            </h2>
+            <p className="muted">Keep finding moves to reach the next one.</p>
+          </>
+        )}
         <div className="level-up__actions">
-          <Link href="/achievements" className="btn btn--secondary" onClick={onClose}>
-            See badges
-          </Link>
+          {mascot?.id ? (
+            <ShareLevel />
+          ) : (
+            <Link href="/achievements" className="btn btn--secondary" onClick={onClose}>
+              See badges
+            </Link>
+          )}
           <button type="button" className="btn btn--primary" onClick={onClose}>
             Nice
           </button>

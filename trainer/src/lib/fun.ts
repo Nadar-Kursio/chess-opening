@@ -200,7 +200,7 @@ export async function syncFun(userId: string): Promise<Fun> {
 
 export type News =
   | { kind: 'welcome'; level: number; name: string; badges: number }
-  | { kind: 'level'; level: number; name: string }
+  | { kind: 'level'; level: number; name: string; from: number }
   | { kind: 'badge'; badge: string; name: string; label: string; tier: Tier; emblem: Emblem }
   | { kind: 'quest'; title: string }
   | { kind: 'quests' };
@@ -225,11 +225,14 @@ export async function takeNews(userId: string): Promise<{ news: News[]; fun: Fun
       return level.level > 1 || badges ? [{ kind: 'welcome', level: level.level, name: level.name, badges } as News] : [];
     }
     const out: News[] = [];
-    const up = await client.query(
-      `update fun_state set level_seen = $2, updated_at = now() where user_id = $1 and level_seen < $2`,
+    const up = await client.query<{ from: number }>(
+      `update fun_state f set level_seen = $2, updated_at = now()
+         from fun_state seen
+        where f.user_id = $1 and seen.user_id = $1 and f.level_seen < $2
+        returning seen.level_seen as "from"`,
       [userId, level.level],
     );
-    if (up.rowCount) out.push({ kind: 'level', level: level.level, name: level.name });
+    if (up.rowCount) out.push({ kind: 'level', level: level.level, name: level.name, from: up.rows[0].from });
     const quests = await client.query<{ day: string; quest: string }>(
       `update quest_clears set announced_at = now()
         where user_id = $1 and announced_at is null returning day::text, quest`,
