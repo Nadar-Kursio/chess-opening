@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import Board, { type BoardArrow } from '@/components/Board';
-import { scorePct, type Arrow, type Deviation, type Result, type Tally } from '@/lib/games';
+import { prepBadge, prepOf, type Prep } from '@/lib/gamePrep';
+import { SITE_NAME, scorePct, type Arrow, type Deviation, type Matched, type Result, type Tally } from '@/lib/games';
 import type { Colour } from '@/lib/types';
 
 /* Small pieces the games report and a single game share. */
@@ -89,4 +91,32 @@ export function teachLink(openingId: string, f: Pick<Deviation, 'teaches'>, line
     label: t.sideline ? `Learn the sideline` : `Learn chapter ${index + 1}`,
     name: t.name,
   };
+}
+
+/** How far a game's prep went, as a coloured pill. */
+export function PrepBadge({ prep, muted = false }: { prep: Prep | null; muted?: boolean }) {
+  if (!prep) return <span className="prep-badge prep-badge--none">No course</span>;
+  return <span className={`prep-badge prep-badge--${muted ? 'none' : prep.kind}`}>{prepBadge(prep)}</span>;
+}
+
+/** One imported game in a list, linking to its prep report. `course` names the course it followed. */
+export function GameRow({ m, date, course, studied }: { m: Matched; date: (d: Date) => string; course?: string | null; studied: boolean }) {
+  const prep = m.walk ? prepOf(m.walk, m.game.moves) : null;
+  return (
+    <li>
+      <Link href={`/games/${m.game.site}/${m.game.id}`} className="game-row">
+        <ResultChip result={m.game.result} />
+        <span className="game-row__who">
+          <b>
+            {m.game.opponent}
+            {m.game.opponentRating ? <span className="muted"> ({m.game.opponentRating})</span> : null}
+          </b>
+          <span className="muted small">
+            {date(m.game.playedAt)} · {m.game.speed} · {course ?? SITE_NAME[m.game.site]}
+          </span>
+        </span>
+        <PrepBadge prep={prep} muted={!studied} />
+      </Link>
+    </li>
+  );
 }

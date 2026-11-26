@@ -14,6 +14,7 @@ import type { Severity } from '@/lib/types';
 import { Coach, CoachAvatar, SessionFrame, useMessages, usePrimaryKey, type Msg, type Tone } from './Frame';
 import { squareIndex } from './LineSession';
 import { MoveTape, SessionBoard, useMoveReview } from './SessionBoard';
+import '@/app/prep.css';
 
 /* A round of Recall: the board replays the moves leading to each due position and the learner
    finds the move from memory. A right answer is graded and the round flows on; a miss shows the
@@ -386,6 +387,11 @@ export default function RecallSession({ runs, remaining: left, title, closeHref,
               <CoachAvatar />
               <Combo combo={combo} />
             </div>
+            {ask?.game ? (
+              <Link href={ask.game.href} className="from-game">
+                From your game vs {ask.game.opponent}, move {ask.game.move}
+              </Link>
+            ) : null}
             <Coach msgs={msgs} />
             <MoveTape review={review} marks={run.engineView} />
           </>

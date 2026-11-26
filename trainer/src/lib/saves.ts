@@ -17,6 +17,8 @@ const SessionSave = z.object({
   hints: Count,
   score: z.number().int().min(0).max(100).nullable(),
   positions: z.array(z.object({ key: PositionKey, hit: z.boolean() })).max(400),
+  /** A Drill opened partway (`?ply=`): it saves as practice without completing the step. */
+  partial: z.boolean().optional(),
   // An Opening Rush run touching several courses saves a session for each; one of them carries the run.
   rush: z
     .object({

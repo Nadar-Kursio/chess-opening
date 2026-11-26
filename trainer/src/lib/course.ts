@@ -129,6 +129,22 @@ export function stepColumn(kind: StepKind) {
   return STEP_COLUMN[kind];
 }
 
+/** Whether a finished session completes its step. The client reports counts, the server decides. */
+export function stepPassed(r: { mode: string; wrong: number; hints: number; score: number | null; partial?: boolean }) {
+  if (r.partial) return false;
+  switch (r.mode) {
+    case 'learn':
+    case 'drill':
+      return true;
+    case 'recall':
+      return r.wrong === 0 && r.hints === 0;
+    case 'quiz':
+      return (r.score ?? 0) >= 80;
+    default:
+      return false;
+  }
+}
+
 export function stepDone(p: LineProgress | undefined, kind: StepKind) {
   return !!p?.[STEP_COLUMN[kind]];
 }

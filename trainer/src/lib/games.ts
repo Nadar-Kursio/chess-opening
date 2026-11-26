@@ -90,7 +90,7 @@ interface Course {
   /** Moves the chapters themselves play, as "from>to" position keys. */
   chapter: Set<string>;
   /** The opponent's authored deviations from the chapters, by the same edge id. */
-  authored: Map<string, { sev: Severity; name?: string }>;
+  authored: Map<string, { sev: Severity; name?: string; why: string }>;
   /** The opponent move a sideline's lesson opens with, as the same edge id, to its slug. */
   sidelineAt: Map<string, string>;
   /** Every line that asks the learner for a move at a position, chapters first. */
@@ -127,7 +127,7 @@ function courseFor(op: Opening, side: Colour): Course {
       if (toMove(p) === you) return;
       for (const b of alternativesAt(op, line, i)) {
         const id = edgeId(positionKey(p), positionKey(b.plies[0]));
-        if (!authored.has(id)) authored.set(id, { sev: b.sev, name: b.name });
+        if (!authored.has(id)) authored.set(id, { sev: b.sev, name: b.name, why: b.why });
       }
     });
     teach(line.plies, 0, { slug: line.slug, name: line.name, sideline: false });
@@ -160,6 +160,8 @@ export interface Met {
   slug?: string;
   sev?: Severity;
   name?: string;
+  /** The course's authored words on the move, for a deviation it chose to answer. */
+  why?: string;
 }
 
 /** A position the game reached, from the site's moves replayed on the server. */
@@ -244,7 +246,7 @@ export function walkCourse(op: Opening, side: Colour, moves: string[], positions
       if (slug) sidelines.push(slug);
       if (!met && node.toMove !== you && !c.chapter.has(id)) {
         const a = c.authored.get(id);
-        met = { ply: i, key, san: edge.san, num: edge.num, kind: slug ? 'sideline' : 'branch', slug, sev: a?.sev ?? edge.sev, name: a?.name ?? edge.name };
+        met = { ply: i, key, san: edge.san, num: edge.num, kind: slug ? 'sideline' : 'branch', slug, sev: a?.sev ?? edge.sev, name: a?.name ?? edge.name, why: a?.why };
       }
       const n = nodes[edge.next];
       steps.push({ key: edge.next, fen: n.fen, san: edge.san, num: edge.num, from: edge.from, to: edge.to, check: n.check, book: true });

@@ -4,6 +4,7 @@ import { getCatalog, getOpening } from './content';
 import { query, transaction } from './db';
 import { SITE_NAME, buildReport, deviationOf, forgot, matchGame, type ImportedGame, type Learned, type Site } from './games';
 import { replay } from './gamePositions';
+import { gameOrigins, type FromGame } from './gamePrep';
 import { IMPORT_GAMES, fromChesscom, fromLichess, type ChesscomGame, type LichessGame } from './gameSources';
 import { isCard } from './recall';
 import type { Opening } from './types';
@@ -206,6 +207,21 @@ export async function learnedLines(userId: string) {
     m.set(r.line_slug, r.learned_at);
   }
   return { learned, studied: new Set(learned.keys()) };
+}
+
+/** Where the learner's games left the courses they study, to label the Recall cards at those positions. */
+export async function gameCards(userId: string) {
+  const [games, { learned, studied }] = await Promise.all([getGames(userId), learnedLines(userId)]);
+  if (!games.length) return new Map<string, FromGame>();
+  const openings = allOpenings();
+  const byId = new Map(openings.map((op) => [op.id, op]));
+  return gameOrigins(
+    games.map((game) => {
+      const walk = matchGame(openings, studied, game.colour, game.moves, game.positions);
+      const op = walk && studied.has(walk.openingId) ? byId.get(walk.openingId)! : null;
+      return { game, walk, deviation: op ? deviationOf(op, walk!, learned.get(op.id)) : null, traps: [] };
+    }),
+  );
 }
 
 export async function loadReport(userId: string) {
