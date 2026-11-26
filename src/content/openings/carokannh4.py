@@ -169,7 +169,7 @@ OPENING = {
             "side": "black",
             "plan": {
                 "tier": "Structure",
-                "point": "A pawn up: White's d-pawn has gone and nothing came back for it. White is ahead in development and your queen has moved four times, so the next few moves are about getting the pieces out.",
+                "point": "A pawn up: White's d-pawn has gone and nothing came back for it. White is ahead in development and your queen has moved four times, which is why the engine calls the position about level. The next few moves are about getting your pieces out.",
                 "next": [
                     "...e6 and ...Nd7, then the f8-bishop out and castle.",
                     "Watch the queen: White's knights will come to d4 and h4 to hit it, so have a retreat ready.",
@@ -191,7 +191,7 @@ OPENING = {
                 10: "The bishop on g5 has left the queenside, so the queen hits b2 and d4 together.",
                 12: "Take the pawn on d4.",
                 14: "The queen steps to g4, where it attacks the bishop on g5 and the pawn on g2 and still guards your bishop on f5.",
-                16: "Take back. You are a clean pawn up.",
+                16: "Take back. You are a pawn up, and White has development for it.",
             },
         },
     ],

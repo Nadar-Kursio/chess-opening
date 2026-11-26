@@ -7,7 +7,7 @@ OPENING = {
     "tagline": "Black has grabbed two pawns after 2.Nf3 d5 3.d3. One natural move later, Nxf7 forks queen and rook, and Bg6+ wins the queen down the d-file.",
     "level": "Beginner → Intermediate",
     "theory": {
-        "big_idea": "After 1.e4 c6 2.Nf3 d5 3.d3 dxe4 4.Ng5, half of club players take a second pawn with 4...exd3. That is the engine's choice and it is fine, but after 5.Bxd3 Black has one move, 5...Nd7, and almost nobody finds it. The knight on g5 and the bishop on d3 both aim at f7 and h7, and nothing in Black's camp has moved to cover them. The natural 5...Nf6 loses to 6.Nxf7, which forks the queen on d8 and the rook on h8, and if the king takes, 7.Bg6+ moves the bishop off the d-file with check and the queen on d1 takes the queen on d8.",
+        "big_idea": "After 1.e4 c6 2.Nf3 d5 3.d3 dxe4 4.Ng5, half of club players take a second pawn with 4...exd3. That is the engine's choice and it is fine, but after 5.Bxd3 only a couple of moves hold, 5...Nd7 the best of them, and almost nobody finds one. The knight on g5 and the bishop on d3 both aim at f7 and h7, and nothing in Black's camp has moved to cover them. The natural 5...Nf6 loses to 6.Nxf7, which forks the queen on d8 and the rook on h8, and if the king takes, 7.Bg6+ moves the bishop off the d-file with check and the queen on d1 takes the queen on d8.",
         "structure": "There is no structure, only a file and two squares. The d-file is completely empty, because both d-pawns have been captured, so the queens face each other from d1 and d8 with only White's bishop on d3 between them. f7 is guarded only by the king. Every Black move that does not cover f7 or move the queen off the d-file loses something.",
         "white_plans": [
             "After 5...Nf6, 5...h6 or 5...g6, take on f7 at once: the knight forks the queen and the rook on h8.",
@@ -16,7 +16,7 @@ OPENING = {
         ],
         "black_plans": [
             "After 4.Ng5, the quiet 4...Nf6 avoids all of this: 5.Nxe4 Nbd7 and the game is level.",
-            "If you have taken on d3, play 5...Nd7. It stops nothing on f7 directly, but it covers e5, and after 6.Nxh7 Ne5 the bishop on d3 comes off.",
+            "If you have taken on d3, only a few moves hold, 5...Nd7 and 5...e5 among them. The natural 5...Nf6, 5...h6 and 5...g6 all lose.",
             "Never answer a knight on g5 and a bishop on d3 with a developing move that leaves f7 alone.",
         ],
         "traps": [
@@ -24,7 +24,7 @@ OPENING = {
             "The rook: 6...Qa5+ 7.Bd2 Qd5 8.Nxh8 Qxg2 9.Rf1, and White is a rook up.",
             "The same fork after 5...h6: 6.Nxf7 Qxd3 7.Qxd3 Kxf7, and White has a queen for a bishop and a knight.",
         ],
-        "who": "Players who meet the Caro-Kann with 2.Nf3, because this trap needs one quiet move and club players fall into it in thousands of games a month. And Caro-Kann players, because the Caro-Kann course plays 3...dxe4 here, and the safe moves are in the last line.",
+        "who": "Players who meet the Caro-Kann with 2.Nf3, because this trap needs one quiet move and club players fall into it in thousands of games a month. And Caro-Kann players, because the Caro-Kann course plays 3...dxe4 here, and the safe answer, 4...Nf6, is in the last line.",
     },
     "lines": [
         {
@@ -129,19 +129,19 @@ OPENING = {
             },
         },
         {
-            "name": "Black's safe move: 5...Nd7",
-            "slug": "black-nd7",
-            "note": "From Black's chair. After 4...exd3 5.Bxd3 the knight goes to d7, heading for e5 to hit the bishop. If White grabs h7, the knights trade off the bishops and the game is level.",
-            "moves": "e4 c6 Nf3 d5 d3 dxe4 Ng5 exd3 Bxd3 Nd7 Nxh7 Ne5 Nxf8 Nxd3+ Qxd3 Qxd3 cxd3 Kxf8",
+            "name": "Black's safe move: 4...Nf6",
+            "slug": "black-nf6",
+            "note": "From Black's chair. After 3.d3 dxe4 4.Ng5, don't grab the second pawn: develop the knight to f6, where it guards the e4-pawn and covers h7. White wins the pawn back and the game is level.",
+            "moves": "e4 c6 Nf3 d5 d3 dxe4 Ng5 Nf6 Nxe4 Nbd7",
             "tier": "Foundation",
             "drill": True,
             "side": "black",
             "plan": {
                 "tier": "Foundation",
-                "point": "Material is level: both sides have traded a knight and a bishop, the queens are off, and each side has six pawns. White has an isolated pawn on d3, and your rook on h8 already has the half-open h-file. The engine has you a little better.",
+                "point": "Material is level and nothing is aimed at f7: the knight that went to g5 is back on e4, and the d-file is still closed by White's pawn on d3. The engine has White about a fifth of a pawn better, the normal first-move edge.",
                 "next": [
-                    "...Nf6 and ...Bf5, and the d3-pawn is the target.",
-                    "Your king is fine on f8 with the queens gone. Bring it toward the centre when the rooks are out.",
+                    "...e5 and ...Be7, then castle. With White's pawn on d3, the centre is yours to take.",
+                    "Trade on e4 if the knight stays there: ...Nxe4 dxe4 leaves White's pawns doubled on the e-file.",
                 ],
             },
             "notes": {
@@ -149,20 +149,12 @@ OPENING = {
                 3: "The knight first.",
                 5: "The quiet move.",
                 7: "The knight jumps at f7 and e4.",
-                9: "White recaptures with the bishop.",
-                11: "White takes h7, the most common reply.",
-                13: "The knight takes the bishop.",
-                15: "White recaptures with the queen.",
-                17: "White takes back.",
+                9: "White takes the pawn back.",
                 2: "The Caro-Kann.",
                 4: "You challenge e4.",
                 6: "Take on e4.",
-                8: "The second pawn. The engine likes it, and only one move works next.",
-                10: "The one move. The knight heads for e5 to hit the bishop on d3, and it does not leave f7 for the queen to defend.",
-                12: "The knight attacks the bishop on d3, and the knight on h7 is a long way from home.",
-                14: "Take the bishop with check, and the bishops have both gone.",
-                16: "Trade queens.",
-                18: "Take the knight on f8. Everything is level, and White has the worse pawns.",
+                8: "Develop instead of grabbing on d3. The knight defends e4, and it covers h7 against the bishop that is coming to d3.",
+                10: "The second knight, so a trade on f6 never spoils your pawns. The game is level.",
             },
         },
     ],
@@ -184,7 +176,7 @@ OPENING = {
             16: "The knight develops and makes room for the rook on a8.",
             17: "White develops the last knight.",
             18: "The knight heads for c2 and the rook on a1.",
-            19: "Castle, and the rook on a1 is no longer the only piece the fork would hit.",
+            19: "Castle, so a knight landing on c2 can no longer fork king and rook.",
         },
     },
     "progression": {
@@ -197,7 +189,7 @@ OPENING = {
                 "learn": [
                     "The pattern: a knight on g5, a bishop on d3, an empty d-file and a black king that has only f7 to look after.",
                     "The three Black mistakes: 5...Nf6, 5...h6 and 5...g6.",
-                    "From Black's chair: 5...Nd7, and before that, 4...Nf6 instead of grabbing the pawn.",
+                    "From Black's chair: 4...Nf6 instead of grabbing the pawn.",
                 ],
                 "drill": "Drill each line from White's chair, then the safe line from Black's.",
                 "mistake": "Taking on f7 when Black's queen is not on the d-file. Then the bishop check wins nothing.",
