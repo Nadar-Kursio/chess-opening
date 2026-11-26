@@ -32,10 +32,38 @@ from sidelines import SEARCH, Search, line_from_pv      # noqa: E402
 MATE = 10000
 
 
-def leaving_positions(tree, counts, min_games):
-    """Positions after a club move that leaves the course: {epd: (games, ply)}."""
+def plies(op, tree):
+    """Plies played to reach each position the module names, for a move number.
+
+    The tree's own roads first; then every authored sequence, because the committed club file
+    (club-moves.py) also holds positions the sparring tree never walks into, such as the far side
+    of a learner's alternative move order, and the build asks for an answer at those too."""
+    out = {epd: len(path) for epd, path in tree.path.items()}
+
+    def walk(sans):
+        board = chess.Board()
+        for i, san in enumerate(sans):
+            out.setdefault(board.epd(), i)
+            board.push_san(san)
+        out.setdefault(board.epd(), len(sans))
+
+    for line in op["lines"] + ([op["deep"]] if op.get("deep") else []):
+        walk(line["moves"].split())
+    for prefix, entries in (op.get("branches") or {}).items():
+        for br in entries:
+            walk(prefix.split() + [br["san"]] + br.get("line", "").split())
+    for item in tree.sidelines:
+        if item.get("line"):
+            walk(item["moves"].split() + [item["reply"]] + item["line"].split())
+    return out
+
+
+def leaving_positions(tree, counts, min_games, depth_of):
+    """Positions after a club move that leaves the course: {epd: (games, ply)}.
+
+    Every opponent position the club file has, not only the tree's: the build checks them all."""
     out = {}
-    for epd, moves in tree.moves.items():
+    for epd in set(tree.moves) | set(counts):
         board = chess.Board(epd + " 0 1")
         if board.turn == tree.side:
             continue
@@ -51,7 +79,7 @@ def leaving_positions(tree, counts, min_games):
                 continue
             if not list(b.legal_moves):
                 continue
-            prior = out.get(b.epd(), (0, len(tree.path.get(epd, [])) + 1))
+            prior = out.get(b.epd(), (0, depth_of.get(epd, 0) + 1))
             out[b.epd()] = (prior[0] + n, prior[1])
     return out
 
@@ -72,7 +100,7 @@ def main():
             op = opening(op_id)
             tree = Tree(op)
             counts, source = club_counts(op_id, "spar")
-            todo = leaving_positions(tree, counts, args.games)
+            todo = leaving_positions(tree, counts, args.games, plies(op, tree))
             print(f"{op_id}: {len(todo)} positions after a club move that leaves the course", flush=True)
             started = time.time()
             answers = {}

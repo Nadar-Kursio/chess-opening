@@ -19,6 +19,11 @@ differ, both positions are searched again here at --deep. The deeper local searc
                course says about it (a severity, a mark, a sentence in a note) needs a look.
   holds        it agrees with depth 20. The cloud entry was shallow or stale.
 
+The cloud is asked without waiting: when Lichess asks for a pause, the moves it would have
+checked are counted as unchecked, the report says so, and a later run fills them in (nothing
+unchecked is cached). The deep searches take the engine lock (--lock) only while they run, so
+the box's engine is never held while Lichess is the bottleneck.
+
 Nothing here edits a generated file: the shipped scores stay at one depth. A confirmed row is
 fixed in the content (a different move in the line, a softer sentence, a severity from
 verify-branches.py with a note) or left with a reason. Deep searches go in the shared
@@ -26,6 +31,7 @@ verify-branches.py with a note) or left with a reason. Deep searches go in the s
 Writes .engine/crosscheck/<opening>.txt.
 """
 import argparse
+import fcntl
 import json
 import os
 import sys
@@ -42,6 +48,7 @@ BLUNDER = 300
 INACCURACY = 50
 DECIDED = 250
 MATE = 10000
+INCOMPLETE = 3      # the exit status generate.py reads as "report written, run again later"
 
 
 def moves_shown(op):
@@ -91,6 +98,7 @@ def main():
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--limit", type=int, default=80, help="at most this many disputes searched deeply")
     ap.add_argument("--cache", default=os.path.join(ROOT, ".engine", "eval-cache.json"))
+    ap.add_argument("--lock", help="a lock file to hold while the engine runs (generate.py passes the box's)")
     args = ap.parse_args()
 
     op = opening(args.opening)
@@ -99,7 +107,7 @@ def main():
         raise SystemExit(f"no src/content/evals/{args.opening}.json: run position-evals.py first")
     scores = {epd: s["v"] for epd, s in evals["scores"].items()}
     shown = moves_shown(op)
-    cloud = Cloud()
+    cloud = Cloud(patient=False)
     started = time.time()
 
     seen, disputes = set(), []
@@ -120,7 +128,8 @@ def main():
                              "cloud": (a["cp"], b["cp"], deep, min(a["depth"], b["depth"]))})
     checked = len(seen)
     print(f"{checked} moves, {cloud.asked} new cloud lookups, {len(disputes)} where a cloud analysis of "
-          f"depth {args.min_depth}+ puts the move in another band", flush=True)
+          f"depth {args.min_depth}+ puts the move in another band"
+          + (f"; {cloud.skipped} positions unchecked while the cloud rested" if cloud.skipped else ""), flush=True)
 
     cache = {}
     if os.path.exists(args.cache):
@@ -128,6 +137,9 @@ def main():
             cache = json.load(f)
     disputes.sort(key=lambda d: (not d["where"].startswith(("chapter", "deviation")), d["where"]))
     searched = disputes[:args.limit]
+    lock = open(args.lock, "a") if args.lock and searched else None
+    if lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
     if searched:
         eng = chess.engine.SimpleEngine.popen_uci(engine_path())
         eng.configure({"Threads": args.threads, "Hash": 1024})
@@ -151,6 +163,8 @@ def main():
             with open(f"{args.cache}.{os.getpid()}.tmp", "w", encoding="utf-8") as f:
                 json.dump(cache, f)
             os.replace(f"{args.cache}.{os.getpid()}.tmp", args.cache)
+    if lock:
+        lock.close()
 
     lines = [f"{op['name']} ({args.opening}): {checked} moves checked against Lichess cloud analyses of depth "
              f"{args.min_depth}+, {len(disputes)} in another band, {len(searched)} searched at depth {args.deep}", ""]
@@ -169,6 +183,9 @@ def main():
             lines.append(f"             depth 20 {a:+5} -> {b:+5} {band20:<10}  cloud d{cdepth} {ca:+5} -> {cb:+5} {cband:<10}"
                          f"  depth {args.deep} {da:+5} -> {db:+5} {dband}")
         lines.append("")
+    if cloud.skipped:
+        lines.append(f"{cloud.skipped} positions were not checked: Lichess's cloud asked for a pause. "
+                     f"Run crosscheck.py again later to check them.")
     if len(disputes) > len(searched):
         lines.append(f"{len(disputes) - len(searched)} more disputes not searched (--limit {args.limit}); "
                      f"chapters and deviations were searched first")
@@ -178,6 +195,8 @@ def main():
         f.write("\n".join(lines) + "\n")
     print("\n".join(lines))
     print(f"{int(time.time() - started)} s, wrote .engine/crosscheck/{args.opening}.txt")
+    if cloud.skipped:
+        sys.exit(INCOMPLETE)
 
 
 if __name__ == "__main__":

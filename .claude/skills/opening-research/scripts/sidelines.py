@@ -74,6 +74,7 @@ LEARNER_MOVES = 3
 # How far below the engine's best a club move may be and still be the reply a lesson expects.
 CLUB_SLACK = INACCURACY  # "holds up" means what the move marks mean by it
 CLUB_TRIES = 3      # most common club moves tried at a position, most common first
+WALK_REACH = 0.001  # the walk past the chapters stops where fewer of the course's games than this go
 CLUB_COMMON = 0.25  # a top move this share of club players choose is expected whatever it costs
 
 
@@ -352,7 +353,10 @@ def main():
                     continue
                 auto = moves[i + 1] if i + 1 < len(moves) else None
                 for reply, count in sorted(counts.items(), key=lambda kv: -kv[1]):
-                    if reply == san or count < RARE_ENOUGH:
+                    # A share as well as a count: with a month of games behind a position nearly
+                    # every legal move has RARE_ENOUGH of them, and a reply under SET_SHARE is one
+                    # a learner will hardly meet, so it isn't worth teaching even as a dodge.
+                    if reply == san or count < RARE_ENOUGH or count / total < SET_SHARE:
                         continue
                     result = board.copy()
                     result.push_san(reply)
@@ -364,8 +368,10 @@ def main():
             board.push_san(san)
 
     # Off the chapters: mistakes players make after sidelines the course knows about.
-    def walk(board, moves, depth):
+    def walk(board, moves, depth, reach=1.0):
         epd = board.epd()
+        if reach < WALK_REACH:
+            return
         counts = positions.get(epd)
         if not counts or depth > MOVES:
             return
@@ -377,19 +383,22 @@ def main():
                 if san in studied_moves.get(epd, ()) or san == course_move.get(epd):
                     b = board.copy()
                     b.push_san(san)
-                    walk(b, moves + [san], depth)
+                    walk(b, moves + [san], depth, reach)
             return
         for reply, count in sorted(counts.items(), key=lambda kv: -kv[1]):
-            if count < ENOUGH:
+            # By share as well as count: with a whole month of the explorer behind every
+            # position, 25 games is a sliver of a busy one, and following every sliver walks a
+            # tree many times the course's size.
+            if count < ENOUGH or count / total < COMMON:
                 continue
             b = board.copy()
             b.push_san(reply)
-            if b.epd() not in seen and count / total >= COMMON:
+            if b.epd() not in seen:
                 seen.add(b.epd())
                 item = build_item(board, moves, reply, count, total, None, None, course_move.get(epd))
                 if item and item["kind"] == "set":
                     add(item, board)
-            walk(b, moves + [reply], depth + 1)
+            walk(b, moves + [reply], depth + 1, reach * count / total)
 
     walk(chess.Board(), [], 0)
 
@@ -462,6 +471,15 @@ def main():
             if not grown:
                 break
 
+    # A sideline found along one of the learner's own alternative move orders (the London's
+    # 2.Bf4 in the Jobava) is stored on the course's own road to the same position whenever the
+    # chapters reach it: the trainer walks a sideline's moves, and a step nothing teaches is a
+    # dead end in the repertoire explorer.
+    roads = Tree(op, with_sidelines=False).path
+    for item in items:
+        road = roads.get(play(item["moves"].split()).epd())
+        if road is not None:
+            item["moves"] = " ".join(road)
     for item in items:
         item["chapter"], item["moment"] = placement(item["moves"].split(), item["reply"])
 
