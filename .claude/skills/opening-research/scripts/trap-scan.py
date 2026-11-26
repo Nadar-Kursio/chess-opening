@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Real traps in a course: common club moves that lose a lot, and whether a trap course covers them.
 
-    nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/trap-scan.py london
+    nice -n 10 .venv/bin/python3 .claude/skills/opening-research/scripts/trap-scan.py london --lock .../.heavy.lock
 
 A trap worth a course is a natural move club players really make that the engine says loses
 heavily. This finds them in the games, not in a book: every position a club game reaches while
@@ -30,6 +30,7 @@ known traps (from Wikipedia and Wikibooks) is still yours to make; this only add
 games prove.
 """
 import argparse
+import fcntl
 import os
 import sys
 
@@ -97,6 +98,8 @@ def main():
     ap.add_argument("--drop", type=int, default=200, help="centipawns a move must cost its player")
     ap.add_argument("--lost", type=int, default=150, help="...leaving them at least this far behind")
     ap.add_argument("--threads", type=int, default=1)
+    ap.add_argument("--lock", help="a lock file to hold while the engine runs: the club counts come first, from "
+                    "Lichess, and can take half an hour on a new course")
     args = ap.parse_args()
 
     op = opening(args.opening)
@@ -116,6 +119,9 @@ def main():
     print(f"{op['name']}: {len(found)} positions in the first {args.moves} moves, "
           f"{len(jobs)} club moves to score ({source})", flush=True)
 
+    lock = open(args.lock, "a") if args.lock else None
+    if lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
     search = Search(args.threads)
     candidates = []
     try:
@@ -143,6 +149,8 @@ def main():
                 print(f"  {i}/{len(jobs)} scored, {len(candidates)} candidates", flush=True)
     finally:
         search.quit()
+        if lock:
+            lock.close()
 
     learner = tree.side
     print(f"\nCANDIDATES: club moves that cost {args.drop}cp+ (depth {SEARCH}), most often met first\n")
