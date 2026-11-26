@@ -238,6 +238,7 @@ function Run({
       progress={(index + (solved ? 1 : 0)) / total}
       counter={`${index + 1}/${total}`}
       tone={tone}
+      cheer={done ? (done.pct >= 80 ? 'good' : 'mixed') : undefined}
       board={
         <SessionBoard
           review={review}

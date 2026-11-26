@@ -1,7 +1,11 @@
 import { signOut } from '@/app/auth-actions';
 import Link from 'next/link';
+import Mascot from '@/components/mascot/Mascot';
 import { Board, Book, Flame, Target } from '@/components/ui/icons';
 import { courseCard, courses } from '@/lib/catalog';
+import { getFun } from '@/lib/fun';
+import { getMascot } from '@/lib/mascotChoice';
+import { mascotById, stageFor } from '@/lib/mascots';
 import { sampleClips } from '@/lib/narration';
 import { brianOnly } from '@/lib/speech';
 import { getProgress, getPulse, getSettings, getTotals } from '@/lib/progress';
@@ -13,12 +17,15 @@ export const metadata = { title: 'Profile' };
 
 export default async function ProfilePage() {
   const user = await requirePageUser('/profile');
-  const [totals, pulse, settings, progress] = await Promise.all([
+  const [totals, pulse, settings, progress, mascotId, fun] = await Promise.all([
     getTotals(user.id),
     getPulse(user.id),
     getSettings(user.id),
     getProgress(user.id),
+    getMascot(user.id).catch(() => null),
+    getFun(user.id),
   ]);
+  const mascot = mascotById(mascotId);
   const started = courses()
     .map((o) => courseCard(o, progress.get(o.id)))
     .filter((c) => c.progress.done > 0);
@@ -27,10 +34,23 @@ export default async function ProfilePage() {
   return (
     <main className="page page--narrow">
       <section className="card profile-head">
-        <span className="avatar avatar--big">{(user.name || user.email).slice(0, 1).toUpperCase()}</span>
+        {mascot ? (
+          <Link
+            href="/mascot"
+            className={`avatar avatar--big mascot-disc mascot-disc--${mascot.id}`}
+            aria-label={`${mascot.name}, your companion`}
+          >
+            <Mascot id={mascot.id} stage={stageFor(fun.level.level)} size="md" />
+          </Link>
+        ) : (
+          <span className="avatar avatar--big">{(user.name || user.email).slice(0, 1).toUpperCase()}</span>
+        )}
         <div>
           <h1>{user.name}</h1>
           <p className="muted">{user.email}</p>
+          <Link href="/mascot" className="small profile-head__mascot">
+            {mascot ? `${mascot.name}, ${mascot.kind} · Change` : 'Pick a companion'}
+          </Link>
         </div>
         <form action={signOut}>
           <button className="btn btn--ghost" type="submit">

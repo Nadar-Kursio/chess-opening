@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, type ReactNode } from 'react';
 import Burst from '@/components/fun/Burst';
+import MascotCheer from '@/components/mascot/MascotCheer';
 import { Speaker, SpeakerOff } from '@/components/ui/icons';
 
 /* The session screen every mode shares: a top bar with the way out and the progress, the board,
@@ -45,6 +46,7 @@ export function SessionFrame({
   side,
   footer,
   tone,
+  cheer,
   onFlip,
 }: {
   onFlip: () => void;
@@ -56,6 +58,8 @@ export function SessionFrame({
   side: ReactNode;
   footer: ReactNode;
   tone: Tone;
+  /** How the learner's companion takes the session, once it's over. */
+  cheer?: 'good' | 'mixed';
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -97,6 +101,7 @@ export function SessionFrame({
       </main>
       {tone === 'done' ? <Burst /> : null}
       <footer className={`session__foot session__foot--${tone}`} aria-live="polite">
+        {cheer ? <MascotCheer result={cheer} /> : null}
         <div className="session__foot-inner">{footer}</div>
       </footer>
     </div>

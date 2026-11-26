@@ -240,6 +240,68 @@
   --trap-badge-lg: 56px;
   --trap-slot-min: 220px;
   --trap-slot-board: 200px;
+  /* mascots: the companions are characters, so their own colours hold in both themes; only the
+     locked silhouette and the soft disc behind them follow the theme */
+  --mascot-xs: 24px;
+  --mascot-sm: 36px;
+  --mascot-md: 64px;
+  --mascot-lg: 112px;
+  --mascot-xl: 160px;
+  --mascot-stroke: 3.4;
+  --mascot-stroke-small: 6;
+  --mascot-stroke-detail: 2.4;
+  --mascot-line: #1b2333;
+  --mascot-eye: #ffffff;
+  --mascot-shine: #ffffff;
+  --mascot-mouth: #8c2433;
+  --mascot-blush: rgba(255, 112, 132, 0.5);
+  --mascot-pip: #5aa9f5;
+  --mascot-pip-shade: #2f7fd6;
+  --mascot-pip-light: #d6ebff;
+  --mascot-pip-scarf: #e5484d;
+  --mascot-pip-cape: #b8323c;
+  --mascot-jinx: #a07cf2;
+  --mascot-jinx-shade: #6a45c9;
+  --mascot-jinx-light: #efe6ff;
+  --mascot-jinx-scarf: #f5b83d;
+  --mascot-jinx-cape: #2f8f5a;
+  --mascot-hoot: #b08463;
+  --mascot-hoot-shade: #7d5640;
+  --mascot-hoot-light: #f5e8d8;
+  --mascot-hoot-scarf: #e5484d;
+  --mascot-hoot-cape: #6a45c9;
+  --mascot-hoot-beak: #f5b83d;
+  --mascot-brick: #9aa6ba;
+  --mascot-brick-shade: #6c7890;
+  --mascot-brick-light: #e4e9f1;
+  --mascot-brick-scarf: #e5484d;
+  --mascot-brick-cape: #2b4b9a;
+  --mascot-nova: #f2707f;
+  --mascot-nova-shade: #c9405a;
+  --mascot-nova-light: #ffe3e7;
+  --mascot-nova-scarf: #3d8bfd;
+  --mascot-nova-cape: #2b4b9a;
+  --mascot-rufus: #f5a640;
+  --mascot-rufus-shade: #c96a1f;
+  --mascot-rufus-light: #fff1d6;
+  --mascot-rufus-scarf: #2e9e5b;
+  --mascot-rufus-cape: #b8323c;
+  --mascot-ribbon: #3d8bfd;
+  --mascot-crown: #f7c843;
+  --mascot-jewel: #e5484d;
+  --mascot-star: #ffd75e;
+  --mascot-laurel: #5fae5a;
+  --mascot-glow: rgba(247, 200, 67, 0.22);
+  --mascot-glow-blur: 3px;
+  --mascot-shadow: #cdd5e1;
+  --mascot-shadow-line: #b3bdcc;
+  --mascot-disc: 22%;
+  --mascot-hop: 14%;
+  --mascot-pick-min: 140px;
+  --mascot-bubble-max: 260px;
+  --mascot-share: 1080px;
+  --mascot-sheet-max: 92vh;
+  --levelup-width: 360px;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 120ms;
@@ -302,5 +364,15 @@
     --viz-wash: rgba(79, 143, 245, 0.12);
     --viz-grid: #222b3d;
     --viz-axis: #3a4660;
+  }
+}
+
+/* mascots, dark: the locked silhouette steps down to the dark surface */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --mascot-shadow: #2a3448;
+    --mascot-shadow-line: #3a4660;
+    --mascot-disc: 30%;
+    --mascot-glow: rgba(255, 214, 102, 0.2);
   }
 }
