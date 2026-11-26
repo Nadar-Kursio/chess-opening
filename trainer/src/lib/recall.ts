@@ -81,7 +81,7 @@ export interface Paths {
   /** The move that reaches each position, so any position has a path back to the start. */
   parent: Map<string, Edge>;
   alternatives: Map<string, YourAlternative[]>;
-  /** Every chapter, deviation and sideline the learner meets a position in, in course order. */
+  /** Every lesson that meets a position, closest first: chapters, then sidelines, then deviations. */
   where: Map<string, Where[]>;
 }
 

@@ -14,9 +14,14 @@
   font-weight: 800;
 }
 
-.mark-badge--wrong {
+/* Scaled with the square on a small board, so the cross never hides the piece it marks. */
+.mark-badge.mark-badge--wrong {
+  min-width: 0;
+  width: min(var(--mark-badge), 45%);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 0;
   background: var(--red);
-  font-size: var(--text-sm);
   animation: recall-cross var(--mid) var(--ease);
 }
 @keyframes recall-cross {
