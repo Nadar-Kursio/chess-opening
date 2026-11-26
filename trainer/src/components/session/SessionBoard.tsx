@@ -79,6 +79,8 @@ export function SessionBoard({
   onMove,
   arrows = [],
   flash,
+  badge: ownBadge,
+  undo,
   coordinates,
   engine,
 }: {
@@ -88,6 +90,9 @@ export function SessionBoard({
   onMove: (from: string, to: string) => void;
   arrows?: BoardArrow[];
   flash?: BoardFlash | null;
+  /** In place of the engine's mark on the live position. */
+  badge?: BoardBadge | null;
+  undo?: { from: string; to: string } | null;
   coordinates: boolean;
   /** The eval bar and marks, for a course that has them. */
   engine?: EvalShown | null;
@@ -125,12 +130,13 @@ export function SessionBoard({
             fen={shown.fen}
             orientation={orientation}
             last={shown.from ? { from: shown.from, to: shown.to } : null}
+            undo={review.isReviewing ? null : undo}
             legal={shown.legal}
             movable={review.isReviewing ? null : movable}
             onMove={onMove}
             arrows={review.isReviewing ? [] : [...arrows, ...tried]}
             flash={review.isReviewing ? null : flash}
-            badge={badge}
+            badge={ownBadge && !review.isReviewing ? ownBadge : badge}
             checkSide={shown.check ? otherTurn(shown.turn) : null}
             coordinates={coordinates}
           />

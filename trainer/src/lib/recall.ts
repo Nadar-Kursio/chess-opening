@@ -20,6 +20,25 @@ export interface YourAlternative {
   name?: string;
 }
 
+/** The chapter, or sideline lesson, a card comes from, and where its Learn picks up for it. */
+export interface Where {
+  slug: string;
+  name: string;
+  /** The chapter's number in the course; null for a sideline. */
+  chapter: number | null;
+  /** The ply Learn opens at: just before the move, so the opponent's move that sets it is replayed. */
+  ply: number;
+}
+
+/** A wrong answer played out: the board it leaves, and its score where the course ships one. */
+export interface WrongMove {
+  san: string;
+  fen: string;
+  check?: boolean;
+  ev?: number;
+  mate?: number;
+}
+
 export interface Ask {
   /** Index into the run's plies: the position the learner moves from. */
   at: number;
@@ -28,6 +47,9 @@ export interface Ask {
   accept: string[];
   /** The authored moves the course chose against, with why. */
   alternatives: YourAlternative[];
+  where: Where | null;
+  /** Every other legal move from here, by from+to; filled in by the page (recallMoves.ts). */
+  wrong?: Record<string, WrongMove>;
 }
 
 export interface Run {
@@ -59,6 +81,8 @@ export interface Paths {
   /** The move that reaches each position, so any position has a path back to the start. */
   parent: Map<string, Edge>;
   alternatives: Map<string, YourAlternative[]>;
+  /** Every lesson that meets a position, closest first: chapters, then sidelines, then deviations. */
+  where: Map<string, Where[]>;
 }
 
 const cache = new WeakMap<Opening, Map<Colour, Paths>>();
@@ -115,7 +139,39 @@ export function pathsFor(op: Opening, side: Colour): Paths {
     });
   }
 
-  paths = { tree, parent, alternatives };
+  const where: Paths['where'] = new Map();
+  const place = (key: string, w: Where) => {
+    const list = where.get(key) ?? [];
+    if (!list.some((x) => x.slug === w.slug)) list.push(w);
+    where.set(key, list);
+  };
+  // A chapter's own moves first, then the sideline lessons, then the opponent's deviations, each
+  // met in its chapter where it leaves the line: the first entry is the closest lesson.
+  const chapters = op.lines.flatMap((line, index) =>
+    lineSide(op, line) === side ? [{ line, chapter: { slug: line.slug, name: line.name, chapter: index + 1 } }] : [],
+  );
+  for (const { line, chapter } of chapters) {
+    line.plies.forEach((p, i) => {
+      if (toMove(p) === you) place(positionKey(p), { ...chapter, ply: Math.max(0, i - 1) });
+    });
+  }
+  for (const s of op.sidelines?.items ?? []) {
+    if (!s.line || lineSide(op, s.line) !== side) continue;
+    const start = s.line.start ?? 0;
+    s.line.plies.forEach((p, i) => {
+      if (i > start && toMove(p) === you) place(positionKey(p), { slug: s.slug, name: s.line!.name, chapter: null, ply: Math.max(start, i - 1) });
+    });
+  }
+  for (const { line, chapter } of chapters) {
+    line.plies.forEach((p, i) => {
+      if (toMove(p) === you) return;
+      for (const b of alternativesAt(op, line, i)) {
+        for (const q of b.plies) if (toMove(q) === you) place(positionKey(q), { ...chapter, ply: i });
+      }
+    });
+  }
+
+  paths = { tree, parent, alternatives, where };
   bySide.set(side, paths);
   return paths;
 }
@@ -248,17 +304,26 @@ function runAlong(op: Opening, side: Colour, path: string[], stops: Placed[]): R
   const answer = [...lastNode.moves].sort((a, b) => b.w - a.w)[0];
   plies.push(plyAt(p.tree, answer.next, { ...answer, move: { from: answer.from, to: answer.to } }));
 
+  // A card met in several chapters is named by the one this run replays, where it can be.
+  const runLine = p.where.get(stops.at(-1)!.key)?.[0]?.slug;
   const asks = stops.map((s): Ask => {
     const at = s.path.length - 1;
     const isLast = at === path.length - 1;
     const next = plies[at + 1];
+    const met = p.where.get(s.key) ?? [];
     return {
       at,
       key: s.key,
       // Mid-run the line must continue the way it's going; at the end any taught move will do.
       accept: isLast ? p.tree.nodes[s.key].moves.map((e) => e.from + e.to) : [next.from! + next.to!],
       alternatives: p.alternatives.get(s.key) ?? [],
+      where: met.find((w) => w.slug === runLine) ?? met[0] ?? null,
     };
+  });
+  // Only an asked position's verdicts are read, and they are most of a run's weight.
+  const asked = new Set(asks.map((a) => a.at));
+  plies.forEach((ply, i) => {
+    if (!asked.has(i)) delete ply.verdicts;
   });
   return {
     openingId: op.id,
@@ -286,4 +351,34 @@ function interleave(runs: Run[]) {
 /** A single question again, for a move missed earlier in the round. */
 export function retryRun(run: Run, ask: Ask): Run {
   return { ...run, plies: run.plies.slice(0, ask.at + 2), start: Math.max(0, ask.at - 2), asks: [ask] };
+}
+
+/** Wrong tries at one question before the move is shown. */
+export const TRIES = 2;
+
+/**
+ * What one try at a question does. Only the first try is evidence for the schedule: a miss grades
+ * the card Again even when the next try finds it, and a retry later in the round grades nothing.
+ * The second try is there to learn from, and a second miss shows the move.
+ */
+export function judgeTry(misses: number, hit: boolean, retry: boolean): { grade: boolean | null; reveal: boolean } {
+  return { grade: misses === 0 && !retry ? hit : null, reveal: !hit && misses + 1 >= TRIES };
+}
+
+/**
+ * Names each card by a lesson the learner has learned, the one that put it in their deck. Finishing
+ * Learn adds every move of its chapter to Recall, so Rewind must never open a chapter they haven't
+ * learned, even when that chapter meets the position first.
+ */
+export function byLearned(runs: Run[], opening: (id: string) => Opening, learned: (openingId: string, slug: string) => boolean): Run[] {
+  return runs.map((run) => {
+    const { where } = pathsFor(opening(run.openingId), run.side === 'w' ? 'white' : 'black');
+    const isLearned = (w: Where | null | undefined) => !!w && learned(run.openingId, w.slug);
+    return { ...run, asks: run.asks.map((a) => (isLearned(a.where) ? a : { ...a, where: where.get(a.key)?.find(isLearned) ?? null })) };
+  });
+}
+
+/** The card's chapter in Learn, opened just before its move. */
+export function learnHref(openingId: string, where: Where) {
+  return `/openings/${openingId}/${where.slug}/learn?at=${where.ply}`;
 }

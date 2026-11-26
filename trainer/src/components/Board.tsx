@@ -29,13 +29,16 @@ export interface BoardFlash {
 export interface BoardBadge {
   sq: string;
   glyph: string;
-  mark: 'brilliant' | 'great' | 'inaccuracy' | 'blunder';
+  /** `wrong`: not the move asked for. */
+  mark: 'brilliant' | 'great' | 'inaccuracy' | 'blunder' | 'wrong';
 }
 
 interface Props {
   fen: string;
   orientation: Turn;
   last?: { from: string | null; to: string | null } | null;
+  /** A move just taken back: its piece slides from `from` home to `to`, and `last` stays lit. */
+  undo?: { from: string; to: string } | null;
   /** Fixed-width 4-char UCI records for the side to move. */
   legal?: string;
   /** Whose pieces the hand may pick up; null makes the board a picture. */
@@ -85,6 +88,7 @@ export default function Board({
   fen,
   orientation,
   last,
+  undo,
   legal,
   movable = null,
   onMove,
@@ -211,10 +215,11 @@ export default function Board({
       cls.push('sq--check');
     }
     const isTarget = targets.includes(sq);
-    const arriving = animate && last?.to === sq && last.from;
+    const origin = undo ? (undo.to === sq ? undo.from : null) : last?.to === sq ? last.from : null;
+    const arriving = animate && !!origin;
     let slide;
-    if (arriving && last?.from) {
-      const from = cell(last.from, orientation);
+    if (arriving && origin) {
+      const from = cell(origin, orientation);
       slide = {
         '--dx': `${(from.col - col) * 100}%`,
         '--dy': `${(from.row - row) * 100}%`,
