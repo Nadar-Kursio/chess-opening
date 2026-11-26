@@ -156,9 +156,9 @@ function Toast({ item, onClose }: { item: Shown; onClose: () => void }) {
 function LevelUp({ item, onClose }: { item: Extract<Shown, { kind: 'level' }>; onClose: () => void }) {
   const mascot = useMascot();
   useEffect(() => {
-    updateMascot({ levelCard: true });
+    updateMascot({ levelCard: true, level: item.level });
     return () => updateMascot({ levelCard: false });
-  }, []);
+  }, [item.level]);
   // The card stays until dismissed when there's a mascot to show off, so it can be screenshotted.
   useAutoClose(onClose, mascot?.id ? null : LEVEL_MS);
   return (
@@ -166,7 +166,7 @@ function LevelUp({ item, onClose }: { item: Extract<Shown, { kind: 'level' }>; o
       <Burst big />
       <div className="level-up__card">
         {mascot?.id ? (
-          <MascotLevelUp id={mascot.id} level={item.level} name={item.name} />
+          <MascotLevelUp id={mascot.id} level={item.level} from={item.from} name={item.name} />
         ) : (
           <>
             <span className="level-up__ring" aria-hidden="true">

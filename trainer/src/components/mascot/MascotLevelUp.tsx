@@ -6,8 +6,8 @@ import Mascot from './Mascot';
 import { levelCardPng, shareOrSave } from './shareCard';
 
 /** The level-up card's middle: the mascot in its new look, what changed, and one line from it. */
-export default function MascotLevelUp({ id, level, name }: { id: MascotId; level: number; name: string }) {
-  const gain = newLookAt(level);
+export default function MascotLevelUp({ id, level, from, name }: { id: MascotId; level: number; from: number; name: string }) {
+  const gain = newLookAt(level, from);
   const next = nextLook(level);
   const line = mascotLine(id, 'level', level);
   return (

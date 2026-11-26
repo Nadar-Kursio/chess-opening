@@ -33,13 +33,14 @@ test('the look follows the level through the ranks', () => {
   assert.equal(lookAt(stageFor(40)).glow, false);
 });
 
-test('the next look names the next rank, and a new look shows only on the level it arrives', () => {
+test('the next look names the next rank, and a new look shows when a level-up crosses a rank', () => {
   assert.deepEqual(nextLook(5), { stage: 3, rank: 'Rook', level: 7, gain: 'a cape' });
   assert.equal(nextLook(50), null);
   assert.equal(nextLookLine('Pip', 6), 'Reach Rook at level 7 and Pip gets a cape.');
-  assert.equal(newLookAt(7), 'a cape');
-  assert.equal(newLookAt(8), null);
-  assert.equal(newLookAt(1), null);
+  assert.equal(newLookAt(7, 6), 'a cape');
+  assert.equal(newLookAt(8, 7), null);
+  assert.equal(newLookAt(9, 6), 'a cape');
+  assert.equal(newLookAt(53, 9), 'a golden glow');
 });
 
 test('mascots speak on about every other screen, the same words for the same seed, always on a level-up', () => {

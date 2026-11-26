@@ -163,10 +163,10 @@ export function nextLook(level: number) {
   return { stage: stage + 1, rank: next.name, level: next.from, gain: LOOK_GAINS[stage + 1]! };
 }
 
-/** True when reaching `level` changed the look, so the level-up card can say what's new. */
-export function newLookAt(level: number) {
+/** What the look gained on the way from level `from` to `level`, so the level-up card can say what's new. */
+export function newLookAt(level: number, from: number) {
   const stage = stageFor(level);
-  return RANKS[stage].from === level && stage > 0 ? LOOK_GAINS[stage] : null;
+  return stage > stageFor(from) ? LOOK_GAINS[stage] : null;
 }
 
 /** A short friendly line for each rank, shown on the ladder. */
