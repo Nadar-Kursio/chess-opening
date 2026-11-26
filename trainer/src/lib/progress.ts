@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { gradeCards, introduce } from './cards';
 import { getOpening } from './content';
 import { query, queryOne, transaction } from './db';
-import { stepColumn, type LineProgress, type StepKind } from './course';
+import { stepColumn, stepPassed, type LineProgress, type StepKind } from './course';
 import { lineCards } from './recall';
 import type { SoundSet } from './sound';
 import type { SPEECH_RATES, Voice } from './speech';
@@ -171,21 +171,8 @@ export interface SessionResult {
   score: number | null;
   /** Positions asked, by key, and whether the learner found the move first time. */
   positions: { key: string; hit: boolean }[];
-}
-
-/** Whether a finished session completes its step. The client reports counts, the server decides. */
-export function stepPassed(r: SessionResult) {
-  switch (r.mode) {
-    case 'learn':
-    case 'drill':
-      return true;
-    case 'recall':
-      return r.wrong === 0 && r.hints === 0;
-    case 'quiz':
-      return (r.score ?? 0) >= 80;
-    default:
-      return false;
-  }
+  /** Started partway through the line: it counts as practice, but neither completes the step nor counts as a run. */
+  partial?: boolean;
 }
 
 /** Saves a session once: a repeat of the same `clientId` changes nothing and gets the same answer. */
@@ -201,7 +188,7 @@ export async function recordSession(userId: string, r: SessionResult, { clientId
     if (!rowCount) return;
     if (r.lineSlug && r.mode !== 'free' && r.mode !== 'review' && r.mode !== 'rush' && r.mode !== 'spar') {
       const column = stepColumn(r.mode);
-      const isRun = r.mode === 'drill' || r.mode === 'recall';
+      const isRun = !r.partial && (r.mode === 'drill' || r.mode === 'recall');
       const isClean = isRun && r.wrong === 0 && r.hints === 0;
       // `column` comes from a fixed map in course.ts, never from input.
       await client.query(

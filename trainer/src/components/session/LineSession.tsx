@@ -163,6 +163,7 @@ function Run({
           mode,
           ...final,
           score: null,
+          ...(startAt ? { partial: true } : {}),
           positions:
             mode === 'learn'
               ? []
@@ -181,7 +182,7 @@ function Run({
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [openingId, line.slug, mode, sound],
+    [openingId, line.slug, mode, sound, startAt],
   );
 
   // The opponent's moves play themselves, once the coach has finished speaking; the end of the

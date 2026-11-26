@@ -11,10 +11,12 @@ import {
   punishQuestions,
   quizFor,
   sidesTaught,
+  stepPassed,
   toMove,
   turnOf,
   type LineProgress,
 } from '../src/lib/course.ts';
+import { Save } from '../src/lib/saves.ts';
 import type { Opening, Ply } from '../src/lib/types.ts';
 
 // Runs against the real compiled course: CONTENT_DIR, else trainer/content (npm run content).
@@ -109,4 +111,17 @@ test('course progress counts four steps a chapter and points at the first gap', 
 test('position keys separate the side to move', () => {
   const start = openings[0].lines[0].plies[0];
   assert.equal(positionKey(start).at(-1), 'w');
+});
+
+test('a Drill opened partway saves as practice but leaves the step to a whole run', () => {
+  const drill = { mode: 'drill', correct: 4, wrong: 0, hints: 0, score: null };
+  assert.equal(stepPassed(drill), true);
+  assert.equal(stepPassed({ ...drill, partial: true }), false);
+  assert.equal(stepPassed({ mode: 'quiz', wrong: 0, hints: 0, score: 100, partial: true }), false);
+
+  const session = { openingId: 'london', lineSlug: 'ne5-attack', ...drill, positions: [] };
+  const save = (s: object) => Save.safeParse({ id: crypto.randomUUID(), at: Date.now(), kind: 'session', session: s });
+  assert.ok(save(session).success, 'a save without the flag, as older clients send it');
+  const parsed = save({ ...session, partial: true });
+  assert.ok(parsed.success && parsed.data.kind === 'session' && parsed.data.session.partial === true);
 });
