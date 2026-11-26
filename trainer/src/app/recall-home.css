@@ -411,6 +411,8 @@
   }
   .rh-hero__main .btn--lg {
     align-self: stretch;
+    white-space: normal;
+    text-align: center;
   }
   .rh-course__head {
     flex-wrap: wrap;
